@@ -1,0 +1,11 @@
+[user]
+	name = elliancarlos
+	email = 17656878+EllianCarlos@users.noreply.github.com
+[core]
+	editor = nvim
+[alias]
+	add-commit = !git add -A && git commit
+	delete-merged = "!f(){ git branch --merged | grep -v ^* | grep -v 'dev|qa|master' | xargs git branch -d; }; f"
+	alias = ! git config --get-regexp ^alias\\. | sed -e s/^alias\\.// -e s/\\ /\\ =\\ /
+[credential]
+    helper = store
