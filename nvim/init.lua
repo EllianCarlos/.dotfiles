@@ -1,3 +1,6 @@
+  vim.cmd([[
+let mapleader=","
+
 set number
 set mouse=a
 set numberwidth=1
@@ -19,17 +22,24 @@ noremap j h
 
 call plug#begin('~/.config/nvim/plugged')
 
-Plug 'dense-analysis/ale'
 Plug 'scrooloose/nerdtree'
 Plug 'jiangmiao/auto-pairs'
-Plug 'Shougo/deoplete.nvim'
-"" Doesn't work:
-"" Plug 'ternjs/tern_for_vim'
-Plug 'carlitux/deoplete-ternjs'
 Plug 'dracula/vim'
 Plug 'ryanoasis/vim-devicons'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'junegunn/goyo.vim'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'junegunn/fzf', {  'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+
+Plug 'neovim/nvim-lspconfig'
+Plug 'williamboman/mason.nvim'
+
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+Plug 'nvim-tree/nvim-web-devicons'
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.0' }
 
 call plug#end()
 
@@ -44,16 +54,6 @@ imap <A-k> <Up>
 imap <A-l> <Right>
 imap <A-h> <Left>
 
-"" ALE 
-"" Allow prettier to format files
-""let g:ale_fixers = {
-""\   	'javascript': ['prettier', 'eslint'],
-""\	'typescript': ['prettier', 'eslint'],
-""\   	'css': ['prettier'],
-""\}
-"" Set ALE to fix on save
-"" let g:ale_fix_on_save = 1
-
 "" COC
 
 "" COC Prettier Commands
@@ -67,3 +67,22 @@ command! -nargs=0 ESLintFix :call CocAction('runCommand', 'eslint.executeAutofix
 let @i = ":Prettier\<Enter>"
 let @o = ':ESLintFix\<Enter>'
 
+nmap <Leader>i :Prettier<CR>
+nmap <Leader>o :ESLintFix<CR>
+
+
+"" Move Between Windows
+nmap <silent> <c-k> :wincmd k<CR>
+nmap <silent> <c-j> :wincmd j<CR>
+nmap <silent> <c-h> :wincmd h<CR>
+nmap <silent> <c-l> :wincmd l<CR>
+
+]])
+
+require("mason").setup()
+
+local builtin = require('telescope.builtin')
+vim.keymap.set('n', 'ff', builtin.find_files, {})
+vim.keymap.set('n', 'fg', builtin.live_grep, {})
+vim.keymap.set('n', 'fb', builtin.buffers, {})
+vim.keymap.set('n', 'fh', builtin.help_tags, {})
