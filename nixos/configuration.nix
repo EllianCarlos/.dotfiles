@@ -26,7 +26,13 @@
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # Enable networking
-  networking.networkmanager.enable = true;
+  networking = {
+    networkmanager = {
+      enable = true;
+      dns = "default";
+    };
+    wireless.enable = false;
+  };
 
   # Set your time zone.
   time.timeZone = "America/Sao_Paulo";
@@ -59,7 +65,7 @@
   # Save volume state on shutdown
   hardware.pulseaudio.enable = true;
   hardware.pulseaudio.package = pkgs.pulseaudioFull;
-  nixpkgs.config.pulseaudio = true;
+  nixpkgs.config.pulseaudio = true; ## to change default sink pacmd set-default-sink SINK_NUMBER  ex: pacmd set-default-sink 4
   sound.enable = true;
 
   # Allow zsh
@@ -81,7 +87,7 @@
 
   programs.hyprland.enable = true;
   programs.hyprland.xwayland.enable = true;
-  
+
   environment.sessionVariables = {
     WLR_NO_HARDWARE_CURSORS = "1";
     NIXOS_OZONE_WL = "1";
@@ -101,52 +107,105 @@
 
   hardware = {
     opengl.enable = true;
+    mwProCapture.enable = true;
   };
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.allowUnfreePredicate = _: true;
+
   system.autoUpgrade.enable  = true;
   system.autoUpgrade.allowReboot  = true;
+
+  # Allow for nix flakes
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.trusted-users = [ "root" "elliancarlos" ];
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
      git
      kitty
-     vim
      zsh
-     firefox
      nerdfonts
+     
+     # writers
+     obsidian
+
+     # webbrowsers
+     firefox
+     qutebrowser
 
      # programs utils
      killall
      bottom
 
+     ## find files and directories
+     ripgrep
+     fd
+
+     ## print, select, copy
+     grim
+     slurp
+     wl-clipboard
+
      # coding
+     vim
      neovim
+     jetbrains-toolbox
      
      # env setup
      waybar
-     wofi
+     # wofi - home-manager
      hyprlock
      hyprpaper
      hypridle
      brightnessctl
 
+     # screen sharing
+     pipewire
+     wireplumber
+     xdg-desktop-portal-hyprland
+
      # gaming
      steam
+     discord
+
+     # music
+     spotify
 
      # home manager (i think i shouldnt be doing this)
      home-manager
+
+     # formatter test
+     nixfmt-rfc-style
+
+     # developer tools
+     devenv
+
+     # video player
+     mplayer
+
+     # image viewer
+     sxiv
   ];
 
   programs.git = {
     enable = true;
   };
+  
+  programs.steam = {
+    enable = true;
+    remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
+    dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
+    localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers
+  };
 
   home-manager.users.elliancarlos = {
     home.stateVersion = "24.05";
   };
+
+  programs.direnv.enable = true;
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
