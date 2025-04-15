@@ -10,7 +10,7 @@
   # The home.packages option allows you to install Nix packages into your
   # environment.
   home.packages =  with pkgs; [
-    pkgs.oh-my-zsh
+    oh-my-zsh
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
@@ -46,6 +46,10 @@
       plugins = ["git"];
       theme = "robbyrussell";
     };
+  };
+
+  programs.wofi = {
+    enable = true;
   };
 
 
