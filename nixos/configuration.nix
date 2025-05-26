@@ -54,13 +54,15 @@
 
   # Configure keymap in X11
   services.xserver = {
+    enable = true;
+    layout = "br";
     xkb = {
-      layout = "us";
-      model = "us";
+      layout = "br";
+      variant = "";
     };
   };
 
-  console.keyMap = "us";
+  console.keyMap = "br-abnt";
 
   # Save volume state on shutdown
   hardware.pulseaudio.enable = true;
@@ -82,7 +84,7 @@
 
   # Visual Environment
   xdg.portal.enable = true;
-  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk pkgs.xdg-desktop-portal-hyprland ];
   xdg.portal.wlr.enable = true;
 
   programs.hyprland.enable = true;
@@ -92,6 +94,17 @@
     WLR_NO_HARDWARE_CURSORS = "1";
     NIXOS_OZONE_WL = "1";
   };
+
+  security.rtkit.enable = true;
+  services.pipewire = {
+	  enable = true;
+	  wireplumber = {
+		  enable = true;
+	  };
+  };
+
+
+
 
   # Fonts
   fonts.packages = with pkgs; [
@@ -108,7 +121,11 @@
   hardware = {
     opengl.enable = true;
     mwProCapture.enable = true;
+    # Configurable keyboards
+    keyboard.qmk.enable = true;
   };
+
+  services.udev.packages = [ pkgs.via ];
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
@@ -166,6 +183,7 @@
      pipewire
      wireplumber
      xdg-desktop-portal-hyprland
+     xwaylandvideobridge
 
      # gaming
      steam
@@ -188,6 +206,10 @@
 
      # image viewer
      sxiv
+
+     # qmk and keyboards
+     via
+     vial
   ];
 
   programs.git = {
