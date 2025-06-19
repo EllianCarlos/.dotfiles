@@ -8,3 +8,4 @@ Here are my dotfiles for some of the applications I use.
 
 ### Attention Points
 
+I don't know shit.
