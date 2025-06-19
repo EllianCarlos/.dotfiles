@@ -53,16 +53,24 @@
   };
 
   # Configure keymap in X11
+  # be careful xserver also has a shitty login screen
   services.xserver = {
-    enable = true;
+    enable = false;
     layout = "br";
     xkb = {
       layout = "br";
       variant = "";
     };
+    displayManager = {
+      gdm.enable = false;
+      lightdm.enable = false;
+      sddm.enable = false;
+    };
   };
 
   console.keyMap = "br-abnt";
+
+  services.displayManager.sddm.enable = false;
 
   # Save volume state on shutdown
   hardware.pulseaudio.enable = true;
@@ -192,9 +200,6 @@
      # music
      spotify
 
-     # home manager (i think i shouldnt be doing this)
-     home-manager
-
      # formatter test
      nixfmt-rfc-style
 
@@ -223,9 +228,7 @@
     localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers
   };
 
-  home-manager.users.elliancarlos = {
-    home.stateVersion = "24.05";
-  };
+  home-manager.users.elliancarlos = import /home/elliancarlos/.config/home-manager/home.nix;
 
   programs.direnv.enable = true;
 
