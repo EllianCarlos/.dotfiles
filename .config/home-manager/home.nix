@@ -1,8 +1,6 @@
 { config, pkgs, ... }:
 
 {
-  # Home Manager needs a bit of information about you and the paths it should
-  # manage.
   home.username = "elliancarlos";
   home.homeDirectory = "/home/elliancarlos";
   home.stateVersion = "24.05"; 
@@ -16,6 +14,8 @@
     xsel
 
     zsh-powerlevel10k
+
+    ticker
   ];
 
 
@@ -103,6 +103,12 @@
         }
     ];
   };
+
+  programs.fzf = {
+    enable = true;
+    enableZshIntegration = true;
+  };
+
 
   programs.wofi = {
     enable = true;

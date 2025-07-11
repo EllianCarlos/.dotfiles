@@ -1,0 +1,23 @@
+show-summary: true
+show-fundamentals: true
+show-tags: true
+show-separator: true
+show-holdings: true
+show-tags: true
+interval: 10
+currency: "BRL"
+sort: "value"
+
+
+watchlist:
+  - AMZN
+  - AAPL
+  - GOOGL
+  - TSLA
+  - BTC-USD
+  - NVDA
+
+lots:
+  - symbol: AMZN
+    quantity: 7
+    unit_cost: 219.33
