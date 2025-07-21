@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   imports =
@@ -73,10 +73,9 @@
   services.displayManager.sddm.enable = false;
 
   # Save volume state on shutdown
-  hardware.pulseaudio.enable = true;
-  hardware.pulseaudio.package = pkgs.pulseaudioFull;
-  nixpkgs.config.pulseaudio = true; ## to change default sink pacmd set-default-sink SINK_NUMBER  ex: pacmd set-default-sink 4
-  sound.enable = true;
+  # hardware.pulseaudio.enable = true;
+  # hardware.pulseaudio.package = pkgs.pulseaudioFull;
+  # nixpkgs.config.pulseaudio = true; ### Conflicts with pipe wire
 
   # Allow zsh
   programs.zsh.enable = true;
@@ -106,20 +105,19 @@
   security.rtkit.enable = true;
   services.pipewire = {
 	  enable = true;
-	  wireplumber = {
-		  enable = true;
-	  };
+	  wireplumber.enable = true;
   };
 
-
+  services.pulseaudio.enable = lib.mkForce false;
 
 
   # Fonts
   fonts.packages = with pkgs; [
-    (nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" ]; })
+    nerd-fonts.fira-code
+    nerd-fonts.droid-sans-mono
     font-awesome
     noto-fonts
-    noto-fonts-cjk
+    noto-fonts-cjk-sans
     noto-fonts-emoji
     liberation_ttf
   ];
@@ -152,7 +150,6 @@
      git
      kitty
      zsh
-     nerdfonts
      
      # writers
      obsidian
@@ -191,7 +188,7 @@
      pipewire
      wireplumber
      xdg-desktop-portal-hyprland
-     xwaylandvideobridge
+     kdePackages.xwaylandvideobridge
 
      # gaming
      steam
@@ -257,5 +254,5 @@
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "24.05"; # Did you read the comment?
+  system.stateVersion = "25.05"; # Did you read the comment?
 }
