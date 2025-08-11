@@ -16,8 +16,15 @@ watchlist:
   - TSLA
   - BTC-USD
   - NVDA
+  - AMZO34.SA
 
 lots:
-  - symbol: AMZN
-    quantity: 7
-    unit_cost: 204.21
+  # - symbol: AMZN
+    # quantity: 7
+    # unit_cost: 204.21
+  - symbol: AMZO34.SA
+    quantity: 20
+    unit_cost: 59.74
+  - symbol: AMZO34.SA
+    quantity: 80
+    unit_cost: 55.17
