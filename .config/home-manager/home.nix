@@ -149,7 +149,60 @@
     enable = true;
   };
 
+  programs.neovim = {
+    enable = true;
+    defaultEditor = true;
+    viAlias = true;
+    vimAlias = true;
 
-  # Let Home Manager install and manage itself.
+    extraPackages = with pkgs; [
+      gcc
+      gnumake
+      unzip
+      wget
+      curl
+      tree-sitter
+
+      fzf
+      trash-cli
+      diffutils
+      ghostscript
+      tectonic
+
+      lua-language-server
+      stylua
+
+      nil
+      nixpkgs-fmt
+
+      nodejs_22
+
+      vscode-langservers-extracted
+
+      nodePackages.prettier
+      prettierd
+      eslint_d
+      biome
+      stylelint
+
+      pyright
+      black
+
+      rust-analyzer
+      rustfmt
+
+      kotlin-language-server
+      ktlint
+
+      shfmt
+      shellcheck
+
+      ast-grep
+      detekt
+      nimlangserver
+    ];
+  };
+
+# Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 }
