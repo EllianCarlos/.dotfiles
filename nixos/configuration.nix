@@ -31,7 +31,7 @@
       enable = true;
       dns = "default";
     };
-    wireless.enable = false;
+    wireless.enable = lib.mkForce false;
   };
 
   # Set your time zone.
@@ -56,10 +56,9 @@
   # be careful xserver also has a shitty login screen
   services.xserver = {
     enable = false;
-    layout = "br";
     xkb = {
-      layout = "br";
-      variant = "";
+      layout = "us";
+      variant = "intl";
     };
     displayManager = {
       gdm.enable = false;
@@ -68,12 +67,12 @@
     };
   };
 
-  console.keyMap = "br-abnt";
+  console.keyMap = "us-acentos";
 
   services.displayManager.sddm.enable = false;
 
   # Save volume state on shutdown
-  # hardware.pulseaudio.enable = true;
+ # hardware.pulseaudio.enable = true;
   # hardware.pulseaudio.package = pkgs.pulseaudioFull;
   # nixpkgs.config.pulseaudio = true; ### Conflicts with pipe wire
 
@@ -105,7 +104,9 @@
   security.rtkit.enable = true;
   services.pipewire = {
 	  enable = true;
-	  wireplumber.enable = true;
+	  alsa.enable = true;
+	  alsa.support32Bit = true;
+	  pulse.enable = true;
   };
 
   services.pulseaudio.enable = lib.mkForce false;
@@ -118,7 +119,7 @@
     font-awesome
     noto-fonts
     noto-fonts-cjk-sans
-    noto-fonts-emoji
+    noto-fonts-color-emoji
     liberation_ttf
   ];
   
@@ -188,7 +189,6 @@
      pipewire
      wireplumber
      xdg-desktop-portal-hyprland
-     kdePackages.xwaylandvideobridge
 
      # gaming
      steam
@@ -226,6 +226,7 @@
   };
 
   home-manager.users.elliancarlos = import /home/elliancarlos/.config/home-manager/home.nix;
+  home-manager.backupFileExtension = "backup";
 
   programs.direnv.enable = true;
 
