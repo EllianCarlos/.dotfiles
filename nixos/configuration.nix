@@ -174,7 +174,7 @@
 
      # coding
      vim
-     neovim
+     # neovim - home-manager
      jetbrains-toolbox
      
      # env setup
