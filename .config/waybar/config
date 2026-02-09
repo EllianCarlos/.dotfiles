@@ -2,7 +2,7 @@
 {
     "layer": "top",
     "position": "top",
-    "margin": 5,
+    "margin": 2,
 
     // If height property would be not present, it'd be calculated dynamically
     "height": 30,
@@ -21,6 +21,8 @@
     "modules-right": [
         "tray",
         // "idle_inhibitor",
+        "disk",
+        "temperature",
         "memory",
         "cpu",
         // "custom/keyboard-layout",
@@ -54,7 +56,8 @@
         "format-plugged": "{capacity}% ",
         // "format-good": "", // An empty format will hide the module
         // "format-full": "",
-        "format-icons": ["", "", "", "", ""]
+        "format-icons": ["", "", "", "", ""],
+        "tooltip-format": "{timeTo}\nPower: {power}W"
     },
 
     "custom/PBPbattery": {
@@ -76,7 +79,8 @@
             "warning": 70,
             "critical": 90,
         },
-        "on-click": "kitty -e 'btm'",
+        "tooltip-format": "CPU: {usage}%\nLoad: {load}\nCores: {avg_frequency}GHz",
+        "on-click": "kitty -e ~/.config/waybar/bottom-cpu.sh",
     },
 
     "custom/keyboard-layout": {
@@ -90,10 +94,26 @@
         "on-click": "~/.config/waybar/scripts/keyhint.sh",
     },
 
+    "disk": {
+        "interval": 30,
+        "format": "  {percentage_used}%",
+        "path": "/",
+        "tooltip-format": "Used: {used} / {total}\nFree: {free} ({percentage_free}%)"
+    },
+
+    "temperature": {
+        "interval": 10,
+        "hwmon-path": "/sys/class/hwmon/hwmon2/temp1_input",
+        "critical-threshold": 80,
+        "format": " {temperatureC}°C",
+        "tooltip-format": "Temperature: {temperatureC}°C"
+    },
+
     "memory": {
         "interval": 5,
         "format": "  {}%", // Icon: memory
-        "on-click": "kitty -e 'btm'", 
+        "tooltip-format": "RAM: {used:0.1f}GiB / {total:0.1f}GiB ({percentage}%)\nSwap: {swapUsed:0.1f}GiB / {swapTotal:0.1f}GiB",
+        "on-click": "kitty -e ~/.config/waybar/bottom-memory.sh", 
         "states": {
             "warning": 70,
             "critical": 90
@@ -105,7 +125,7 @@
         "format-wifi": " ", // Icon: wifi
         "format-ethernet": " ", // Icon: ethernet
         "format-disconnected": "⚠  Disconnected",
-        "tooltip-format": "{ifname}: {ipaddr}",
+        "tooltip-format": "{ifname}: {ipaddr}/{cidr}\nSignal: {signalStrength}%\n: {bandwidthDownBits}\n: {bandwidthUpBits}",
         "on-click": "kitty -e 'nmtui'",
     },
     "network#vpn": {
@@ -129,15 +149,13 @@
         "disable-scroll": true,
         "disable-markup" : false,
         "all-outputs": true,
-        "format": "  {icon}  ",
-        //"format":"{icon}",
-        "format-icons": {
-            "1": "",
-            "2": "",
-            "3": "󰙯",
-            "4": "",
-            "5": "󰡨",
-            "6": "",
+        "format": "{name}",
+        "persistent_workspaces": {
+            "1": [],
+            "2": [],
+            "3": [],
+            "4": [],
+            "5": []
         }
     },
 
