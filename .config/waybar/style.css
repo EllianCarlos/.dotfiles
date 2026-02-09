@@ -11,27 +11,27 @@
  * -------------------------------------------------------------------------- */
 
 /*
-Arc-Dark Color Scheme
+Catppuccin Mocha Color Scheme
 */
 @keyframes blink-warning {
     70% {
-        color: white;
+        color: #cdd6f4; /* Mocha Text */
     }
 
     to {
-        color: white;
-        background-color: orange;
+        color: #1e1e2e; /* Mocha Base */
+        background-color: #f9e2af; /* Mocha Yellow */
     }
 }
 
 @keyframes blink-critical {
     70% {
-      color: white;
+      color: #cdd6f4; /* Mocha Text */
     }
 
     to {
-        color: white;
-        background-color: red;
+        color: #1e1e2e; /* Mocha Base */
+        background-color: #f38ba8; /* Mocha Red */
     }
 }
 
@@ -46,20 +46,15 @@ Arc-Dark Color Scheme
     min-height: 0;
     margin: 1px;
     padding: 0;
-    color: #66ACED;
+    color: #cdd6f4; /* Mocha Text */
 }
 
 
 /* The whole bar */
 window#waybar {
-    /* color: #dfdfdf; */
-    /* background-color: rgba(0,0,0,0.8); */
-    /* background-color: rgba(8,0,37,0.85); */
-    background-color: rgba(0,0,0,0);
-    /* font-family: JetBrains Mono Nerd Font; */
+    background-color: rgba(0,0,0,0); /* Transparent */
     font-family: Intel One Mono Nerd Font;
     font-size: 14px;
-    /* border-radius: 22px; */
 }
 
 /* Every modules */
@@ -68,6 +63,7 @@ window#waybar {
 #backlight,
 #cpu,
 #custom-keyboard-layout,
+#disk,
 #memory,
 #mode,
 #custom-weather,
@@ -81,9 +77,9 @@ window#waybar {
 #workspaces,
 #custom-media,
 #custom-PBPbattery {
-    padding:0.25rem 0.75rem;
-    margin: 1px 6px;
-    background-color: rgba(0,0,0,0.8);
+    padding:0.15rem 0.5rem;
+    margin: 1px 3px;
+    background-color: rgba(49, 50, 68, 0.8); /* Mocha Surface 0 with transparency */
     border-radius: 20px;
 }
 
@@ -92,12 +88,11 @@ window#waybar {
  * -------------------------------------------------------------------------- */
 
 #clock {
-    /* color: #ff4499; */
-    color: #73daca;
+    color: #94e2d5; /* Mocha Teal */
 }
 
 #custom-weather {
-    color: #ff4499;
+    color: #f5c2e7; /* Mocha Pink */
 }
 
 #battery {
@@ -107,11 +102,11 @@ window#waybar {
 }
 
 #battery.warning {
-    color: orange;
+    color: #f9e2af; /* Mocha Yellow */
 }
 
 #battery.critical {
-    color: red;
+    color: #f38ba8; /* Mocha Red */
 }
 
 #battery.warning.discharging {
@@ -125,30 +120,30 @@ window#waybar {
 }
 
 #cpu {
-    color: #f7768e;
+    color: #f38ba8; /* Mocha Red */
 }
 
 #cpu.warning {
-    color: orange;
+    color: #f9e2af; /* Mocha Yellow */
 }
 
 #cpu.critical {
-    color: red;
+    color: #f38ba8; /* Mocha Red */
 }
 
 #memory {
     animation-timing-function: linear;
     animation-iteration-count: infinite;
     animation-direction: alternate;
-    color: #f7768e;
+    color: #f38ba8; /* Mocha Red */
 }
 
 #memory.warning {
-    color: orange;
+    color: #f9e2af; /* Mocha Yellow */
  }
 
 #memory.critical {
-    color: red;
+    color: #f38ba8; /* Mocha Red */
     animation-name: blink-critical;
     animation-duration: 2s;
     padding-left:5px;
@@ -156,20 +151,18 @@ window#waybar {
 }
 
 #mode {
-    /* background: @highlight; */
-    /* background: #dfdfdf; */
     border-bottom: 3px transparent;
-    color:#ff4499;
+    color: #f5c2e7; /* Mocha Pink */
     margin-left: 5px;
     padding: 7px;
 }
 
 #network.disconnected {
-    color: orange;
+    color: #f9e2af; /* Mocha Yellow */
 }
 
 #pulseaudio {
-    color: #bb9af7;
+    color: #cba6f7; /* Mocha Mauve */
     border-left: 0px;
     border-right: 0px;
     margin-right: 0;
@@ -177,9 +170,9 @@ window#waybar {
 }
 
 /* #pulseaudio.muted { */
-/*     color: #ff4499; */
+/*     color: #f5c2e7; */ /* Mocha Pink */
 /* } */
-/**/
+
 #pulseaudio.microphone {
     border-left: 0px;
     border-right: 0px;
@@ -189,44 +182,46 @@ window#waybar {
 }
 
 /* #pulseaudio.microphone.muted { */
-/*     color: #ff4499; */
+/*     color: #f5c2e7; */ /* Mocha Pink */
 /* } */
 
 
 #temperature.critical {
-    color: red;
+    color: #f38ba8; /* Mocha Red */
 }
 
 #window {
-    font-weight: bold;
-    color: #f7768e;
+    font-weight: normal;   /* Changed from bold */
+    font-size: 12px;       /* New */
+    color: #f38ba8; /* Mocha Red */
 }
 
 #custom-media {
-    color: #bb9af7;
+    font-size: 12px;       /* New */
+    color: #cba6f7; /* Mocha Mauve */
 }
 
 #workspaces {
-    font-size:16px;
-    background-color: rgba(0,0,0,0.8);
+    font-size: 12px;    /* Reduced from 16px */
+    background-color: rgba(49, 50, 68, 0.8); /* Mocha Surface 0 with transparency */
     border-radius: 20px;
 }
 
 #workspaces button {
     border-bottom: 3px solid transparent;
     margin-bottom: 0px;
-    color: #dfdfdf;
+    color: #a6adc8; /* Mocha Subtext 0 */
 }
 
 #workspaces button.active {
-    border-bottom: 1px solid  #ff4499;
+    border-bottom: 1px solid #f5c2e7; /* Mocha Pink */
     margin-bottom: 1px;
     padding-left:0;
 }
 
 #workspaces button.urgent {
-    border-color: #c9545d;
-    color: #c9545d;
+    border-color: #eba0ac; /* Mocha Maroon */
+    color: #eba0ac; /* Mocha Maroon */
 }
 
 #custom-power {
@@ -243,4 +238,24 @@ window#waybar {
 #backlight.icon {
     padding-right:1px;
     font-size: 13px;
+}
+
+#disk {
+    color: #89b4fa; /* Mocha Blue */
+}
+
+#disk.warning {
+    color: #f9e2af; /* Mocha Yellow */
+}
+
+#disk.critical {
+    color: #f38ba8; /* Mocha Red */
+}
+
+#temperature {
+    color: #89dceb; /* Mocha Sky */
+}
+
+#temperature.critical {
+    color: #f38ba8; /* Mocha Red */
 }

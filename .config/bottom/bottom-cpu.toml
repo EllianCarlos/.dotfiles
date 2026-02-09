@@ -1,0 +1,28 @@
+# Bottom config for CPU-focused view
+# Used when clicking CPU in waybar
+
+[flags]
+expanded_on_startup = true
+show_table_scroll_position = true
+current_usage = true
+left_legend = false
+
+# Show CPU-focused columns in process list
+[processes]
+columns = ["PID", "Name", "CPU%", "Mem%", "User", "State", "Time"]
+
+# Custom layout: CPU and temp widgets on top, process list below
+[[row]]
+  ratio = 30
+  [[row.child]]
+    ratio = 2
+    type = "cpu"
+  [[row.child]]
+    ratio = 1
+    type = "temp"
+
+[[row]]
+  ratio = 70
+  [[row.child]]
+    type = "proc"
+    default = true
