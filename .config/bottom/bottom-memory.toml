@@ -1,0 +1,25 @@
+# Bottom config for memory-focused view
+# Used when clicking RAM in waybar
+
+[flags]
+mem_as_value = true
+process_memory_as_value = true
+expanded_on_startup = true
+show_table_scroll_position = true
+enable_cache_memory = true
+
+# Show memory columns in process list
+[processes]
+columns = ["PID", "Name", "Mem%", "Mem", "R/s", "W/s", "User", "State"]
+
+# Custom layout: Memory widget on top, process list below
+[[row]]
+  ratio = 30
+  [[row.child]]
+    type = "mem"
+
+[[row]]
+  ratio = 70
+  [[row.child]]
+    type = "proc"
+    default = true
