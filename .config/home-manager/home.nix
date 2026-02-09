@@ -7,11 +7,11 @@
   # manage.
   home.username = "elliancarlos";
   home.homeDirectory = "/home/elliancarlos";
-  home.stateVersion = "25.05"; 
+  home.stateVersion = "25.05";
 
   # The home.packages option allows you to install Nix packages into your
   # environment.
-  home.packages =  with pkgs; [
+  home.packages = with pkgs; [
     oh-my-zsh
 
     xclip
@@ -20,7 +20,13 @@
     zsh-powerlevel10k
 
     gemini-cli
-    kiro
+    # kiro
+    code-cursor
+    
+    # Hyprland enhancements
+    cliphist          # Clipboard manager
+    libnotify         # Desktop notifications
+    wl-clipboard      # Wayland clipboard utilities
   ];
 
   home.pointerCursor = {
@@ -63,6 +69,8 @@
   #  ~/.nix-profile/etc/profile.d/hm-session-vars.sh
   home.sessionVariables = {
     # EDITOR = "emacs";
+    GTK_IM_MODULE = "xim";
+    QT_IM_MODULE = "xim";
   };
 
   programs.zsh = {
@@ -122,7 +130,7 @@
       {
         name = "p10k-config";
         src = ./.;
-          file = ".p10k.zsh";
+        file = ".p10k.zsh";
       }
       {
         name = "zsh-completions";
@@ -203,6 +211,6 @@
     ];
   };
 
-# Let Home Manager install and manage itself.
+  # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 }
