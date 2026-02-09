@@ -22,11 +22,11 @@
     gemini-cli
     # kiro
     code-cursor
-    
+
     # Hyprland enhancements
-    cliphist          # Clipboard manager
-    libnotify         # Desktop notifications
-    wl-clipboard      # Wayland clipboard utilities
+    cliphist # Clipboard manager
+    libnotify # Desktop notifications
+    wl-clipboard # Wayland clipboard utilities
   ];
 
   home.pointerCursor = {
@@ -68,9 +68,9 @@
   #
   #  ~/.nix-profile/etc/profile.d/hm-session-vars.sh
   home.sessionVariables = {
-    # EDITOR = "emacs";
-    GTK_IM_MODULE = "xim";
-    QT_IM_MODULE = "xim";
+    EDITOR = "vim";
+    GTK_IM_MODULE = "cedilla";
+    QT_IM_MODULE = "cedilla";
   };
 
   programs.zsh = {

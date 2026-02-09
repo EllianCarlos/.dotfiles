@@ -6,7 +6,8 @@
 
 {
   imports =
-    [ # Include the results of the hardware scan.
+    [
+      # Include the results of the hardware scan.
       ./hardware-configuration.nix
       <home-manager/nixos>
     ];
@@ -14,7 +15,7 @@
   # Bootloader.
   boot.loader.grub.enable = true;
   boot.loader.grub.efiSupport = true;
-  boot.loader.grub.devices = ["nodev"];
+  boot.loader.grub.devices = [ "nodev" ];
   boot.loader.grub.useOSProber = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -72,7 +73,7 @@
   services.displayManager.sddm.enable = false;
 
   # Save volume state on shutdown
- # hardware.pulseaudio.enable = true;
+  # hardware.pulseaudio.enable = true;
   # hardware.pulseaudio.package = pkgs.pulseaudioFull;
   # nixpkgs.config.pulseaudio = true; ### Conflicts with pipe wire
 
@@ -84,7 +85,7 @@
     isNormalUser = true;
     description = "Ellian Carlos";
     extraGroups = [ "networkmanager" "wheel" ];
-    packages = with pkgs; [];
+    packages = with pkgs; [ ];
     shell = pkgs.zsh;
   };
 
@@ -99,15 +100,15 @@
   environment.sessionVariables = {
     WLR_NO_HARDWARE_CURSORS = "1";
     NIXOS_OZONE_WL = "1";
-    GTK_IM_MODULE = "xim";
+    GTK_IM_MODULE = "cedilla";
   };
 
   security.rtkit.enable = true;
   services.pipewire = {
-	  enable = true;
-	  alsa.enable = true;
-	  alsa.support32Bit = true;
-	  pulse.enable = true;
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
   };
 
   services.pulseaudio.enable = lib.mkForce false;
@@ -123,7 +124,7 @@
     noto-fonts-color-emoji
     liberation_ttf
   ];
-  
+
 
 
   hardware = {
@@ -139,8 +140,8 @@
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.allowUnfreePredicate = _: true;
 
-  system.autoUpgrade.enable  = true;
-  system.autoUpgrade.allowReboot  = true;
+  system.autoUpgrade.enable = true;
+  system.autoUpgrade.allowReboot = true;
 
   # Allow for nix flakes
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
@@ -149,76 +150,76 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-     git
-     kitty
-     zsh
-     
-     # writers
-     obsidian
+    git
+    kitty
+    zsh
 
-     # webbrowsers
-     firefox
-     qutebrowser
+    # writers
+    obsidian
 
-     # programs utils
-     killall
-     bottom
+    # webbrowsers
+    firefox
+    qutebrowser
 
-     ## find files and directories
-     ripgrep
-     fd
+    # programs utils
+    killall
+    bottom
 
-     ## print, select, copy
-     grim
-     slurp
-     wl-clipboard
+    ## find files and directories
+    ripgrep
+    fd
 
-     # coding
-     vim
-     # neovim - home-manager
-     jetbrains-toolbox
-     
-     # env setup
-     waybar
-     # wofi - home-manager
-     hyprlock
-     hyprpaper
-     hypridle
-     brightnessctl
+    ## print, select, copy
+    grim
+    slurp
+    wl-clipboard
 
-     # screen sharing
-     pipewire
-     wireplumber
-     xdg-desktop-portal-hyprland
+    # coding
+    vim
+    # neovim - home-manager
+    jetbrains-toolbox
 
-     # gaming
-     steam
-     discord
+    # env setup
+    waybar
+    # wofi - home-manager
+    hyprlock
+    hyprpaper
+    hypridle
+    brightnessctl
 
-     # music
-     spotify
+    # screen sharing
+    pipewire
+    wireplumber
+    xdg-desktop-portal-hyprland
 
-     # formatter test
-     nixfmt-rfc-style
+    # gaming
+    steam
+    discord
 
-     # developer tools
-     devenv
+    # music
+    spotify
 
-     # video player
-     mplayer
+    # formatter test
+    nixfmt-rfc-style
 
-     # image viewer
-     sxiv
+    # developer tools
+    devenv
 
-     # qmk and keyboards
-     via
-     vial
+    # video player
+    mplayer
+
+    # image viewer
+    sxiv
+
+    # qmk and keyboards
+    via
+    vial
   ];
 
   programs.git = {
     enable = true;
   };
-  
+
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
