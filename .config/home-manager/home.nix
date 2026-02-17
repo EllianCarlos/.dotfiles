@@ -21,12 +21,13 @@
 
     gemini-cli
     # kiro
-    code-cursor
+    # code-cursor
 
-    # Hyprland enhancements
     cliphist # Clipboard manager
     libnotify # Desktop notifications
     wl-clipboard # Wayland clipboard utilities
+
+    xournalpp
   ];
 
   home.pointerCursor = {
@@ -68,7 +69,6 @@
   #
   #  ~/.nix-profile/etc/profile.d/hm-session-vars.sh
   home.sessionVariables = {
-    EDITOR = "vim";
     GTK_IM_MODULE = "cedilla";
     QT_IM_MODULE = "cedilla";
   };
@@ -89,7 +89,7 @@
     enableCompletion = true;
     syntaxHighlighting.enable = true;
 
-    initExtraFirst = ''
+    initContent = ''
       if [[ -r "$\{XDG_CACHE_HOME:-$HOME/.cache\}/p10k-instant-prompt-$\{(%):-%n\}.zsh" ]]; then
         source "$\{XDG_CACHE_HOME:-$HOME/.cache\}/p10k-instant-prompt-$\{(%):-%n\}.zsh"
       fi
