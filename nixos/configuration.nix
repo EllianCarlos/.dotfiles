@@ -4,22 +4,34 @@
 
 { config, pkgs, lib, ... }:
 
+let 
+  cursor-flake = builtins.getFlake "github:omarcresp/cursor-flake";
+  lanzaboote = builtins.getFlake "github:nix-community/lanzaboote/v1.0.1";
+  system = "x86_64-linux";
+in
 {
   imports =
-    [
-      # Include the results of the hardware scan.
+    [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       <home-manager/nixos>
+      ./server.nix
     ];
+  
 
   # Bootloader.
-  boot.loader.grub.enable = true;
-  boot.loader.grub.efiSupport = true;
-  boot.loader.grub.devices = [ "nodev" ];
-  boot.loader.grub.useOSProber = true;
+  # boot.loader.grub.enable = true;
+  # boot.loader.grub.efiSupport = true;
+  # boot.loader.grub.devices = ["nodev"];
+  # boot.loader.grub.useOSProber = true;
+  # boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.systemd-boot.enable = lib.mkForce false;
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.lanzaboote = {
+    enable = true;
+    pkiBundle = "/var/lib/sbctl";
+  };
 
-  networking.hostName = "nixos"; # Define your hostname.
+  networking.hostName = "carmenere"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary
@@ -62,15 +74,14 @@
       variant = "intl";
     };
     displayManager = {
-      gdm.enable = false;
       lightdm.enable = false;
-      sddm.enable = false;
     };
   };
 
   console.keyMap = "us-acentos";
 
   services.displayManager.sddm.enable = false;
+  services.displayManager.gdm.enable = false;
 
   # Save volume state on shutdown
   # hardware.pulseaudio.enable = true;
@@ -85,7 +96,7 @@
     isNormalUser = true;
     description = "Ellian Carlos";
     extraGroups = [ "networkmanager" "wheel" ];
-    packages = with pkgs; [ ];
+    packages = with pkgs; [];
     shell = pkgs.zsh;
   };
 
@@ -100,15 +111,14 @@
   environment.sessionVariables = {
     WLR_NO_HARDWARE_CURSORS = "1";
     NIXOS_OZONE_WL = "1";
-    GTK_IM_MODULE = "cedilla";
   };
 
   security.rtkit.enable = true;
   services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
+	  enable = true;
+	  alsa.enable = true;
+	  alsa.support32Bit = true;
+	  pulse.enable = true;
   };
 
   services.pulseaudio.enable = lib.mkForce false;
@@ -124,7 +134,7 @@
     noto-fonts-color-emoji
     liberation_ttf
   ];
-
+  
 
 
   hardware = {
@@ -140,86 +150,87 @@
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.allowUnfreePredicate = _: true;
 
-  system.autoUpgrade.enable = true;
-  system.autoUpgrade.allowReboot = true;
+  system.autoUpgrade.enable  = true;
+  system.autoUpgrade.allowReboot  = true;
 
-  # Allow for nix flakes
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   nix.settings.trusted-users = [ "root" "elliancarlos" ];
 
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
   environment.systemPackages = with pkgs; [
     git
     kitty
     zsh
 
-    # writers
+		# writers
     obsidian
 
-    # webbrowsers
+		# webbrowsers
     firefox
     qutebrowser
 
-    # programs utils
+		# programs utils
     killall
     bottom
 
-    ## find files and directories
+		## find files and directories
     ripgrep
     fd
 
-    ## print, select, copy
+		## print, select, copy
     grim
     slurp
     wl-clipboard
 
-    # coding
+		# coding
     vim
-    # neovim - home-manager
+		# neovim - home-manager
     jetbrains-toolbox
 
-    # env setup
+		# env setup
     waybar
-    # wofi - home-manager
+		# wofi - home-manager
     hyprlock
     hyprpaper
     hypridle
     brightnessctl
 
-    # screen sharing
+		# screen sharing
     pipewire
     wireplumber
     xdg-desktop-portal-hyprland
 
-    # gaming
+		# gaming
     steam
     discord
 
-    # music
+		# music
     spotify
 
-    # formatter test
-    nixfmt-rfc-style
+		# formatter test
+    nixfmt
 
-    # developer tools
+		# developer tools
     devenv
+    cursor-flake.packages.${system}.default
 
-    # video player
+		# video player
     mplayer
 
-    # image viewer
+		# image viewer
     sxiv
 
-    # qmk and keyboards
+		# qmk and keyboards
     via
     vial
+
+		# Boot Utils
+    sbctl
   ];
 
   programs.git = {
     enable = true;
   };
-
+  
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
