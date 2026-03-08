@@ -14,12 +14,12 @@
   home.packages = with pkgs; [
     oh-my-zsh
 
-    xclip
-    xsel
+    # xclip
+    # xsel
 
     zsh-powerlevel10k
 
-    gemini-cli
+    # gemini-cli
     # kiro
     # code-cursor
 
@@ -28,6 +28,11 @@
     wl-clipboard # Wayland clipboard utilities
 
     xournalpp
+
+    libvirt
+    libguestfs-with-appliance
+    guestfs-tools
+    wget
   ];
 
   home.pointerCursor = {
