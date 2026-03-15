@@ -14,6 +14,13 @@
   home.packages = with pkgs; [
     oh-my-zsh
 
+    # User Applications moved from system
+    kitty obsidian firefox discord spotify 
+    mplayer sxiv tmux devenv ticker
+    
+    # Wayland/Hyprland User Tools
+    grim slurp waybar hyprlock hyprpaper hypridle
+
     # xclip
     # xsel
 
@@ -34,6 +41,18 @@
     guestfs-tools
     wget
   ];
+
+  xdg.configFile = {
+    "hypr".source = ../hypr;
+    "kitty".source = ../kitty;
+    "waybar".source = ../waybar;
+    "bottom".source = ../bottom;
+    "nvim".source = ../nvim;
+    "wofi".source = ../wofi;
+    "neofetch".source = ../neofetch;
+    "wallpapers".source = ../wallpapers;
+    "background".source = ../background;
+  };
 
   home.pointerCursor = {
     gtk.enable = true;
@@ -64,6 +83,7 @@
     # # symlink to the Nix store copy.
     # ".screenrc".source = dotfiles/screenrc;
     ".p10k.zsh".source = ./p10k.zsh;
+    ".ticker.yaml".source = ../.ticker.yaml;
   };
 
   # Home Manager can also manage your environment variables through
@@ -87,7 +107,12 @@
 
     shellAliases = {
       la = "ls -la";
-      update = "sudo nixos-rebuild switch";
+      ll = "ls -l";
+      v = "nvim";
+      # Update NixOS by copying the local config to /etc/nixos and then rebuilding
+      update = "sudo cp -r ~/Projects/.dotfiles/nixos/* /etc/nixos/ && sudo nixos-rebuild switch";
+      # Quick garbage collection
+      gc = "nix-collect-garbage -d && sudo nix-collect-garbage -d";
     };
 
     autosuggestion.enable = true;
