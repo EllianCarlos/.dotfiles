@@ -1,5 +1,7 @@
 { config, pkgs, ... }:
-
+let
+  claude-code-flake = builtins.getFlake "github:sadjow/claude-code-nix";
+in
 {
   nixpkgs.config.allowUnfree = true;
 
@@ -9,17 +11,32 @@
   home.homeDirectory = "/home/elliancarlos";
   home.stateVersion = "25.05";
 
+  nixpkgs.overlays = [ claude-code-flake.overlays.default ];
+
   # The home.packages option allows you to install Nix packages into your
   # environment.
   home.packages = with pkgs; [
     oh-my-zsh
 
     # User Applications moved from system
-    kitty obsidian firefox discord spotify 
-    mplayer sxiv tmux devenv ticker
-    
+    kitty
+    obsidian
+    firefox
+    discord
+    spotify
+    mplayer
+    sxiv
+    tmux
+    devenv
+    ticker
+
     # Wayland/Hyprland User Tools
-    grim slurp waybar hyprlock hyprpaper hypridle
+    grim
+    slurp
+    waybar
+    hyprlock
+    hyprpaper
+    hypridle
 
     # xclip
     # xsel
@@ -29,6 +46,7 @@
     # gemini-cli
     # kiro
     # code-cursor
+    claude-code
 
     cliphist # Clipboard manager
     libnotify # Desktop notifications
@@ -240,6 +258,61 @@
       nimlangserver
     ];
   };
+
+  # Claude Code settings (permissions only - MCP servers go in ~/.claude.json)
+  home.activation.claudeSettings =
+    let
+      claudeSettingsFile = pkgs.writeText "claude-settings.json" (builtins.toJSON {
+        permissions = {
+          allow = [
+            "WebFetch(domain:github.com)"
+            "WebFetch(domain:raw.githubusercontent.com)"
+            "Bash(nix-channel --list)"
+          ];
+        };
+      });
+      # MCP servers must be in ~/.claude.json (not settings.json)
+      # env.PATH must include nodejs bin dir so spawned packages can find `node`
+      nodePath = "${pkgs.nodejs_22}/bin";
+      claudeMcpFile = pkgs.writeText "claude.json" (builtins.toJSON {
+        mcpServers = {
+          context7 = {
+            command = "${pkgs.nodejs_22}/bin/npx";
+            args = [ "-y" "@upstash/context7-mcp@latest" ];
+            env = { PATH = "${pkgs.nodejs_22}/bin:/usr/bin:/bin"; };
+          };
+          github = {
+            command = "${pkgs.nodejs_22}/bin/npx";
+            args = [ "-y" "@modelcontextprotocol/server-github" ];
+            env = { PATH = "${pkgs.nodejs_22}/bin:/usr/bin:/bin"; };
+          };
+          sequential-thinking = {
+            command = "${pkgs.nodejs_22}/bin/npx";
+            args = [ "-y" "@modelcontextprotocol/server-sequential-thinking" ];
+            env = { PATH = "${pkgs.nodejs_22}/bin:/usr/bin:/bin"; };
+          };
+          playwright = {
+            command = "${pkgs.nodejs_22}/bin/npx";
+            args = [ "-y" "@playwright/mcp" ];
+            env = { PATH = "${pkgs.nodejs_22}/bin:/usr/bin:/bin"; };
+          };
+        };
+      });
+    in
+    config.lib.dag.entryAfter [ "writeBoundary" ] ''
+      mkdir -p "$HOME/.claude"
+      rm -f "$HOME/.claude/settings.json"
+      cp ${claudeSettingsFile} "$HOME/.claude/settings.json"
+      chmod 644 "$HOME/.claude/settings.json"
+
+      if [ -f "$HOME/.claude.json" ]; then
+        ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$HOME/.claude.json" ${claudeMcpFile} > "$HOME/.claude.json.tmp"
+        mv "$HOME/.claude.json.tmp" "$HOME/.claude.json"
+      else
+        cp ${claudeMcpFile} "$HOME/.claude.json"
+      fi
+      chmod 644 "$HOME/.claude.json"
+    '';
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
