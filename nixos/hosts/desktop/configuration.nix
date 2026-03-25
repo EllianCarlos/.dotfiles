@@ -1,11 +1,11 @@
 { config, pkgs, lib, ... }:
 
-let 
+let
   lanzaboote = builtins.getFlake "github:nix-community/lanzaboote/v1.0.0";
   system = "x86_64-linux";
 in
 {
-  imports = [ 
+  imports = [
     <home-manager/nixos>
     ./hardware-configuration.nix
     ../../server.nix
@@ -19,6 +19,7 @@ in
     ../../modules/core/flakes.nix
     ../../modules/desktop/hyprland.nix
     ../../modules/hardware/audio.nix
+    ../../modules/hardware/printer.nix
     ../../modules/services/tailscale.nix
     ../../modules/services/virtualisation.nix
   ];
@@ -92,23 +93,24 @@ in
   # Desktop extra packages
   environment.systemPackages = with pkgs; [
     sbctl
-    (import <nixos-stable> { 
-      inherit system; 
-      config.allowUnfree = true; 
+    (import <nixos-stable> {
+      inherit system;
+      config.allowUnfree = true;
     }).qemu_full
   ];
 
   # System Upgrade
-  system.autoUpgrade.enable  = true;
-  system.autoUpgrade.allowReboot  = true;
+  system.autoUpgrade.enable = true;
+  system.autoUpgrade.allowReboot = true;
 
   # Gaming
   programs.steam = {
-    enable = false; 
-    remotePlay.openFirewall = true; 
-    dedicatedServer.openFirewall = true; 
-    localNetworkGameTransfers.openFirewall = true; 
+    enable = false;
+    remotePlay.openFirewall = true;
+    dedicatedServer.openFirewall = true;
+    localNetworkGameTransfers.openFirewall = true;
   };
 
   system.stateVersion = "25.05";
 }
+
