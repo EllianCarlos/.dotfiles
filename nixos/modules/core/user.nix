@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 
 {
   programs.zsh.enable = true;
@@ -12,3 +12,4 @@
   home-manager.users.elliancarlos = import /home/elliancarlos/Projects/.dotfiles/.config/home-manager/home.nix;
   home-manager.backupFileExtension = "backup";
 }
+
