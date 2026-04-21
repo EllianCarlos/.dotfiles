@@ -70,7 +70,6 @@ in
     "neofetch".source = ../neofetch;
     "wallpapers".source = ../wallpapers;
     "background".source = ../background;
-    "pipewire".source = ../pipewire;
   };
 
   home.pointerCursor = {
