@@ -1,6 +1,20 @@
 { config, pkgs, ... }:
 let
   claude-code-flake = builtins.getFlake "github:sadjow/claude-code-nix";
+  mnemon = pkgs.stdenv.mkDerivation {
+    pname = "mnemon";
+    version = "0.1.3";
+    src = pkgs.fetchurl {
+      url = "https://github.com/mnemon-dev/mnemon/releases/download/v0.1.3/mnemon_0.1.3_linux_amd64.tar.gz";
+      hash = "sha256-38pH9YNNSv0yycdufodqvJ+8ofrI5QFm9qm6NnPOQbA=";
+    };
+    unpackPhase = "tar xzf $src";
+    dontBuild = true;
+    installPhase = ''
+      mkdir -p $out/bin
+      install -m755 mnemon $out/bin/mnemon
+    '';
+  };
 in
 {
   nixpkgs.config.allowUnfree = true;
@@ -29,6 +43,7 @@ in
     tmux
     devenv
     ticker
+    zip
 
     # Wayland/Hyprland User Tools
     grim
@@ -47,6 +62,7 @@ in
     # kiro
     # code-cursor
     claude-code
+    mnemon
 
     cliphist # Clipboard manager
     libnotify # Desktop notifications
@@ -131,6 +147,11 @@ in
       update = "sudo cp -r ~/Projects/.dotfiles/nixos/* /etc/nixos/ && sudo nixos-rebuild switch";
       # Quick garbage collection
       gc = "nix-collect-garbage -d && sudo nix-collect-garbage -d";
+
+      # Change default sink 
+      audio-headset = "audio-to alsa_output.usb-Logitech_G535_Wireless_Gaming_Headset-00.analog-stereo";
+      audio-hdmi = "audio-to alsa_output.pci-0000_03_00.1.hdmi-stereo-extra1";
+      audio-combine = "audio-to combine-sink";
     };
 
     autosuggestion.enable = true;
@@ -138,13 +159,20 @@ in
     syntaxHighlighting.enable = true;
 
     initContent = ''
-      if [[ -r "$\{XDG_CACHE_HOME:-$HOME/.cache\}/p10k-instant-prompt-$\{(%):-%n\}.zsh" ]]; then
-        source "$\{XDG_CACHE_HOME:-$HOME/.cache\}/p10k-instant-prompt-$\{(%):-%n\}.zsh"
+      if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
+        source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
       fi
     '';
 
     initExtra = ''
       [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+      audio-to() {
+        pactl set-default-sink "$1"
+        for i in $(pactl list short sink-inputs | cut -f1); do
+          pactl move-sink-input "$i" "$1" 2>/dev/null
+        done
+      }
     '';
 
     # zplug = {
@@ -277,32 +305,47 @@ in
       claudeMcpFile = pkgs.writeText "claude.json" (builtins.toJSON {
         mcpServers = {
           context7 = {
-            command = "${pkgs.nodejs_22}/bin/npx";
+            command = "${nodePath}/npx";
             args = [ "-y" "@upstash/context7-mcp@latest" ];
-            env = { PATH = "${pkgs.nodejs_22}/bin:/usr/bin:/bin"; };
+            env = { PATH = "${nodePath}:/usr/bin:/bin"; };
           };
           github = {
-            command = "${pkgs.nodejs_22}/bin/npx";
+            command = "${nodePath}/npx";
             args = [ "-y" "@modelcontextprotocol/server-github" ];
-            env = { PATH = "${pkgs.nodejs_22}/bin:/usr/bin:/bin"; };
+            env = { PATH = "${nodePath}:/usr/bin:/bin"; };
           };
           sequential-thinking = {
-            command = "${pkgs.nodejs_22}/bin/npx";
+            command = "${nodePath}/npx";
             args = [ "-y" "@modelcontextprotocol/server-sequential-thinking" ];
-            env = { PATH = "${pkgs.nodejs_22}/bin:/usr/bin:/bin"; };
+            env = { PATH = "${nodePath}:/usr/bin:/bin"; };
           };
           playwright = {
-            command = "${pkgs.nodejs_22}/bin/npx";
+            command = "${nodePath}/npx";
             args = [ "-y" "@playwright/mcp" ];
-            env = { PATH = "${pkgs.nodejs_22}/bin:/usr/bin:/bin"; };
+            env = { PATH = "${nodePath}:/usr/bin:/bin"; };
           };
         };
       });
     in
     config.lib.dag.entryAfter [ "writeBoundary" ] ''
       mkdir -p "$HOME/.claude"
-      rm -f "$HOME/.claude/settings.json"
-      cp ${claudeSettingsFile} "$HOME/.claude/settings.json"
+
+      # Install mnemon hook scripts and skill (idempotent)
+      ${mnemon}/bin/mnemon setup --global --target claude-code --yes
+
+      # mnemon ships hooks with `#!/bin/bash`, which doesn't exist on NixOS.
+      # Rewrite to `#!/usr/bin/env bash` so the kernel can locate the interpreter.
+      for hook in "$HOME"/.claude/hooks/mnemon/*.sh; do
+        [ -f "$hook" ] && ${pkgs.gnused}/bin/sed -i '1s|^#!/bin/bash|#!/usr/bin/env bash|' "$hook"
+      done
+
+      # Merge Nix permissions into settings.json, preserving mnemon hooks
+      if [ -f "$HOME/.claude/settings.json" ]; then
+        ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$HOME/.claude/settings.json" ${claudeSettingsFile} > "$HOME/.claude/settings.json.tmp"
+        mv "$HOME/.claude/settings.json.tmp" "$HOME/.claude/settings.json"
+      else
+        cp ${claudeSettingsFile} "$HOME/.claude/settings.json"
+      fi
       chmod 644 "$HOME/.claude/settings.json"
 
       if [ -f "$HOME/.claude.json" ]; then
