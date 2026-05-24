@@ -32,7 +32,8 @@ in
     pkiBundle = "/var/lib/sbctl";
   };
 
-  boot.kernelPackages = pkgs.linuxPackages_6_6;
+  # Attempting to use newer kernel version
+  # boot.kernelPackages = pkgs.linuxPackages_6_6;
   boot.kernelParams = [ "nowatchdog" ];
   systemd.settings.Manager = {
     RuntimeWatchdogSec = 0;
@@ -81,7 +82,7 @@ in
   # Hardware specifics
   hardware = {
     opengl.enable = true;
-    mwProCapture.enable = true;
+    # mwProCapture.enable = true;
     keyboard.qmk.enable = true;
     graphics = {
       enable = true;

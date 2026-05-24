@@ -17,11 +17,11 @@
             "node.description" = "Combined";
             "combine.latency-compensate" = false;
             "combine.props"."audio.position" = [ "FL" "FR" ];
-            "stream.props" = {};
+            "stream.props" = { };
             "stream.rules" = [
               {
                 matches = [{ "media.class" = "Audio/Sink"; "node.name" = "~alsa_output.*"; }];
-                actions."create-stream" = {};
+                actions."create-stream" = { };
               }
             ];
           };
@@ -43,3 +43,4 @@
   '';
   services.pulseaudio.enable = lib.mkForce false;
 }
+
