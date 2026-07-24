@@ -320,6 +320,35 @@ in
             "WebFetch(domain:github.com)"
             "WebFetch(domain:raw.githubusercontent.com)"
             "Bash(nix-channel --list)"
+
+            # Read-only Hyprland state queries (mutating verbs — keyword,
+            # dispatch, reload — are deliberately left out).
+            "Bash(hyprctl monitors)"
+            "Bash(hyprctl monitors *)"
+            "Bash(hyprctl configerrors)"
+            "Bash(hyprctl version)"
+            "Bash(hyprctl systeminfo)"
+            "Bash(hyprctl instances)"
+            "Bash(hyprctl dispatchers)"
+            "Bash(hyprctl cursorpos)"
+            "Bash(hyprctl clients)"
+            "Bash(hyprctl clients *)"
+            "Bash(hyprctl workspaces)"
+            "Bash(hyprctl workspaces *)"
+            "Bash(hyprctl activewindow)"
+            "Bash(hyprctl activewindow *)"
+            "Bash(hyprctl getoption *)"
+            "Bash(hyprctl binds)"
+            "Bash(hyprctl devices)"
+
+            # Crash inspection and font resolution.
+            "Bash(coredumpctl list *)"
+            "Bash(coredumpctl info *)"
+            "Bash(fc-match *)"
+            "Bash(fc-list)"
+            "Bash(fc-list *)"
+
+            "Bash(mnemon recall *)"
           ];
         };
         # mnemon hooks (scripts symlinked in via home.file above).
