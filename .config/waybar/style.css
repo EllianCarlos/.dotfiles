@@ -53,7 +53,7 @@ Catppuccin Mocha Color Scheme
 /* The whole bar */
 window#waybar {
     background-color: rgba(0,0,0,0); /* Transparent */
-    font-family: Intel One Mono Nerd Font;
+    font-family: FiraCode Nerd Font;
     font-size: 14px;
 }
 

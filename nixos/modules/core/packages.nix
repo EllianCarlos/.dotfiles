@@ -19,6 +19,7 @@
     wl-clipboard wireplumber
     brightnessctl nixfmt-rfc-style
     via vial wget curl
+    unrar
   ];
 
   # Basic tools

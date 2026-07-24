@@ -1,7 +1,7 @@
 { config, pkgs, lib, ... }:
 
 let
-  lanzaboote = builtins.getFlake "github:nix-community/lanzaboote/v1.0.0";
+  lanzaboote = builtins.getFlake "github:nix-community/lanzaboote/v1.1.0";
   system = "x86_64-linux";
 in
 {

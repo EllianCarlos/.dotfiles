@@ -44,6 +44,7 @@ in
     devenv
     ticker
     zip
+    stress-ng
 
     # Wayland/Hyprland User Tools
     grim
@@ -118,6 +119,28 @@ in
     # ".screenrc".source = dotfiles/screenrc;
     ".p10k.zsh".source = ./p10k.zsh;
     ".ticker.yaml".source = ../.ticker.yaml;
+
+    # mnemon: manage hooks/prompt/skill declaratively instead of running
+    # `mnemon setup` at activation. The vendored copies fix two upstream bugs:
+    # hooks use `#!/usr/bin/env bash` (NixOS has no /bin/bash), and guide.md
+    # stores memories via the real `subagent_type="general-purpose"` agent
+    # (mnemon ships a non-existent "Bash" agent). The data store
+    # (~/.mnemon/data) is stateful and self-initialises on first use.
+    ".mnemon/prompt/guide.md".source = ./mnemon/guide.md;
+    ".mnemon/prompt/skill.md".source = ./mnemon/skill.md;
+    ".claude/skills/mnemon/SKILL.md".source = ./mnemon/skill.md;
+    ".claude/hooks/mnemon/prime.sh" = {
+      source = ./mnemon/hooks/prime.sh;
+      executable = true;
+    };
+    ".claude/hooks/mnemon/stop.sh" = {
+      source = ./mnemon/hooks/stop.sh;
+      executable = true;
+    };
+    ".claude/hooks/mnemon/user_prompt.sh" = {
+      source = ./mnemon/hooks/user_prompt.sh;
+      executable = true;
+    };
   };
 
   # Home Manager can also manage your environment variables through
@@ -290,6 +313,7 @@ in
   # Claude Code settings (permissions only - MCP servers go in ~/.claude.json)
   home.activation.claudeSettings =
     let
+      hooksDir = "${config.home.homeDirectory}/.claude/hooks/mnemon";
       claudeSettingsFile = pkgs.writeText "claude-settings.json" (builtins.toJSON {
         permissions = {
           allow = [
@@ -297,6 +321,12 @@ in
             "WebFetch(domain:raw.githubusercontent.com)"
             "Bash(nix-channel --list)"
           ];
+        };
+        # mnemon hooks (scripts symlinked in via home.file above).
+        hooks = {
+          SessionStart = [{ hooks = [{ type = "command"; command = "${hooksDir}/prime.sh"; }]; }];
+          Stop = [{ hooks = [{ type = "command"; command = "${hooksDir}/stop.sh"; }]; }];
+          UserPromptSubmit = [{ hooks = [{ type = "command"; command = "${hooksDir}/user_prompt.sh"; }]; }];
         };
       });
       # MCP servers must be in ~/.claude.json (not settings.json)
@@ -330,16 +360,11 @@ in
     config.lib.dag.entryAfter [ "writeBoundary" ] ''
       mkdir -p "$HOME/.claude"
 
-      # Install mnemon hook scripts and skill (idempotent)
-      ${mnemon}/bin/mnemon setup --global --target claude-code --yes
+      # mnemon's hooks, prompt, and skill are installed declaratively via
+      # home.file (see the mnemon entries above); the data store self-initialises
+      # on first use, so no `mnemon setup` is needed here.
 
-      # mnemon ships hooks with `#!/bin/bash`, which doesn't exist on NixOS.
-      # Rewrite to `#!/usr/bin/env bash` so the kernel can locate the interpreter.
-      for hook in "$HOME"/.claude/hooks/mnemon/*.sh; do
-        [ -f "$hook" ] && ${pkgs.gnused}/bin/sed -i '1s|^#!/bin/bash|#!/usr/bin/env bash|' "$hook"
-      done
-
-      # Merge Nix permissions into settings.json, preserving mnemon hooks
+      # Merge Nix-managed settings (permissions + mnemon hooks) into settings.json
       if [ -f "$HOME/.claude/settings.json" ]; then
         ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$HOME/.claude/settings.json" ${claudeSettingsFile} > "$HOME/.claude/settings.json.tmp"
         mv "$HOME/.claude/settings.json.tmp" "$HOME/.claude/settings.json"

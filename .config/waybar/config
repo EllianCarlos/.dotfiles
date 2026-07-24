@@ -31,8 +31,8 @@
         // "backlight#value",
         "pulseaudio",
     "pulseaudio#microphone",
-        "network",
-        "battery",
+        // "battery" removed: desktop has no battery; module crashes waybar (SIGABRT) on transient /sys/class/power_supply devices
+        "network"
     ],
 
     // Modules
