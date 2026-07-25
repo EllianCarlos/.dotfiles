@@ -1,6 +1,7 @@
 { config, lib, pkgs, osConfig ? null, ... }:
 let
   claude-code-flake = builtins.getFlake "github:sadjow/claude-code-nix";
+  agentSkillsFlake = builtins.getFlake "github:Kyure-A/agent-skills-nix";
 
   # kitty and waybar name fonts as plain strings that fontconfig resolves at
   # runtime. Fontconfig never fails: an unknown family silently falls back to
@@ -74,6 +75,11 @@ let
   };
 in
 {
+  imports = [
+    agentSkillsFlake.homeManagerModules.default
+    ./skills.nix
+  ];
+
   nixpkgs.config.allowUnfree = true;
 
   # Home Manager needs a bit of information about you and the paths it should
@@ -134,7 +140,7 @@ in
     # Not a program -- an empty package whose build fails if the font families
     # named in kitty.conf / waybar style.css are not actually installed.
     checkFontFamilies
-  ];
+  ] ++ (import ./loop-tools.nix { inherit pkgs; });
 
   xdg.configFile = {
     "hypr".source = ../hypr;
@@ -583,11 +589,38 @@ in
             "mcp__sequential-thinking__*"
             "mcp__time__*"
 
-            # obsidian-mestrado/obsidian-second-brain (mcp-obsidian@1.0.0) expose
-            # only read_notes and search_notes -- no write/delete tools exist in
-            # this package version, so a full wildcard is safe.
-            "mcp__obsidian-mestrado__*"
-            "mcp__obsidian-second-brain__*"
+            # obsidian-mestrado/obsidian-second-brain (seekstone) -- read-only
+            # tools plus the non-destructive additive writes (append_note,
+            # get/append_periodic_note never overwrite existing content).
+            # create_note and move_note stay excluded: both take an
+            # overwrite:true param that would let Claude silently clobber
+            # existing note content, and MCP tool permission rules can't
+            # distinguish overwrite:true from false. delete_note,
+            # patch_frontmatter, patch_note, replace_in_note also stay
+            # excluded and keep prompting.
+            "mcp__obsidian-mestrado__search"
+            "mcp__obsidian-mestrado__query_notes"
+            "mcp__obsidian-mestrado__read_note"
+            "mcp__obsidian-mestrado__list_notes"
+            "mcp__obsidian-mestrado__list_tags"
+            "mcp__obsidian-mestrado__outline_note"
+            "mcp__obsidian-mestrado__get_backlinks"
+            "mcp__obsidian-mestrado__get_links"
+            "mcp__obsidian-mestrado__append_note"
+            "mcp__obsidian-mestrado__get_periodic_note"
+            "mcp__obsidian-mestrado__append_periodic_note"
+
+            "mcp__obsidian-second-brain__search"
+            "mcp__obsidian-second-brain__query_notes"
+            "mcp__obsidian-second-brain__read_note"
+            "mcp__obsidian-second-brain__list_notes"
+            "mcp__obsidian-second-brain__list_tags"
+            "mcp__obsidian-second-brain__outline_note"
+            "mcp__obsidian-second-brain__get_backlinks"
+            "mcp__obsidian-second-brain__get_links"
+            "mcp__obsidian-second-brain__append_note"
+            "mcp__obsidian-second-brain__get_periodic_note"
+            "mcp__obsidian-second-brain__append_periodic_note"
 
             "mcp__git__git_status"
             "mcp__git__git_diff"
@@ -731,7 +764,13 @@ in
       chmod 644 "$HOME/.claude/settings.json"
 
       if [ -f "$HOME/.claude.json" ]; then
-        ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$HOME/.claude.json" ${claudeMcpFile} > "$HOME/.claude.json.tmp"
+        # jq's `*` deep-merges nested objects, so per-server fields removed
+        # from mcp.nix (e.g. a stale `args` from before a wrapper existed)
+        # would otherwise survive forever in mcpServers.<name>. Force
+        # mcpServers to be wholesale-replaced by the new config instead of
+        # deep-merged, while still deep-merging everything else (OAuth
+        # tokens, project state, etc. that Nix doesn't manage).
+        ${pkgs.jq}/bin/jq -s '.[0] as $old | .[1] as $new | ($old * $new) | .mcpServers = $new.mcpServers' "$HOME/.claude.json" ${claudeMcpFile} > "$HOME/.claude.json.tmp"
         mv "$HOME/.claude.json.tmp" "$HOME/.claude.json"
       else
         cp ${claudeMcpFile} "$HOME/.claude.json"

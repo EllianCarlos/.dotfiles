@@ -13,11 +13,6 @@ let
     export UV_PYTHON_PREFERENCE=only-system
   '';
 
-  # mcp-obsidian's shebang is `#!/usr/bin/env node`, unpatched since npx
-  # fetches it fresh at runtime instead of nixpkgs building it -- needs
-  # node's directory on PATH. Verified: without this, npx fails with
-  # "env: 'node': No such file or directory".
-  #
   # Claude Code spawns MCP servers with a stripped env, not a login shell's
   # PATH -- so "$PATH" here can be empty, and npx also shells out to `sh`
   # internally. Without /usr/bin:/bin explicitly present, that spawn fails
@@ -31,12 +26,12 @@ let
   # settings.servers entry below so each gets exactly the env it needs
   # without polluting the others.
   mkWrapper =
-    {
-      name,
-      exe,
-      args ? [ ],
-      extraEnv ? [ ],
-      withSecrets ? false,
+    { name
+    , exe
+    , args ? [ ]
+    , extraEnv ? [ ]
+    , withSecrets ? false
+    ,
     }:
     pkgs.writeShellScriptBin name ''
       ${lib.concatStringsSep "\n" extraEnv}
@@ -78,22 +73,29 @@ mcp-services-nix.lib.mkConfig pkgs {
           args = [ "postgres-mcp" "--access-mode=restricted" ];
         }}/bin/postgres-mcp-wrapped";
     };
+    # mcp-obsidian@1.0.0 (npm) is abandoned -- only version ever published,
+    # no repo/bugs link -- and its tools/list response omits inputSchema.type
+    # entirely, which Claude Code's stricter validation rejects outright
+    # ("tools fetch failed"). Verified by hand-sending initialize+tools/list
+    # over stdio. seekstone reads the vault directly from disk (no Obsidian
+    # app or Local REST API plugin needed, like the old setup) and was
+    # verified to return well-formed schemas against the mestrado vault.
     obsidian-mestrado = {
       command =
         "${mkWrapper {
           name = "obsidian-mestrado-wrapped";
-          extraEnv = [ nodePathEnv ];
+          extraEnv = [ nodePathEnv "export SEEKSTONE_VAULT=${lib.escapeShellArg "/home/elliancarlos/Projects/mestrado-space/mestrado"}" ];
           exe = "${pkgs.nodejs}/bin/npx";
-          args = [ "-y" "mcp-obsidian@1.0.0" "/home/elliancarlos/Projects/mestrado-space/mestrado" ];
+          args = [ "-y" "seekstone" ];
         }}/bin/obsidian-mestrado-wrapped";
     };
     obsidian-second-brain = {
       command =
         "${mkWrapper {
           name = "obsidian-second-brain-wrapped";
-          extraEnv = [ nodePathEnv ];
+          extraEnv = [ nodePathEnv "export SEEKSTONE_VAULT=${lib.escapeShellArg "/home/elliancarlos/Projects/second-brain"}" ];
           exe = "${pkgs.nodejs}/bin/npx";
-          args = [ "-y" "mcp-obsidian@1.0.0" "/home/elliancarlos/Projects/second-brain" ];
+          args = [ "-y" "seekstone" ];
         }}/bin/obsidian-second-brain-wrapped";
     };
     # Remote, Cockroach Labs-hosted server -- no local process, no secret.
