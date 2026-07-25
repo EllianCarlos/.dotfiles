@@ -5,7 +5,7 @@
     "margin": 2,
 
     // If height property would be not present, it'd be calculated dynamically
-    "height": 30,
+    "height": 34,
 
     "modules-left": [
         // "custom/launcher",
@@ -96,7 +96,7 @@
 
     "disk": {
         "interval": 30,
-        "format": "  {percentage_used}%",
+        "format": "  {percentage_used}%", // Icon: hdd
         "path": "/",
         "tooltip-format": "Used: {used} / {total}\nFree: {free} ({percentage_free}%)"
     },
@@ -105,7 +105,7 @@
         "interval": 10,
         "hwmon-path": "/sys/class/hwmon/hwmon2/temp1_input",
         "critical-threshold": 80,
-        "format": " {temperatureC}°C",
+        "format": "  {temperatureC}°C", // Icon: thermometer-half
         "tooltip-format": "Temperature: {temperatureC}°C"
     },
 
@@ -124,14 +124,14 @@
         "interval": 5,
         "format-wifi": " ", // Icon: wifi
         "format-ethernet": " ", // Icon: ethernet
-        "format-disconnected": "⚠  Disconnected",
+        "format-disconnected": "  Disconnected",
         "tooltip-format": "{ifname}: {ipaddr}/{cidr}\nSignal: {signalStrength}%\n: {bandwidthDownBits}\n: {bandwidthUpBits}",
         "on-click": "kitty -e 'nmtui'",
     },
     "network#vpn": {
         "interface": "tun0",
         "format": " ",
-        "format-disconnected": "⚠  Disconnected",
+        "format-disconnected": "  Disconnected",
         "tooltip-format": "{ifname}: {ipaddr}/{cidr}",
     },
 
@@ -163,12 +163,12 @@
         "scroll-step": 1, // %, can be a float
         "format": "{icon} {volume}%",
         "format-bluetooth": "{volume}% {icon}  {format_source}",
-        "format-bluetooth-muted": " {icon}  {format_source}",
+        "format-bluetooth-muted": "󰸈 {icon}  {format_source}",
         "format-muted": "󰸈",
         "format-icons": {
             "headphone": "󰋋",
-            "hands-free": "וֹ",
-            "headset": "  ",
+            "hands-free": "󰋎",
+            "headset": "  ",
             "phone": "",
             "portable": "",
             "car": "",

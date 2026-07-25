@@ -1,6 +1,63 @@
-{ config, pkgs, ... }:
+{ config, lib, pkgs, osConfig ? null, ... }:
 let
   claude-code-flake = builtins.getFlake "github:sadjow/claude-code-nix";
+
+  # kitty and waybar name fonts as plain strings that fontconfig resolves at
+  # runtime. Fontconfig never fails: an unknown family silently falls back to
+  # whatever else it can find, so a typo or an upstream font rename degrades
+  # quietly instead of erroring -- which is how kitty.conf asked for the
+  # never-installed "Fira Code" for over a year while actually rendering
+  # DejaVu Sans Mono, with icons served by the shrunken *Mono* Nerd Font.
+  #
+  # Nix cannot catch that by itself: xdg.configFile copies these files as
+  # opaque bytes and has no idea they name a font. So extract the families the
+  # configs actually ask for and fail the build when the installed font
+  # packages do not provide them. Compares against osConfig.fonts.packages,
+  # the real system font set -- a hand-written list of expected names would
+  # just repeat whatever name is already wrong in the config, and pass.
+  fontPackages =
+    if osConfig == null
+    then throw "home.nix: osConfig is unavailable, so the font-family check cannot read fonts.packages. Remove the check or give it an explicit package list rather than letting it silently pass."
+    else osConfig.fonts.packages;
+
+  checkFontFamilies = pkgs.runCommand "check-font-families"
+    { nativeBuildInputs = [ pkgs.fontconfig.bin ]; } ''
+    dirs=""
+    for d in ${lib.escapeShellArgs (map (p: "${p}/share/fonts") fontPackages)}; do
+      [ -d "$d" ] && dirs="$dirs $d"
+    done
+
+    # stderr is only sandbox noise about unwritable font caches
+    fc-scan --format '%{family}\n' $dirs 2>/dev/null \
+      | tr ',' '\n' | sed 's/^[ "]*//; s/[ "]*$//' | grep -v '^$' | sort -u > installed
+
+    # font_family in kitty.conf, font-family in waybar's stylesheet
+    {
+      sed -n 's/^font_family[[:space:]]\+//p' ${../kitty/kitty.conf}
+      sed -n 's/.*font-family:[[:space:]]*\([^;]*\);.*/\1/p' ${../waybar/style.css}
+    } | tr ',' '\n' | sed 's/^[ "]*//; s/[ "]*$//' | grep -v '^$' | sort -u > wanted
+
+    missing=$(grep -Fxv -f installed wanted || true)
+    if [ -n "$missing" ]; then
+      echo "" >&2
+      echo "error: these font families are referenced by config, but no installed" >&2
+      echo "font package provides them (fontconfig would silently fall back):" >&2
+      echo "" >&2
+      echo "$missing" | while IFS= read -r fam; do
+        echo "  - $fam" >&2
+        # squash case and spaces so "Fira Code" suggests "FiraCode Nerd Font"
+        key=$(printf '%s' "$fam" | tr -d ' ' | tr '[:upper:]' '[:lower:]')
+        awk -v k="$key" \
+          '{ n = tolower($0); gsub(/ /, "", n); if (index(n, k)) print "      did you mean: " $0 }' \
+          installed >&2
+      done
+      echo "" >&2
+      echo "($(wc -l < installed) families installed; run 'fc-list : family' to list them)" >&2
+      exit 1
+    fi
+
+    mkdir -p "$out"
+  '';
   mnemon = pkgs.stdenv.mkDerivation {
     pname = "mnemon";
     version = "0.1.3";
@@ -45,6 +102,7 @@ in
     ticker
     zip
     stress-ng
+    jq
 
     # Wayland/Hyprland User Tools
     grim
@@ -54,12 +112,9 @@ in
     hyprpaper
     hypridle
 
-    # xclip
-    # xsel
-
     zsh-powerlevel10k
 
-    # gemini-cli
+    gemini-cli
     # kiro
     # code-cursor
     claude-code
@@ -75,6 +130,10 @@ in
     libguestfs-with-appliance
     guestfs-tools
     wget
+  ] ++ [
+    # Not a program -- an empty package whose build fails if the font families
+    # named in kitty.conf / waybar style.css are not actually installed.
+    checkFontFamilies
   ];
 
   xdg.configFile = {
@@ -106,6 +165,10 @@ in
     cursorTheme = {
       package = pkgs.bibata-cursors;
       name = "Bibata-Modern-Classic";
+    };
+    iconTheme = {
+      package = pkgs.papirus-icon-theme;
+      name = "Papirus-Dark";
     };
   };
 
@@ -197,13 +260,6 @@ in
         done
       }
     '';
-
-    # zplug = {
-    #     enable=true;
-    #     plugins = [
-    #       { name = "romkatv/powerlevel10k"; tags = [ as:theme depth:1 ]; } # Installations with additional options. For the list of options, please refer to Zplug README.
-    #     ];
-    # };
 
     oh-my-zsh = {
       enable = true;
@@ -349,6 +405,10 @@ in
             "Bash(fc-list *)"
 
             "Bash(mnemon recall *)"
+            "Read(*)"
+            "grep *"
+            "cat *"
+            "ls *"
           ];
         };
         # mnemon hooks (scripts symlinked in via home.file above).
@@ -359,32 +419,8 @@ in
         };
       });
       # MCP servers must be in ~/.claude.json (not settings.json)
-      # env.PATH must include nodejs bin dir so spawned packages can find `node`
-      nodePath = "${pkgs.nodejs_22}/bin";
-      claudeMcpFile = pkgs.writeText "claude.json" (builtins.toJSON {
-        mcpServers = {
-          context7 = {
-            command = "${nodePath}/npx";
-            args = [ "-y" "@upstash/context7-mcp@latest" ];
-            env = { PATH = "${nodePath}:/usr/bin:/bin"; };
-          };
-          github = {
-            command = "${nodePath}/npx";
-            args = [ "-y" "@modelcontextprotocol/server-github" ];
-            env = { PATH = "${nodePath}:/usr/bin:/bin"; };
-          };
-          sequential-thinking = {
-            command = "${nodePath}/npx";
-            args = [ "-y" "@modelcontextprotocol/server-sequential-thinking" ];
-            env = { PATH = "${nodePath}:/usr/bin:/bin"; };
-          };
-          playwright = {
-            command = "${nodePath}/npx";
-            args = [ "-y" "@playwright/mcp" ];
-            env = { PATH = "${nodePath}:/usr/bin:/bin"; };
-          };
-        };
-      });
+      # Server list, packages, and secrets wiring are declared in ./mcp.nix
+      claudeMcpFile = import ./mcp.nix { inherit pkgs; };
     in
     config.lib.dag.entryAfter [ "writeBoundary" ] ''
       mkdir -p "$HOME/.claude"

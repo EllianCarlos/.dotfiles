@@ -54,7 +54,7 @@ Catppuccin Mocha Color Scheme
 window#waybar {
     background-color: rgba(0,0,0,0); /* Transparent */
     font-family: FiraCode Nerd Font;
-    font-size: 14px;
+    font-size: 15px;
 }
 
 /* Every modules */
@@ -192,17 +192,17 @@ window#waybar {
 
 #window {
     font-weight: normal;   /* Changed from bold */
-    font-size: 12px;       /* New */
+    font-size: 13px;       /* New */
     color: #f38ba8; /* Mocha Red */
 }
 
 #custom-media {
-    font-size: 12px;       /* New */
+    font-size: 13px;       /* New */
     color: #cba6f7; /* Mocha Mauve */
 }
 
 #workspaces {
-    font-size: 12px;    /* Reduced from 16px */
+    font-size: 13px;    /* Reduced from 16px */
     background-color: rgba(49, 50, 68, 0.8); /* Mocha Surface 0 with transparency */
     border-radius: 20px;
 }
