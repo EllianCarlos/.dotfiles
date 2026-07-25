@@ -17,7 +17,14 @@ let
   # fetches it fresh at runtime instead of nixpkgs building it -- needs
   # node's directory on PATH. Verified: without this, npx fails with
   # "env: 'node': No such file or directory".
-  nodePathEnv = "export PATH=${pkgs.nodejs}/bin:$PATH";
+  #
+  # Claude Code spawns MCP servers with a stripped env, not a login shell's
+  # PATH -- so "$PATH" here can be empty, and npx also shells out to `sh`
+  # internally. Without /usr/bin:/bin explicitly present, that spawn fails
+  # with "npm error enoent spawn sh ENOENT" (verified by replicating Claude
+  # Code's env -i launch locally). Prepending is not enough; /usr/bin:/bin
+  # must be included outright.
+  nodePathEnv = "export PATH=${pkgs.nodejs}/bin:/usr/bin:/bin:$PATH";
 
   # Generic wrapper: exec `exe args...` after running some setup shell
   # snippets first (env exports, secret loading). Used for every

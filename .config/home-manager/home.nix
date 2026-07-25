@@ -377,6 +377,9 @@ in
             "WebFetch(domain:raw.githubusercontent.com)"
             "Bash(nix-channel --list)"
 
+            "Bash(* --version)"
+            "Bash(* --help *)"
+
             # Read-only Hyprland state queries (mutating verbs — keyword,
             # dispatch, reload — are deliberately left out).
             "Bash(hyprctl monitors)"
@@ -404,11 +407,300 @@ in
             "Bash(fc-list)"
             "Bash(fc-list *)"
 
+            "Agent(*)"
+            "Bash(run_in_backgroun:true)"
+
             "Bash(mnemon recall *)"
             "Read(*)"
-            "grep *"
-            "cat *"
-            "ls *"
+
+            # Built-in tools with no external side effects: loading a skill's
+            # instructions, inspecting/tracking Claude's own subagent tasks,
+            # read-only MCP resource listing, code nav/diagnostics, and
+            # streaming output of an already-running background process.
+            "Skill"
+            "TaskCreate"
+            "TaskUpdate"
+            "TaskGet"
+            "TaskList"
+            "TaskOutput"
+            "ListMcpResourcesTool"
+            "ReadMcpResourceTool"
+            "ReadMcpResourceDirTool"
+            "LSP"
+            "Monitor"
+            "WebSearch"
+
+            # Broad read-only filesystem commands (secrets protected via deny list below)
+            "Bash(ls)"
+            "Bash(ls *)"
+            "Bash(cat *)"
+            "Bash(grep *)"
+            "Bash(pwd)"
+
+            # Git (read-only subset; branch/remote/stash kept to exact matches to
+            # exclude their destructive subcommands: git branch -D, git remote
+            # remove, git stash drop/pop)
+            "Bash(git status)"
+            "Bash(git status *)"
+            "Bash(git diff)"
+            "Bash(git diff *)"
+            "Bash(git log)"
+            "Bash(git log *)"
+            "Bash(git show *)"
+            "Bash(git remote -v)"
+            "Bash(git stash list)"
+            "Bash(git branch)"
+            "Bash(git branch -a)"
+            "Bash(git branch -v)"
+            "Bash(git branch --show-current)"
+
+            # System / process info (no destructive flags exist for these commands)
+            "Bash(whoami)"
+            "Bash(id)"
+            "Bash(uname *)"
+            "Bash(free *)"
+            "Bash(uptime)"
+            "Bash(df -h)"
+            "Bash(df -h *)"
+            "Bash(du *)"
+            "Bash(ps *)"
+            "Bash(lsblk)"
+            "Bash(lsblk *)"
+            "Bash(lscpu)"
+            "Bash(lsusb)"
+            "Bash(lspci)"
+            "Bash(hostnamectl)"
+            "Bash(hostnamectl status)"
+
+            # systemd status/list only (start/stop/restart and journalctl
+            # --vacuum-* are destructive and stay excluded)
+            "Bash(systemctl status *)"
+            "Bash(systemctl --user status *)"
+            "Bash(systemctl list-units *)"
+            "Bash(systemctl list-unit-files *)"
+
+            # Nix read-only queries (nixos-rebuild switch / home-manager switch /
+            # nix-collect-garbage stay excluded -- those are the existing
+            # mutating `update`/`gc` aliases and should keep prompting)
+            "Bash(nix flake show *)"
+            "Bash(nix flake metadata *)"
+            "Bash(nix search *)"
+            "Bash(nix-store -q *)"
+            "Bash(nix-env -q)"
+            "Bash(nix-env --query)"
+            "Bash(home-manager --list-generations)"
+
+            # Common dev tool invocations (build/run/test workflows; publish/
+            # uninstall/toolchain-mutating subcommands deliberately excluded)
+            "Bash(npm install)"
+            "Bash(npm install *)"
+            "Bash(npm ci)"
+            "Bash(npm run *)"
+            "Bash(npm test)"
+            "Bash(npm test *)"
+            "Bash(npm start)"
+            "Bash(npm outdated)"
+            "Bash(npm outdated *)"
+            "Bash(npm list)"
+            "Bash(npm list *)"
+            "Bash(npm view *)"
+
+            "Bash(bun install)"
+            "Bash(bun install *)"
+            "Bash(bun add *)"
+            "Bash(bun run *)"
+            "Bash(bun test)"
+            "Bash(bun test *)"
+            "Bash(bun x *)"
+
+            "Bash(cargo build)"
+            "Bash(cargo build *)"
+            "Bash(cargo run)"
+            "Bash(cargo run *)"
+            "Bash(cargo test)"
+            "Bash(cargo test *)"
+            "Bash(cargo check)"
+            "Bash(cargo check *)"
+            "Bash(cargo fmt)"
+            "Bash(cargo fmt *)"
+            "Bash(cargo clippy)"
+            "Bash(cargo clippy *)"
+            "Bash(cargo add *)"
+            "Bash(cargo doc *)"
+            "Bash(rustup show)"
+            "Bash(rustup show *)"
+            "Bash(rustup toolchain list)"
+
+            "Bash(devenv shell)"
+            "Bash(devenv shell *)"
+            "Bash(devenv up)"
+            "Bash(devenv up *)"
+            "Bash(devenv test)"
+            "Bash(devenv test *)"
+            "Bash(devenv info)"
+            "Bash(devenv tasks *)"
+
+            "Bash(direnv status)"
+            "Bash(direnv status *)"
+            "Bash(direnv reload)"
+            "Bash(direnv reload *)"
+            "Bash(direnv allow)"
+            "Bash(direnv allow *)"
+
+            # More non-breaking nix commands (dry-build/build don't switch/activate)
+            "Bash(nix path-info *)"
+            "Bash(nix why-depends *)"
+            "Bash(nix show-derivation *)"
+            "Bash(nix registry list)"
+            "Bash(nix eval *)"
+            "Bash(nix build --dry-run *)"
+            "Bash(nix-instantiate --parse *)"
+            "Bash(nix-instantiate --eval *)"
+            "Bash(nixos-rebuild dry-build *)"
+            "Bash(nixos-rebuild build *)"
+
+            # Built-in read-only tools
+            "Grep"
+            "Glob"
+
+            # MCP tools from mcp.nix -- read-only subset only. Mutating tools
+            # (execute_sql, git_add/checkout/commit/reset, filesystem
+            # write/edit/move/create, all github comment/merge/push/delete/create,
+            # playwright click/type/fill/evaluate/run_code_unsafe) stay excluded
+            # and keep prompting. cockroachdb-cloud is left out entirely -- its
+            # tool schema wasn't discoverable to verify what's safe.
+            "mcp__postgres__analyze_db_health"
+            "mcp__postgres__analyze_query_indexes"
+            "mcp__postgres__analyze_workload_indexes"
+            "mcp__postgres__explain_query"
+            "mcp__postgres__get_object_details"
+            "mcp__postgres__get_top_queries"
+            "mcp__postgres__list_objects"
+            "mcp__postgres__list_schemas"
+
+            "mcp__context7__*"
+            "mcp__nixos__*"
+            "mcp__sequential-thinking__*"
+            "mcp__time__*"
+
+            # obsidian-mestrado/obsidian-second-brain (mcp-obsidian@1.0.0) expose
+            # only read_notes and search_notes -- no write/delete tools exist in
+            # this package version, so a full wildcard is safe.
+            "mcp__obsidian-mestrado__*"
+            "mcp__obsidian-second-brain__*"
+
+            "mcp__git__git_status"
+            "mcp__git__git_diff"
+            "mcp__git__git_diff_staged"
+            "mcp__git__git_diff_unstaged"
+            "mcp__git__git_log"
+            "mcp__git__git_show"
+            "mcp__git__git_branch"
+
+            "mcp__filesystem__directory_tree"
+            "mcp__filesystem__get_file_info"
+            "mcp__filesystem__list_allowed_directories"
+            "mcp__filesystem__list_directory"
+            "mcp__filesystem__list_directory_with_sizes"
+            "mcp__filesystem__read_file"
+            "mcp__filesystem__read_media_file"
+            "mcp__filesystem__read_multiple_files"
+            "mcp__filesystem__read_text_file"
+            "mcp__filesystem__search_files"
+
+            "mcp__github__get_commit"
+            "mcp__github__get_file_contents"
+            "mcp__github__get_label"
+            "mcp__github__get_latest_release"
+            "mcp__github__get_me"
+            "mcp__github__get_release_by_tag"
+            "mcp__github__get_tag"
+            "mcp__github__get_team_members"
+            "mcp__github__get_teams"
+            "mcp__github__issue_read"
+            "mcp__github__list_branches"
+            "mcp__github__list_commits"
+            "mcp__github__list_issue_fields"
+            "mcp__github__list_issue_types"
+            "mcp__github__list_issues"
+            "mcp__github__list_pull_requests"
+            "mcp__github__list_releases"
+            "mcp__github__list_repository_collaborators"
+            "mcp__github__list_tags"
+            "mcp__github__pull_request_read"
+            "mcp__github__search_code"
+            "mcp__github__search_commits"
+            "mcp__github__search_issues"
+            "mcp__github__search_pull_requests"
+            "mcp__github__search_repositories"
+            "mcp__github__search_users"
+
+            "mcp__playwright__browser_snapshot"
+            "mcp__playwright__browser_console_messages"
+            "mcp__playwright__browser_network_requests"
+            "mcp__playwright__browser_network_request"
+            "mcp__playwright__browser_take_screenshot"
+            "mcp__playwright__browser_find"
+            "mcp__playwright__browser_wait_for"
+
+            "mcp__fetch__fetch"
+
+            # claude.ai personal connectors (account-level, not part of mcp.nix) --
+            # read-only subset only. Send/create/update/delete/respond tools stay
+            # excluded and keep prompting.
+            "mcp__claude_ai_Anthropic_Economic_Index__*"
+            "mcp__claude_ai_Context7__*"
+
+            "mcp__claude_ai_Gmail__get_message"
+            "mcp__claude_ai_Gmail__get_thread"
+            "mcp__claude_ai_Gmail__list_drafts"
+            "mcp__claude_ai_Gmail__list_labels"
+            "mcp__claude_ai_Gmail__search_threads"
+
+            "mcp__claude_ai_Google_Calendar__get_event"
+            "mcp__claude_ai_Google_Calendar__list_calendars"
+            "mcp__claude_ai_Google_Calendar__list_events"
+            "mcp__claude_ai_Google_Calendar__search_events"
+            "mcp__claude_ai_Google_Calendar__suggest_time"
+
+            "mcp__claude_ai_Google_Drive__download_file_content"
+            "mcp__claude_ai_Google_Drive__get_file_metadata"
+            "mcp__claude_ai_Google_Drive__get_file_permissions"
+            "mcp__claude_ai_Google_Drive__list_recent_files"
+            "mcp__claude_ai_Google_Drive__read_file_content"
+            "mcp__claude_ai_Google_Drive__search_files"
+
+            "mcp__claude_ai_Notion__notion-fetch"
+            "mcp__claude_ai_Notion__notion-download-attachment"
+            "mcp__claude_ai_Notion__notion-get-async-task"
+            "mcp__claude_ai_Notion__notion-get-comments"
+            "mcp__claude_ai_Notion__notion-get-teams"
+            "mcp__claude_ai_Notion__notion-get-users"
+            "mcp__claude_ai_Notion__notion-query-data-sources"
+            "mcp__claude_ai_Notion__notion-query-database-view"
+            "mcp__claude_ai_Notion__notion-query-meeting-notes"
+            "mcp__claude_ai_Notion__notion-search"
+
+            "mcp__claude_ai_Excalidraw__read_checkpoint"
+            "mcp__claude_ai_Excalidraw__read_me"
+          ];
+          deny = [
+            "Read(~/.secrets/**)"
+            "Read(~/.ssh/**)"
+            "Read(~/.aws/**)"
+            "Read(~/.gnupg/**)"
+            "Read(**/*.env)"
+            "Grep(~/.secrets/**)"
+            "Grep(~/.ssh/**)"
+            "Grep(~/.aws/**)"
+            "Grep(~/.gnupg/**)"
+            "Grep(**/*.env)"
+            "Bash(*~/.secrets/*)"
+            "Bash(*~/.ssh/*)"
+            "Bash(*~/.aws/*)"
+            "Bash(*~/.gnupg/*)"
+            "Bash(*.env)"
+            "Bash(*.env *)"
           ];
         };
         # mnemon hooks (scripts symlinked in via home.file above).
