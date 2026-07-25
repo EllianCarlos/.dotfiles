@@ -50,3 +50,7 @@ To apply user settings, packages, and symlink updates:
 ```bash
 sudo nixos-rebuild switch
 ```
+
+## Dependency Pinning
+
+Since this repo has no root `flake.nix`, external dependencies fetched directly in Home Manager (`mcp-servers-nix`, `claude-code-nix`, `agent-skills-nix`, and the `loop-engineering`/`superpowers`/`mattpocock/skills` skill sources) are pinned to exact commits in `.config/home-manager/pins.nix` rather than tracking `main`/`master`, so an upstream change can't silently break the build. A `check-nix-pins` command (also run automatically by a weekly systemd user timer, see `.config/home-manager/pin-check.nix`) compares each pin against upstream `HEAD` and sends a desktop notification if one has drifted; bumping a pin is just editing its `rev` in `pins.nix`.

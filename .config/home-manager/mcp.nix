@@ -2,7 +2,8 @@
 let
   lib = pkgs.lib;
   secretsEnvFile = /home/elliancarlos/.secrets/.env;
-  mcp-services-nix = import (fetchTarball "https://github.com/natsukium/mcp-servers-nix/archive/main.tar.gz") { inherit pkgs; };
+  pins = import ./pins.nix;
+  mcp-services-nix = import (fetchTarball "https://github.com/${pins.mcp-servers-nix.owner}/${pins.mcp-servers-nix.repo}/archive/${pins.mcp-servers-nix.rev}.tar.gz") { inherit pkgs; };
 
   # uv's managed-Python downloads are generic dynamically-linked binaries
   # that NixOS can't run without nix-ld -- force uv to use nixpkgs' own

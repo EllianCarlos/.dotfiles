@@ -1,7 +1,8 @@
 { config, lib, pkgs, osConfig ? null, ... }:
 let
-  claude-code-flake = builtins.getFlake "github:sadjow/claude-code-nix";
-  agentSkillsFlake = builtins.getFlake "github:Kyure-A/agent-skills-nix";
+  pins = import ./pins.nix;
+  claude-code-flake = builtins.getFlake "github:${pins.claude-code-nix.owner}/${pins.claude-code-nix.repo}/${pins.claude-code-nix.rev}";
+  agentSkillsFlake = builtins.getFlake "github:${pins.agent-skills-nix.owner}/${pins.agent-skills-nix.repo}/${pins.agent-skills-nix.rev}";
 
   # kitty and waybar name fonts as plain strings that fontconfig resolves at
   # runtime. Fontconfig never fails: an unknown family silently falls back to
@@ -78,6 +79,7 @@ in
   imports = [
     agentSkillsFlake.homeManagerModules.default
     ./skills.nix
+    ./pin-check.nix
   ];
 
   nixpkgs.config.allowUnfree = true;
