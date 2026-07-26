@@ -52,8 +52,9 @@ in
 
     # Default is only ["/.system"] -- setting this option replaces rather
     # than merges the module's default, so both must be listed explicitly.
-    # "/mnemon" protects the hand-managed mnemon skill (home.nix's home.file
-    # entry) from the rsync --delete this module runs on every activation.
-    excludePatterns = [ "/.system" "/mnemon" ];
+    # "/mnemon" and "/nixapply" protect the hand-managed skills (home.nix's
+    # home.file entries) from the rsync --delete this module runs on every
+    # activation.
+    excludePatterns = [ "/.system" "/mnemon" "/nixapply" ];
   };
 }

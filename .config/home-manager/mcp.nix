@@ -96,6 +96,13 @@ mcp-services-nix.lib.mkConfig pkgs {
       type = "http";
       url = "https://cockroachlabs.cloud/mcp";
     };
+    # OAuth-based: connecting triggers a consent screen to authorize
+    # read/write/send access, no static token needed here.
+    # https://www.fastmail.com/blog/an-mcp-server-for-fastmail/
+    fastmail = {
+      type = "http";
+      url = "https://api.fastmail.com/mcp";
+    };
     super-productivity = {
       command =
         "${mkWrapper {

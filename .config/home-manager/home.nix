@@ -214,6 +214,19 @@ in
       source = ./mnemon/hooks/user_prompt.sh;
       executable = true;
     };
+
+    # nixapply: encodes the edit -> validate -> rebuild -> verify -> reload
+    # loop for this repo, so a config change isn't declared fixed before a
+    # rebuild actually lands it.
+    ".claude/skills/nixapply/SKILL.md".source = ./nixapply/skill.md;
+
+    # PostToolUse: catch broken JSON/Nix syntax right after Edit/Write,
+    # instead of discovering it at the next rebuild (a trailing comma in
+    # waybar's JSON once broke it outright).
+    ".claude/hooks/validate-config.sh" = {
+      source = ./hooks/validate-config.sh;
+      executable = true;
+    };
   };
 
   # Home Manager can also manage your environment variables through
@@ -380,6 +393,7 @@ in
   home.activation.claudeSettings =
     let
       hooksDir = "${config.home.homeDirectory}/.claude/hooks/mnemon";
+      claudeHooksDir = "${config.home.homeDirectory}/.claude/hooks";
       claudeSettingsFile = pkgs.writeText "claude-settings.json" (builtins.toJSON {
         permissions = {
           allow = [
@@ -745,6 +759,7 @@ in
           SessionStart = [{ hooks = [{ type = "command"; command = "${hooksDir}/prime.sh"; }]; }];
           Stop = [{ hooks = [{ type = "command"; command = "${hooksDir}/stop.sh"; }]; }];
           UserPromptSubmit = [{ hooks = [{ type = "command"; command = "${hooksDir}/user_prompt.sh"; }]; }];
+          PostToolUse = [{ matcher = "Edit|Write"; hooks = [{ type = "command"; command = "${claudeHooksDir}/validate-config.sh"; }]; }];
         };
       });
       # MCP servers must be in ~/.claude.json (not settings.json)
