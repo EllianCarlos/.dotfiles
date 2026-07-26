@@ -74,13 +74,6 @@ mcp-services-nix.lib.mkConfig pkgs {
           args = [ "postgres-mcp" "--access-mode=restricted" ];
         }}/bin/postgres-mcp-wrapped";
     };
-    # mcp-obsidian@1.0.0 (npm) is abandoned -- only version ever published,
-    # no repo/bugs link -- and its tools/list response omits inputSchema.type
-    # entirely, which Claude Code's stricter validation rejects outright
-    # ("tools fetch failed"). Verified by hand-sending initialize+tools/list
-    # over stdio. seekstone reads the vault directly from disk (no Obsidian
-    # app or Local REST API plugin needed, like the old setup) and was
-    # verified to return well-formed schemas against the mestrado vault.
     obsidian-mestrado = {
       command =
         "${mkWrapper {
@@ -99,12 +92,18 @@ mcp-services-nix.lib.mkConfig pkgs {
           args = [ "-y" "seekstone" ];
         }}/bin/obsidian-second-brain-wrapped";
     };
-    # Remote, Cockroach Labs-hosted server -- no local process, no secret.
-    # First real use triggers an interactive OAuth login (mcp:read/mcp:write
-    # scoped to your Cloud account); Claude Code caches the token itself.
     cockroachdb-cloud = {
       type = "http";
       url = "https://cockroachlabs.cloud/mcp";
+    };
+    super-productivity = {
+      command =
+        "${mkWrapper {
+          name = "supper-productivity-wrapped";
+          extraEnv = [ nodePathEnv ];
+          exe = "${pkgs.nodejs}/bin/npx";
+          args = [ "-y" "super-productivity-mcp" ];
+        }}/bin/supper-productivity-wrapped";
     };
   };
 }

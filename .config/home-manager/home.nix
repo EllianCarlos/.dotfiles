@@ -138,6 +138,8 @@ in
     libguestfs-with-appliance
     guestfs-tools
     wget
+
+    super-productivity
   ] ++ [
     # Not a program -- an empty package whose build fails if the font families
     # named in kitty.conf / waybar style.css are not actually installed.

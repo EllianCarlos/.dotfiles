@@ -14,25 +14,25 @@
 Catppuccin Mocha Color Scheme
 */
 @keyframes blink-warning {
-    70% {
-        color: #cdd6f4; /* Mocha Text */
-    }
+  70% {
+    color: #cdd6f4; /* Mocha Text */
+  }
 
-    to {
-        color: #1e1e2e; /* Mocha Base */
-        background-color: #f9e2af; /* Mocha Yellow */
-    }
+  to {
+    color: #1e1e2e; /* Mocha Base */
+    background-color: #f9e2af; /* Mocha Yellow */
+  }
 }
 
 @keyframes blink-critical {
-    70% {
-      color: #cdd6f4; /* Mocha Text */
-    }
+  70% {
+    color: #cdd6f4; /* Mocha Text */
+  }
 
-    to {
-        color: #1e1e2e; /* Mocha Base */
-        background-color: #f38ba8; /* Mocha Red */
-    }
+  to {
+    color: #1e1e2e; /* Mocha Base */
+    background-color: #f38ba8; /* Mocha Red */
+  }
 }
 
 /* -----------------------------------------------------------------------------
@@ -41,20 +41,19 @@ Catppuccin Mocha Color Scheme
 
 /* Reset all styles */
 * {
-    border: none;
-    border-radius: 0;
-    min-height: 0;
-    margin: 1px;
-    padding: 0;
-    color: #cdd6f4; /* Mocha Text */
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+  margin: 1px;
+  padding: 0;
+  color: #cdd6f4; /* Mocha Text */
 }
-
 
 /* The whole bar */
 window#waybar {
-    background-color: rgba(0,0,0,0); /* Transparent */
-    font-family: FiraCode Nerd Font;
-    font-size: 15px;
+  background-color: rgba(0, 0, 0, 0); /* Transparent */
+  font-family: "FiraCode Nerd Font";
+  font-size: 15px;
 }
 
 /* Every modules */
@@ -77,10 +76,15 @@ window#waybar {
 #workspaces,
 #custom-media,
 #custom-PBPbattery {
-    padding:0.15rem 0.5rem;
-    margin: 1px 3px;
-    background-color: rgba(49, 50, 68, 0.8); /* Mocha Surface 0 with transparency */
-    border-radius: 20px;
+  padding: 0.15rem 0.5rem;
+  margin: 1px 3px;
+  background-color: rgba(
+    49,
+    50,
+    68,
+    0.8
+  ); /* Mocha Surface 0 with transparency */
+  border-radius: 20px;
 }
 
 /* -----------------------------------------------------------------------------
@@ -88,85 +92,85 @@ window#waybar {
  * -------------------------------------------------------------------------- */
 
 #clock {
-    color: #94e2d5; /* Mocha Teal */
+  color: #94e2d5; /* Mocha Teal */
 }
 
 #custom-weather {
-    color: #f5c2e7; /* Mocha Pink */
+  color: #f5c2e7; /* Mocha Pink */
 }
 
 #battery {
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
 }
 
 #battery.warning {
-    color: #f9e2af; /* Mocha Yellow */
+  color: #f9e2af; /* Mocha Yellow */
 }
 
 #battery.critical {
-    color: #f38ba8; /* Mocha Red */
+  color: #f38ba8; /* Mocha Red */
 }
 
 #battery.warning.discharging {
-    animation-name: blink-warning;
-    animation-duration: 3s;
+  animation-name: blink-warning;
+  animation-duration: 3s;
 }
 
 #battery.critical.discharging {
-    animation-name: blink-critical;
-    animation-duration: 2s;
+  animation-name: blink-critical;
+  animation-duration: 2s;
 }
 
 #cpu {
-    color: #f38ba8; /* Mocha Red */
+  color: #f38ba8; /* Mocha Red */
 }
 
 #cpu.warning {
-    color: #f9e2af; /* Mocha Yellow */
+  color: #f9e2af; /* Mocha Yellow */
 }
 
 #cpu.critical {
-    color: #f38ba8; /* Mocha Red */
+  color: #f38ba8; /* Mocha Red */
 }
 
 #memory {
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-    color: #f38ba8; /* Mocha Red */
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  color: #f38ba8; /* Mocha Red */
 }
 
 #memory.warning {
-    color: #f9e2af; /* Mocha Yellow */
- }
+  color: #f9e2af; /* Mocha Yellow */
+}
 
 #memory.critical {
-    color: #f38ba8; /* Mocha Red */
-    animation-name: blink-critical;
-    animation-duration: 2s;
-    padding-left:5px;
-    padding-right:5px;
+  color: #f38ba8; /* Mocha Red */
+  animation-name: blink-critical;
+  animation-duration: 2s;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
 #mode {
-    border-bottom: 3px transparent;
-    color: #f5c2e7; /* Mocha Pink */
-    margin-left: 5px;
-    padding: 7px;
+  border-bottom: 3px transparent;
+  color: #f5c2e7; /* Mocha Pink */
+  margin-left: 5px;
+  padding: 7px;
 }
 
 #network.disconnected {
-    color: #f9e2af; /* Mocha Yellow */
+  color: #f9e2af; /* Mocha Yellow */
 }
 
 #pulseaudio {
-    color: #cba6f7; /* Mocha Mauve */
-    border-left: 0px;
-    border-right: 0px;
-    margin-right: 0;
-    border-radius: 20px 0 0 20px;
+  color: #cba6f7; /* Mocha Mauve */
+  border-left: 0px;
+  border-right: 0px;
+  margin-right: 0;
+  border-radius: 20px 0 0 20px;
 }
 
 /* #pulseaudio.muted { */
@@ -174,88 +178,92 @@ window#waybar {
 /* } */
 
 #pulseaudio.microphone {
-    border-left: 0px;
-    border-right: 0px;
-    margin-left: 0;
-    padding-left: 0;
-    border-radius: 0 20px 20px 0;
+  border-left: 0px;
+  border-right: 0px;
+  margin-left: 0;
+  padding-left: 0;
+  border-radius: 0 20px 20px 0;
 }
 
 /* #pulseaudio.microphone.muted { */
 /*     color: #f5c2e7; */ /* Mocha Pink */
 /* } */
 
-
 #temperature.critical {
-    color: #f38ba8; /* Mocha Red */
+  color: #f38ba8; /* Mocha Red */
 }
 
 #window {
-    font-weight: normal;   /* Changed from bold */
-    font-size: 13px;       /* New */
-    color: #f38ba8; /* Mocha Red */
+  font-weight: normal; /* Changed from bold */
+  font-size: 13px; /* New */
+  color: #f38ba8; /* Mocha Red */
 }
 
 #custom-media {
-    font-size: 13px;       /* New */
-    color: #cba6f7; /* Mocha Mauve */
+  font-size: 13px; /* New */
+  color: #cba6f7; /* Mocha Mauve */
 }
 
 #workspaces {
-    font-size: 13px;    /* Reduced from 16px */
-    background-color: rgba(49, 50, 68, 0.8); /* Mocha Surface 0 with transparency */
-    border-radius: 20px;
+  font-size: 13px; /* Reduced from 16px */
+  background-color: rgba(
+    49,
+    50,
+    68,
+    0.8
+  ); /* Mocha Surface 0 with transparency */
+  border-radius: 20px;
 }
 
 #workspaces button {
-    border-bottom: 3px solid transparent;
-    margin-bottom: 0px;
-    color: #a6adc8; /* Mocha Subtext 0 */
+  border-bottom: 3px solid transparent;
+  margin-bottom: 0px;
+  color: #a6adc8; /* Mocha Subtext 0 */
 }
 
 #workspaces button.active {
-    border-bottom: 1px solid #f5c2e7; /* Mocha Pink */
-    margin-bottom: 1px;
-    padding-left:0;
+  border-bottom: 1px solid #f5c2e7; /* Mocha Pink */
+  margin-bottom: 1px;
+  padding-left: 0;
 }
 
 #workspaces button.urgent {
-    border-color: #eba0ac; /* Mocha Maroon */
-    color: #eba0ac; /* Mocha Maroon */
+  border-color: #eba0ac; /* Mocha Maroon */
+  color: #eba0ac; /* Mocha Maroon */
 }
 
 #custom-power {
-    font-size:18px;
-    padding-right: 1rem;
+  font-size: 18px;
+  padding-right: 1rem;
 }
 
 #custom-launcher {
-    font-size:15px;
-    margin-left:15px;
-    margin-right:10px;
+  font-size: 15px;
+  margin-left: 15px;
+  margin-right: 10px;
 }
 
 #backlight.icon {
-    padding-right:1px;
-    font-size: 13px;
+  padding-right: 1px;
+  font-size: 13px;
 }
 
 #disk {
-    color: #89b4fa; /* Mocha Blue */
+  color: #89b4fa; /* Mocha Blue */
 }
 
 #disk.warning {
-    color: #f9e2af; /* Mocha Yellow */
+  color: #f9e2af; /* Mocha Yellow */
 }
 
 #disk.critical {
-    color: #f38ba8; /* Mocha Red */
+  color: #f38ba8; /* Mocha Red */
 }
 
 #temperature {
-    color: #89dceb; /* Mocha Sky */
+  color: #89dceb; /* Mocha Sky */
 }
 
 #temperature.critical {
-    color: #f38ba8; /* Mocha Red */
+  color: #f38ba8; /* Mocha Red */
 }
