@@ -140,9 +140,10 @@ in
     wget
 
     super-productivity
+
+    pass
   ] ++ [
-    # Not a program -- an empty package whose build fails if the font families
-    # named in kitty.conf / waybar style.css are not actually installed.
+    # Verifiers 
     checkFontFamilies
   ] ++ (import ./loop-tools.nix { inherit pkgs; });
 
@@ -387,6 +388,31 @@ in
       detekt
       nimlangserver
     ];
+  };
+
+  programs.neomutt = {
+    enable = true;
+    vimKeys = true;
+    sort = "threads";
+    extraConfig = ''
+      set timeout = 3;
+      set mail_check = 60;
+      set collapse_all = yes;
+      set use_threads = yes;
+      set sort = "reverse-last-date-received";
+      set delete = ask-yes;
+    '';
+  };
+
+  accounts.email.accounts = import ./email.nix { inherit pkgs; };
+
+  programs.mbsync.enable = true;
+
+  programs.gpg.enable = true;
+
+  services.gpg-agent = {
+    enable = true;
+    pinentry.package = pkgs.pinentry-curses;
   };
 
   # Claude Code settings (permissions only - MCP servers go in ~/.claude.json)
@@ -752,6 +778,7 @@ in
             "Bash(*~/.gnupg/*)"
             "Bash(*.env)"
             "Bash(*.env *)"
+            "Bash(pass *)"
           ];
         };
         # mnemon hooks (scripts symlinked in via home.file above).
