@@ -17,6 +17,7 @@ in
     ../../modules/core/user.nix
     ../../modules/core/packages.nix
     ../../modules/core/flakes.nix
+    ../../modules/core/monitoring.nix
     ../../modules/desktop/hyprland.nix
     ../../modules/hardware/audio.nix
     ../../modules/hardware/printer.nix
@@ -111,6 +112,23 @@ in
     dedicatedServer.openFirewall = true;
     localNetworkGameTransfers.openFirewall = true;
   };
+
+  # --- Build parallelism (12 cores, 15 GiB RAM) ---
+  nix.settings = {
+    max-jobs = 4;
+    cores = 3;
+  };
+
+  # --- Build memory cap ---
+  systemd.services.nix-daemon.serviceConfig = {
+    MemoryHigh = "8G";
+    MemoryMax = "10G";
+  };
+
+  # --- Swap ---
+  swapDevices = [
+    { device = "/dev/disk/by-uuid/83963e87-2ccd-4d81-b1ab-0cd50f2ce6f9"; }
+  ];
 
   system.stateVersion = "25.05";
 }

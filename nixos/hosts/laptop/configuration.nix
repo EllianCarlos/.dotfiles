@@ -11,6 +11,7 @@
     ../../modules/core/user.nix
     ../../modules/core/packages.nix
     ../../modules/core/flakes.nix
+    ../../modules/core/monitoring.nix
     ../../modules/desktop/hyprland.nix
     ../../modules/hardware/audio.nix
     ../../modules/services/tailscale.nix

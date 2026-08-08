@@ -4,19 +4,7 @@ let
   claude-code-flake = builtins.getFlake "github:${pins.claude-code-nix.owner}/${pins.claude-code-nix.repo}/${pins.claude-code-nix.rev}";
   agentSkillsFlake = builtins.getFlake "github:${pins.agent-skills-nix.owner}/${pins.agent-skills-nix.repo}/${pins.agent-skills-nix.rev}";
 
-  # kitty and waybar name fonts as plain strings that fontconfig resolves at
-  # runtime. Fontconfig never fails: an unknown family silently falls back to
-  # whatever else it can find, so a typo or an upstream font rename degrades
-  # quietly instead of erroring -- which is how kitty.conf asked for the
-  # never-installed "Fira Code" for over a year while actually rendering
-  # DejaVu Sans Mono, with icons served by the shrunken *Mono* Nerd Font.
-  #
-  # Nix cannot catch that by itself: xdg.configFile copies these files as
-  # opaque bytes and has no idea they name a font. So extract the families the
-  # configs actually ask for and fail the build when the installed font
-  # packages do not provide them. Compares against osConfig.fonts.packages,
-  # the real system font set -- a hand-written list of expected names would
-  # just repeat whatever name is already wrong in the config, and pass.
+  # --- Font family verification -------------------------------------------
   fontPackages =
     if osConfig == null
     then throw "home.nix: osConfig is unavailable, so the font-family check cannot read fonts.packages. Remove the check or give it an explicit package list rather than letting it silently pass."
@@ -29,11 +17,9 @@ let
       [ -d "$d" ] && dirs="$dirs $d"
     done
 
-    # stderr is only sandbox noise about unwritable font caches
     fc-scan --format '%{family}\n' $dirs 2>/dev/null \
       | tr ',' '\n' | sed 's/^[ "]*//; s/[ "]*$//' | grep -v '^$' | sort -u > installed
 
-    # font_family in kitty.conf, font-family in waybar's stylesheet
     {
       sed -n 's/^font_family[[:space:]]\+//p' ${../kitty/kitty.conf}
       sed -n 's/.*font-family:[[:space:]]*\([^;]*\);.*/\1/p' ${../waybar/style.css}
@@ -47,7 +33,6 @@ let
       echo "" >&2
       echo "$missing" | while IFS= read -r fam; do
         echo "  - $fam" >&2
-        # squash case and spaces so "Fira Code" suggests "FiraCode Nerd Font"
         key=$(printf '%s' "$fam" | tr -d ' ' | tr '[:upper:]' '[:lower:]')
         awk -v k="$key" \
           '{ n = tolower($0); gsub(/ /, "", n); if (index(n, k)) print "      did you mean: " $0 }' \
@@ -84,20 +69,18 @@ in
 
   nixpkgs.config.allowUnfree = true;
 
-  # Home Manager needs a bit of information about you and the paths it should
-  # manage.
+  # --- Identity -------------------------------------------------------------
   home.username = "elliancarlos";
   home.homeDirectory = "/home/elliancarlos";
   home.stateVersion = "25.05";
 
   nixpkgs.overlays = [ claude-code-flake.overlays.default ];
 
-  # The home.packages option allows you to install Nix packages into your
-  # environment.
+  # --- Packages -------------------------------------------------------------
   home.packages = with pkgs; [
     oh-my-zsh
 
-    # User Applications moved from system
+    # --- Applications ---
     kitty
     obsidian
     firefox
@@ -112,7 +95,7 @@ in
     stress-ng
     jq
 
-    # Wayland/Hyprland User Tools
+    # --- Wayland / Hyprland ---
     grim
     slurp
     waybar
@@ -143,7 +126,7 @@ in
 
     pass
   ] ++ [
-    # Verifiers 
+    # --- Verifiers ---
     checkFontFamilies
   ] ++ (import ./loop-tools.nix { inherit pkgs; });
 
@@ -171,7 +154,7 @@ in
     enable = true;
     theme = {
       package = pkgs.catppuccin-gtk;
-      name = "catppuccin-mocha-lavender-standard"; # Or your preferred flavor
+      name = "catppuccin-mocha-lavender-standard";
     };
     cursorTheme = {
       package = pkgs.bibata-cursors;
@@ -184,22 +167,12 @@ in
   };
 
 
-  # Home Manager is pretty good at managing dotfiles. The primary way to manage
-  # plain files is through 'home.file'.
+  # --- Dotfiles ---------------------------------------------------------------
   home.file = {
-    # # Building this configuration will create a copy of 'dotfiles/screenrc' in
-    # # the Nix store. Activating the configuration will then make '~/.screenrc' a
-    # # symlink to the Nix store copy.
-    # ".screenrc".source = dotfiles/screenrc;
     ".p10k.zsh".source = ./p10k.zsh;
     ".ticker.yaml".source = ../.ticker.yaml;
 
-    # mnemon: manage hooks/prompt/skill declaratively instead of running
-    # `mnemon setup` at activation. The vendored copies fix two upstream bugs:
-    # hooks use `#!/usr/bin/env bash` (NixOS has no /bin/bash), and guide.md
-    # stores memories via the real `subagent_type="general-purpose"` agent
-    # (mnemon ships a non-existent "Bash" agent). The data store
-    # (~/.mnemon/data) is stateful and self-initialises on first use.
+    # --- mnemon ---
     ".mnemon/prompt/guide.md".source = ./mnemon/guide.md;
     ".mnemon/prompt/skill.md".source = ./mnemon/skill.md;
     ".claude/skills/mnemon/SKILL.md".source = ./mnemon/skill.md;
@@ -216,27 +189,17 @@ in
       executable = true;
     };
 
-    # nixapply: encodes the edit -> validate -> rebuild -> verify -> reload
-    # loop for this repo, so a config change isn't declared fixed before a
-    # rebuild actually lands it.
+    # --- nixapply ---
     ".claude/skills/nixapply/SKILL.md".source = ./nixapply/skill.md;
 
-    # PostToolUse: catch broken JSON/Nix syntax right after Edit/Write,
-    # instead of discovering it at the next rebuild (a trailing comma in
-    # waybar's JSON once broke it outright).
+    # --- Config validation hook ---
     ".claude/hooks/validate-config.sh" = {
       source = ./hooks/validate-config.sh;
       executable = true;
     };
   };
 
-  # Home Manager can also manage your environment variables through
-  # 'home.sessionVariables'. These will be explicitly sourced when using a
-  # shell provided by Home Manager. If you don't want to manage your shell
-  # through Home Manager then you have to manually source 'hm-session-vars.sh'
-  # located at either
-  #
-  #  ~/.nix-profile/etc/profile.d/hm-session-vars.sh
+  # --- Session variables ------------------------------------------------------
   home.sessionVariables = {
     GTK_IM_MODULE = "cedilla";
     QT_IM_MODULE = "cedilla";
@@ -250,15 +213,34 @@ in
     };
 
     shellAliases = {
+      # --- Files & editor ---------------------------------------------------
       la = "ls -la";
       ll = "ls -l";
       v = "nvim";
-      # Update NixOS by copying the local config to /etc/nixos and then rebuilding
+
+      # --- NixOS ------------------------------------------------------------
+      # Copy the local config to /etc/nixos, then rebuild
       update = "sudo cp -r ~/Projects/.dotfiles/nixos/* /etc/nixos/ && sudo nixos-rebuild switch";
       # Quick garbage collection
       gc = "nix-collect-garbage -d && sudo nix-collect-garbage -d";
 
-      # Change default sink 
+      # --- System history (atop) --------------------------------------------
+      # atopsar summaries read today's log automatically.
+      atop-mem = "atopsar -m"; # memory + swap over time
+      atop-swap = "atopsar -s"; # swap pressure
+      atop-cpu = "atopsar -c"; # cpu utilisation
+      atop-procs = "atopsar -G"; # top memory-consuming processes
+      atop-cpuprocs = "atopsar -p"; # top cpu-consuming processes
+      # Interactive replay. Inside atop: t/T step through samples, m sorts by
+      # memory, c shows full command lines, q quits. For any other day:
+      #   atop -r /var/log/atop/atop_20260807 -b 15:10
+      atop-today = "atop -r /var/log/atop/atop_$(date +%Y%m%d)";
+      atop-yday = "atop -r /var/log/atop/atop_$(date -d yesterday +%Y%m%d)";
+      # What the kernel or earlyoom killed this boot
+      oom-log = "journalctl -b | grep -iE 'oom|killed process|earlyoom'";
+
+      # --- Audio ------------------------------------------------------------
+      # Change default sink
       audio-headset = "audio-to alsa_output.usb-Logitech_G535_Wireless_Gaming_Headset-00.analog-stereo";
       audio-hdmi = "audio-to alsa_output.pci-0000_03_00.1.hdmi-stereo-extra1";
       audio-combine = "audio-to combine-sink";
@@ -415,7 +397,7 @@ in
     pinentry.package = pkgs.pinentry-curses;
   };
 
-  # Claude Code settings (permissions only - MCP servers go in ~/.claude.json)
+  # --- Claude Code settings ---------------------------------------------------
   home.activation.claudeSettings =
     let
       hooksDir = "${config.home.homeDirectory}/.claude/hooks/mnemon";
@@ -430,8 +412,7 @@ in
             "Bash(* --version)"
             "Bash(* --help *)"
 
-            # Read-only Hyprland state queries (mutating verbs — keyword,
-            # dispatch, reload — are deliberately left out).
+            # --- Hyprland (read-only) ---
             "Bash(hyprctl monitors)"
             "Bash(hyprctl monitors *)"
             "Bash(hyprctl configerrors)"
@@ -450,7 +431,7 @@ in
             "Bash(hyprctl binds)"
             "Bash(hyprctl devices)"
 
-            # Crash inspection and font resolution.
+            # --- Crash inspection / fonts ---
             "Bash(coredumpctl list *)"
             "Bash(coredumpctl info *)"
             "Bash(fc-match *)"
@@ -463,10 +444,7 @@ in
             "Bash(mnemon recall *)"
             "Read(*)"
 
-            # Built-in tools with no external side effects: loading a skill's
-            # instructions, inspecting/tracking Claude's own subagent tasks,
-            # read-only MCP resource listing, code nav/diagnostics, and
-            # streaming output of an already-running background process.
+            # --- Built-in tools ---
             "Skill"
             "TaskCreate"
             "TaskUpdate"
@@ -480,16 +458,14 @@ in
             "Monitor"
             "WebSearch"
 
-            # Broad read-only filesystem commands (secrets protected via deny list below)
+            # --- Filesystem (read-only) ---
             "Bash(ls)"
             "Bash(ls *)"
             "Bash(cat *)"
             "Bash(grep *)"
             "Bash(pwd)"
 
-            # Git (read-only subset; branch/remote/stash kept to exact matches to
-            # exclude their destructive subcommands: git branch -D, git remote
-            # remove, git stash drop/pop)
+            # --- Git (read-only) ---
             "Bash(git status)"
             "Bash(git status *)"
             "Bash(git diff)"
@@ -504,7 +480,7 @@ in
             "Bash(git branch -v)"
             "Bash(git branch --show-current)"
 
-            # System / process info (no destructive flags exist for these commands)
+            # --- System / process info ---
             "Bash(whoami)"
             "Bash(id)"
             "Bash(uname *)"
@@ -522,16 +498,13 @@ in
             "Bash(hostnamectl)"
             "Bash(hostnamectl status)"
 
-            # systemd status/list only (start/stop/restart and journalctl
-            # --vacuum-* are destructive and stay excluded)
+            # --- systemd (status / list only) ---
             "Bash(systemctl status *)"
             "Bash(systemctl --user status *)"
             "Bash(systemctl list-units *)"
             "Bash(systemctl list-unit-files *)"
 
-            # Nix read-only queries (nixos-rebuild switch / home-manager switch /
-            # nix-collect-garbage stay excluded -- those are the existing
-            # mutating `update`/`gc` aliases and should keep prompting)
+            # --- Nix (read-only) ---
             "Bash(nix flake show *)"
             "Bash(nix flake metadata *)"
             "Bash(nix search *)"
@@ -540,8 +513,7 @@ in
             "Bash(nix-env --query)"
             "Bash(home-manager --list-generations)"
 
-            # Common dev tool invocations (build/run/test workflows; publish/
-            # uninstall/toolchain-mutating subcommands deliberately excluded)
+            # --- Dev tools ---
             "Bash(npm install)"
             "Bash(npm install *)"
             "Bash(npm ci)"
@@ -597,7 +569,7 @@ in
             "Bash(direnv allow)"
             "Bash(direnv allow *)"
 
-            # More non-breaking nix commands (dry-build/build don't switch/activate)
+            # --- Nix (non-mutating builds / eval) ---
             "Bash(nix path-info *)"
             "Bash(nix why-depends *)"
             "Bash(nix show-derivation *)"
@@ -609,16 +581,11 @@ in
             "Bash(nixos-rebuild dry-build *)"
             "Bash(nixos-rebuild build *)"
 
-            # Built-in read-only tools
+            # --- Built-in search tools ---
             "Grep"
             "Glob"
 
-            # MCP tools from mcp.nix -- read-only subset only. Mutating tools
-            # (execute_sql, git_add/checkout/commit/reset, filesystem
-            # write/edit/move/create, all github comment/merge/push/delete/create,
-            # playwright click/type/fill/evaluate/run_code_unsafe) stay excluded
-            # and keep prompting. cockroachdb-cloud is left out entirely -- its
-            # tool schema wasn't discoverable to verify what's safe.
+            # --- MCP: postgres ---
             "mcp__postgres__analyze_db_health"
             "mcp__postgres__analyze_query_indexes"
             "mcp__postgres__analyze_workload_indexes"
@@ -633,15 +600,7 @@ in
             "mcp__sequential-thinking__*"
             "mcp__time__*"
 
-            # obsidian-mestrado/obsidian-second-brain (seekstone) -- read-only
-            # tools plus the non-destructive additive writes (append_note,
-            # get/append_periodic_note never overwrite existing content).
-            # create_note and move_note stay excluded: both take an
-            # overwrite:true param that would let Claude silently clobber
-            # existing note content, and MCP tool permission rules can't
-            # distinguish overwrite:true from false. delete_note,
-            # patch_frontmatter, patch_note, replace_in_note also stay
-            # excluded and keep prompting.
+            # --- MCP: obsidian (seekstone) ---
             "mcp__obsidian-mestrado__search"
             "mcp__obsidian-mestrado__query_notes"
             "mcp__obsidian-mestrado__read_note"
@@ -722,9 +681,7 @@ in
 
             "mcp__fetch__fetch"
 
-            # claude.ai personal connectors (account-level, not part of mcp.nix) --
-            # read-only subset only. Send/create/update/delete/respond tools stay
-            # excluded and keep prompting.
+            # --- MCP: claude.ai connectors ---
             "mcp__claude_ai_Anthropic_Economic_Index__*"
             "mcp__claude_ai_Context7__*"
 
@@ -781,7 +738,7 @@ in
             "Bash(pass *)"
           ];
         };
-        # mnemon hooks (scripts symlinked in via home.file above).
+        # --- mnemon hooks ---
         hooks = {
           SessionStart = [{ hooks = [{ type = "command"; command = "${hooksDir}/prime.sh"; }]; }];
           Stop = [{ hooks = [{ type = "command"; command = "${hooksDir}/stop.sh"; }]; }];
@@ -789,18 +746,13 @@ in
           PostToolUse = [{ matcher = "Edit|Write"; hooks = [{ type = "command"; command = "${claudeHooksDir}/validate-config.sh"; }]; }];
         };
       });
-      # MCP servers must be in ~/.claude.json (not settings.json)
-      # Server list, packages, and secrets wiring are declared in ./mcp.nix
+      # --- MCP servers (~/.claude.json) ---
       claudeMcpFile = import ./mcp.nix { inherit pkgs; };
     in
     config.lib.dag.entryAfter [ "writeBoundary" ] ''
       mkdir -p "$HOME/.claude"
 
-      # mnemon's hooks, prompt, and skill are installed declaratively via
-      # home.file (see the mnemon entries above); the data store self-initialises
-      # on first use, so no `mnemon setup` is needed here.
-
-      # Merge Nix-managed settings (permissions + mnemon hooks) into settings.json
+      # --- settings.json ---
       if [ -f "$HOME/.claude/settings.json" ]; then
         ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$HOME/.claude/settings.json" ${claudeSettingsFile} > "$HOME/.claude/settings.json.tmp"
         mv "$HOME/.claude/settings.json.tmp" "$HOME/.claude/settings.json"
@@ -809,13 +761,8 @@ in
       fi
       chmod 644 "$HOME/.claude/settings.json"
 
+      # --- .claude.json ---
       if [ -f "$HOME/.claude.json" ]; then
-        # jq's `*` deep-merges nested objects, so per-server fields removed
-        # from mcp.nix (e.g. a stale `args` from before a wrapper existed)
-        # would otherwise survive forever in mcpServers.<name>. Force
-        # mcpServers to be wholesale-replaced by the new config instead of
-        # deep-merged, while still deep-merging everything else (OAuth
-        # tokens, project state, etc. that Nix doesn't manage).
         ${pkgs.jq}/bin/jq -s '.[0] as $old | .[1] as $new | ($old * $new) | .mcpServers = $new.mcpServers' "$HOME/.claude.json" ${claudeMcpFile} > "$HOME/.claude.json.tmp"
         mv "$HOME/.claude.json.tmp" "$HOME/.claude.json"
       else
@@ -824,6 +771,6 @@ in
       chmod 644 "$HOME/.claude.json"
     '';
 
-  # Let Home Manager install and manage itself.
+  # --- Home Manager itself ----------------------------------------------------
   programs.home-manager.enable = true;
 }
