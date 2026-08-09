@@ -42,4 +42,9 @@
     repo = "skills";
     rev = "ed37663cc5fbef691ddfecd080dff42f7e7e350d";
   };
+  resurrect-wezterm = {
+    owner = "MLFlexer";
+    repo = "resurrect.wezterm";
+    rev = "65cbbbf6d2c76f3e36af7610a356fc190fcb6147";
+  };
 }

@@ -80,7 +80,7 @@
             "critical": 90,
         },
         "tooltip-format": "CPU: {usage}%\nLoad: {load}\nCores: {avg_frequency}GHz",
-        "on-click": "kitty -e ~/.config/waybar/bottom-cpu.sh",
+        "on-click": "wezterm start -- ~/.config/waybar/bottom-cpu.sh",
     },
 
     "custom/keyboard-layout": {
@@ -113,7 +113,7 @@
         "interval": 5,
         "format": "  {}%", // Icon: memory
         "tooltip-format": "RAM: {used:0.1f}GiB / {total:0.1f}GiB ({percentage}%)\nSwap: {swapUsed:0.1f}GiB / {swapTotal:0.1f}GiB",
-        "on-click": "kitty -e ~/.config/waybar/bottom-memory.sh", 
+        "on-click": "wezterm start -- ~/.config/waybar/bottom-memory.sh",
         "states": {
             "warning": 70,
             "critical": 90
@@ -126,7 +126,7 @@
         "format-ethernet": " ", // Icon: ethernet
         "format-disconnected": "  Disconnected",
         "tooltip-format": "{ifname}: {ipaddr}/{cidr}\nSignal: {signalStrength}%\n: {bandwidthDownBits}\n: {bandwidthUpBits}",
-        "on-click": "kitty -e 'nmtui'",
+        "on-click": "wezterm start -- nmtui",
     },
     "network#vpn": {
         "interface": "tun0",
@@ -225,7 +225,7 @@
 
     "custom/terminal": {
         "format": " ",
-        "on-click": "exec kitty",
+        "on-click": "exec wezterm",
         "tooltip": false
     },
 

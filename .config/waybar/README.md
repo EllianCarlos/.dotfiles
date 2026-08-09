@@ -7,7 +7,7 @@ Custom Waybar setup with enhanced monitoring and interactive modules.
 ### Essential
 - **waybar** - Status bar for Wayland compositors
 - **bottom** (btm) - System monitor with customizable views
-- **kitty** - Terminal emulator (for launching bottom)
+- **wezterm** - Terminal emulator (for launching bottom)
 - **wofi** - Application launcher (for clipboard history)
 - **hyprland** - Window manager (integration)
 
@@ -29,7 +29,7 @@ Add to your `~/.config/home-manager/home.nix`:
 home.packages = with pkgs; [
   waybar
   bottom
-  kitty
+  wezterm
   wofi
   cliphist
   libnotify
