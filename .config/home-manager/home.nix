@@ -220,6 +220,12 @@ in
     # --- nixapply ---
     ".claude/skills/nixapply/SKILL.md".source = ./nixapply/skill.md;
 
+    # --- statusline ---
+    ".claude/statusline-command.sh" = {
+      source = ./statusline/command.sh;
+      executable = true;
+    };
+
     # --- Config validation hook ---
     ".claude/hooks/validate-config.sh" = {
       source = ./hooks/validate-config.sh;
@@ -790,6 +796,10 @@ in
             "Bash(*.env *)"
             "Bash(pass *)"
           ];
+        };
+        statusLine = {
+          type = "command";
+          command = "${config.home.homeDirectory}/.claude/statusline-command.sh";
         };
         # --- mnemon hooks ---
         hooks = {
