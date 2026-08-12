@@ -71,6 +71,26 @@ let
       install -m755 mnemon $out/bin/mnemon
     '';
   };
+  # herdr (https://herdr.dev) -- agent orchestration runtime that
+  # github.com/AltanS/collie (a phone UI for the agent herd) plugs into.
+  # Not in nixpkgs; upstream ships a single static binary per release
+  # rather than a tarball, so this mirrors the mnemon derivation above
+  # minus the unpack step. Collie itself is installed at runtime via
+  # `herdr plugin install AltanS/collie`, not packaged here.
+  herdr = pkgs.stdenv.mkDerivation {
+    pname = "herdr";
+    version = "0.8.0";
+    src = pkgs.fetchurl {
+      url = "https://github.com/herdrdev/herdr/releases/download/v0.8.0/herdr-linux-x86_64";
+      hash = "sha256-uHLqfkD6LLF+hXrJtisb8m23tAPGIvXS8/WzX26azSg=";
+    };
+    dontUnpack = true;
+    dontBuild = true;
+    installPhase = ''
+      mkdir -p $out/bin
+      install -m755 $src $out/bin/herdr
+    '';
+  };
 in
 {
   imports = [
@@ -126,6 +146,17 @@ in
     claude-code
     mnemon
 
+    # --- Herdr / Collie (github.com/AltanS/collie) ---
+    bun
+    herdr
+    # herdr's Claude Code integration hook (herdr-agent-state.sh) shells out to
+    # python3 to report the session id over the herdr socket. NixOS ships no
+    # system Python, so without this package the hook runs, finds no python3
+    # on PATH, and silently no-ops (see `command -v python3` in the script) —
+    # herdr never learns the session id, and Collie's History icon never
+    # appears, no matter how many times the Claude Code session restarts.
+    python3
+
     cliphist # Clipboard manager
     libnotify # Desktop notifications
     wl-clipboard # Wayland clipboard utilities
@@ -163,6 +194,11 @@ in
     "kitty".source = ../kitty;
     "waybar".source = ../waybar;
     "bottom".source = ../bottom;
+    # recursive = true (same reason as wezterm above): herdr writes runtime state (socket/log) into this dir, so it must stay real and writable, not a whole-dir symlink into the read-only store.
+    "herdr" = {
+      source = ../herdr;
+      recursive = true;
+    };
     "nvim".source = ../nvim;
     "wofi".source = ../wofi;
     "neofetch".source = ../neofetch;
@@ -219,6 +255,9 @@ in
 
     # --- nixapply ---
     ".claude/skills/nixapply/SKILL.md".source = ./nixapply/skill.md;
+
+    # --- output styles ---
+    ".claude/output-styles/asd-ste100.md".source = ./output-styles/asd-ste100.md;
 
     # --- statusline ---
     ".claude/statusline-command.sh" = {
@@ -297,6 +336,10 @@ in
 
     initExtra = ''
       [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+      # --- Gemini CLI: API-key auth, no interactive /auth needed -----------
+      # Requires: pass insert gemini_api_key
+      export GEMINI_API_KEY="$(${pkgs.pass}/bin/pass show gemini_api_key 2>/dev/null)"
 
       audio-to() {
         pactl set-default-sink "$1"
@@ -462,6 +505,7 @@ in
       hooksDir = "${config.home.homeDirectory}/.claude/hooks/mnemon";
       claudeHooksDir = "${config.home.homeDirectory}/.claude/hooks";
       claudeSettingsFile = pkgs.writeText "claude-settings.json" (builtins.toJSON {
+        outputStyle = "ASD-STE100";
         permissions = {
           allow = [
             "WebFetch(domain:github.com)"
@@ -796,6 +840,7 @@ in
             "Bash(*.env *)"
             "Bash(pass *)"
           ];
+          defaultMode = "auto";
         };
         statusLine = {
           type = "command";
@@ -832,6 +877,49 @@ in
         cp ${claudeMcpFile} "$HOME/.claude.json"
       fi
       chmod 644 "$HOME/.claude.json"
+    '';
+
+  # --- Herdr Claude integration -------------------------------------------------
+  # Installs herdr's session-identity hook for Claude Code. Without this hook,
+  # herdr cannot read a pane's Claude Code session id. Collie then shows no
+  # History icon for that pane, because Collie gates it on `hasSession`
+  # (bridge/types.ts in AltanS/collie, keyed on herdr's agent_session report).
+  #
+  # Runs after claudeSettings on purpose, not before. Herdr's own installer
+  # merges its SessionStart hook entry into settings.json without touching
+  # other entries. The claudeSettings jq merge above replaces the whole
+  # hooks.SessionStart array instead of merging it (jq's `*` does not
+  # concatenate arrays), so if this ran first, the next `home-manager switch`
+  # would wipe herdr's entry straight back out.
+  #
+  # `herdr integration install claude` is safe to re-run: it writes the same
+  # hook file and settings entry every time and exits 0.
+  home.activation.herdrClaudeIntegration =
+    config.lib.dag.entryAfter [ "claudeSettings" ] ''
+      ${herdr}/bin/herdr integration install claude
+    '';
+
+  # --- Gemini CLI settings -----------------------------------------------------
+  # Pins auth to the API key path (GEMINI_API_KEY, exported from `pass` in
+  # programs.zsh.initExtra) so `gemini` never drops into the interactive
+  # /auth OAuth flow. Deep-merged over whatever's on disk so unmanaged state
+  # (history, installation_id, etc. live in separate files anyway) survives.
+  home.activation.geminiSettings =
+    let
+      geminiSettingsFile = pkgs.writeText "gemini-settings.json" (builtins.toJSON {
+        security.auth.selectedType = "gemini-api-key";
+      });
+    in
+    config.lib.dag.entryAfter [ "writeBoundary" ] ''
+      mkdir -p "$HOME/.gemini"
+
+      if [ -f "$HOME/.gemini/settings.json" ]; then
+        ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$HOME/.gemini/settings.json" ${geminiSettingsFile} > "$HOME/.gemini/settings.json.tmp"
+        mv "$HOME/.gemini/settings.json.tmp" "$HOME/.gemini/settings.json"
+      else
+        cp ${geminiSettingsFile} "$HOME/.gemini/settings.json"
+      fi
+      chmod 644 "$HOME/.gemini/settings.json"
     '';
 
   # --- Home Manager itself ----------------------------------------------------

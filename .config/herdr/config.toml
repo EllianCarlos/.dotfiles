@@ -1,0 +1,7 @@
+# Leader/prefix key. Default is ctrl+b, which collides with tmux's own
+# default prefix. ctrl+a is free (this repo doesn't rebind tmux's prefix —
+# see .config/home-manager/home.nix) and, being a plain ctrl+<letter>
+# combo, is what Termux's extra-keys CTRL toggle delivers reliably; alt
+# combos and ctrl+space are flaky through Android soft keyboards/IMEs.
+[keys]
+prefix = "ctrl+a"
