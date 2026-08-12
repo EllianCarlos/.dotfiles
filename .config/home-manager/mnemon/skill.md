@@ -42,3 +42,13 @@ mnemon store remove <name>
 - Categories: `preference` · `decision` · `insight` · `fact` · `context`
 - Edge types: `temporal` · `semantic` · `causal` · `entity`
 - Max 8,000 chars per insight.
+- Entities must be genuine named things: people, files, paths, repos, hosts, tools, orgs.
+  Never emphasis words (NEVER, ONLY, ALWAYS), abbreviations (e.g., i.e.), or generic nouns
+  pulled from the sentence just because they are capitalized.
+- `--entities` does NOT override extraction — `mnemon` always runs its own auto-extraction
+  on the content and merges it in, even with a clean `--entities` list (confirmed: the flag's
+  own help text says "merged with auto-extraction"; no flag turns this off). Auto-extraction
+  grabs capitalized tokens, so it re-adds words like NEVER/ONLY/LOCAL if the content itself
+  is written in ALL-CAPS for emphasis. To actually keep entities clean, write emphasis in
+  fact content as lowercase phrasing ("must never be pushed", not "must NEVER be pushed") —
+  fixing the `--entities` list alone will not stop the noise.

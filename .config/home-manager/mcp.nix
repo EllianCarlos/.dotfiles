@@ -41,10 +41,11 @@ let
       ''}
       exec ${lib.escapeShellArg exe} ${lib.escapeShellArgs args} "$@"
     '';
-in
-mcp-services-nix.lib.mkConfig pkgs {
-  flavor = "claude-code";
-  programs = {
+
+  # Shared registry-backed servers -- identical shape (command/args/env) for
+  # every client, since these are all local stdio processes. Reused verbatim
+  # for both Claude Code and Gemini CLI.
+  sharedPrograms = {
     context7.enable = true;
     playwright.enable = true;
     "sequential-thinking".enable = true;
@@ -63,7 +64,9 @@ mcp-services-nix.lib.mkConfig pkgs {
     time.enable = true;
     fetch.enable = true;
   };
-  settings.servers = {
+
+  # Hand-defined stdio servers -- also identical shape across clients.
+  stdioServers = {
     postgres = {
       command =
         "${mkWrapper {
@@ -92,17 +95,6 @@ mcp-services-nix.lib.mkConfig pkgs {
           args = [ "-y" "seekstone" ];
         }}/bin/obsidian-second-brain-wrapped";
     };
-    cockroachdb-cloud = {
-      type = "http";
-      url = "https://cockroachlabs.cloud/mcp";
-    };
-    # OAuth-based: connecting triggers a consent screen to authorize
-    # read/write/send access, no static token needed here.
-    # https://www.fastmail.com/blog/an-mcp-server-for-fastmail/
-    fastmail = {
-      type = "http";
-      url = "https://api.fastmail.com/mcp";
-    };
     super-productivity = {
       command =
         "${mkWrapper {
@@ -113,4 +105,38 @@ mcp-services-nix.lib.mkConfig pkgs {
         }}/bin/supper-productivity-wrapped";
     };
   };
+
+  # Remote HTTP servers -- shape differs per client. Claude Code wants
+  # `type = "http"; url = ...`. Gemini CLI has no `type` field and infers
+  # streamable-HTTP transport from `httpUrl` instead
+  # (https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md).
+  httpServerUrls = {
+    cockroachdb-cloud = "https://cockroachlabs.cloud/mcp";
+    # OAuth-based: connecting triggers a consent screen to authorize
+    # read/write/send access, no static token needed here.
+    # https://www.fastmail.com/blog/an-mcp-server-for-fastmail/
+    fastmail = "https://api.fastmail.com/mcp";
+  };
+  httpServersFor = flavor:
+    lib.mapAttrs
+      (_: url:
+        if flavor == "gemini"
+        then { httpUrl = url; }
+        else { type = "http"; inherit url; })
+      httpServerUrls;
+
+  mkClientConfig = flavor: extraSettings:
+    mcp-services-nix.lib.mkConfig pkgs {
+      # mcp-servers-nix has no "gemini" flavor, but "claude-code" already
+      # emits the same bare `{ mcpServers = {...} }` shape Gemini CLI's
+      # settings.json expects, so it's reused for both -- only the HTTP
+      # server shapes above actually differ per client.
+      flavor = "claude-code";
+      programs = sharedPrograms;
+      settings.servers = stdioServers // (httpServersFor flavor) // extraSettings;
+    };
+in
+{
+  claude = mkClientConfig "claude" { };
+  gemini = mkClientConfig "gemini" { };
 }

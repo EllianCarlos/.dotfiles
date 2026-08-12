@@ -71,6 +71,30 @@ let
       install -m755 mnemon $out/bin/mnemon
     '';
   };
+  # tuicr (https://tuicr.dev) -- terminal UI for code review, with vim
+  # keybindings. Not in nixpkgs; upstream ships a per-platform release
+  # tarball, so this mirrors the mnemon derivation above. Unlike mnemon,
+  # this binary is dynamically linked against glibc/libz/libgcc_s/libm
+  # (verified with `patchelf --print-needed`) rather than static, so it
+  # needs autoPatchelfHook -- without it, NixOS fails with "Could not
+  # start dynamically linked executable" because /lib64/ld-linux-*.so.2
+  # doesn't exist outside an FHS environment.
+  tuicr = pkgs.stdenv.mkDerivation {
+    pname = "tuicr";
+    version = "0.21.0";
+    src = pkgs.fetchurl {
+      url = "https://github.com/agavra/tuicr/releases/download/v0.21.0/tuicr-0.21.0-x86_64-unknown-linux-gnu.tar.gz";
+      hash = "sha256-THdLmB0vc9/2dfUJpGzgfvaro+oSfhZnCqqAE0afaAs=";
+    };
+    nativeBuildInputs = [ pkgs.autoPatchelfHook ];
+    buildInputs = [ pkgs.stdenv.cc.cc.lib pkgs.zlib ];
+    unpackPhase = "tar xzf $src";
+    dontBuild = true;
+    installPhase = ''
+      mkdir -p $out/bin
+      install -m755 tuicr $out/bin/tuicr
+    '';
+  };
   # herdr (https://herdr.dev) -- agent orchestration runtime that
   # github.com/AltanS/collie (a phone UI for the agent herd) plugs into.
   # Not in nixpkgs; upstream ships a single static binary per release
@@ -145,6 +169,7 @@ in
     # code-cursor
     claude-code
     mnemon
+    tuicr
 
     # --- Herdr / Collie (github.com/AltanS/collie) ---
     bun
@@ -338,8 +363,8 @@ in
       [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
       # --- Gemini CLI: API-key auth, no interactive /auth needed -----------
-      # Requires: pass insert gemini_api_key
-      export GEMINI_API_KEY="$(${pkgs.pass}/bin/pass show gemini_api_key 2>/dev/null)"
+      # Requires: pass insert gemini
+      export GEMINI_API_KEY="$(${pkgs.pass}/bin/pass show gemini 2>/dev/null)"
 
       audio-to() {
         pactl set-default-sink "$1"
@@ -854,8 +879,9 @@ in
           PostToolUse = [{ matcher = "Edit|Write"; hooks = [{ type = "command"; command = "${claudeHooksDir}/validate-config.sh"; }]; }];
         };
       });
-      # --- MCP servers (~/.claude.json) ---
-      claudeMcpFile = import ./mcp.nix { inherit pkgs; };
+      # --- MCP servers (~/.claude.json, ~/.gemini/settings.json) ---
+      mcpFiles = import ./mcp.nix { inherit pkgs; };
+      claudeMcpFile = mcpFiles.claude;
     in
     config.lib.dag.entryAfter [ "writeBoundary" ] ''
       mkdir -p "$HOME/.claude"
@@ -904,8 +930,12 @@ in
   # programs.zsh.initExtra) so `gemini` never drops into the interactive
   # /auth OAuth flow. Deep-merged over whatever's on disk so unmanaged state
   # (history, installation_id, etc. live in separate files anyway) survives.
+  # mcpServers is wholesale-replaced rather than deep-merged, same reasoning
+  # as the .claude.json fix above: a deep merge would let a server removed
+  # from mcp.nix survive forever as a stale leftover key.
   home.activation.geminiSettings =
     let
+      geminiMcpFile = (import ./mcp.nix { inherit pkgs; }).gemini;
       geminiSettingsFile = pkgs.writeText "gemini-settings.json" (builtins.toJSON {
         security.auth.selectedType = "gemini-api-key";
       });
@@ -913,12 +943,13 @@ in
     config.lib.dag.entryAfter [ "writeBoundary" ] ''
       mkdir -p "$HOME/.gemini"
 
-      if [ -f "$HOME/.gemini/settings.json" ]; then
-        ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$HOME/.gemini/settings.json" ${geminiSettingsFile} > "$HOME/.gemini/settings.json.tmp"
-        mv "$HOME/.gemini/settings.json.tmp" "$HOME/.gemini/settings.json"
-      else
-        cp ${geminiSettingsFile} "$HOME/.gemini/settings.json"
-      fi
+      [ -f "$HOME/.gemini/settings.json" ] || echo '{}' > "$HOME/.gemini/settings.json"
+
+      ${pkgs.jq}/bin/jq -s \
+        '.[0] as $old | .[1] as $new | .[2] as $mcp | ($old * $new) | .mcpServers = $mcp.mcpServers' \
+        "$HOME/.gemini/settings.json" ${geminiSettingsFile} ${geminiMcpFile} \
+        > "$HOME/.gemini/settings.json.tmp"
+      mv "$HOME/.gemini/settings.json.tmp" "$HOME/.gemini/settings.json"
       chmod 644 "$HOME/.gemini/settings.json"
     '';
 
