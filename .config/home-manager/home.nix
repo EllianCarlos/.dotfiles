@@ -432,6 +432,13 @@ in
     enable = true;
   };
 
+  # Notification daemon: mako is built for wlroots compositors (Hyprland,
+  # Sway), so it works out of the box here. This module also starts and
+  # manages its own systemd user service -- no exec-once line needed.
+  services.mako = {
+    enable = true;
+  };
+
   # Vicinae launcher daemon (bound to SUPER + SPACE in hyprland.conf).
   # No home-manager module upstream yet, so the unit is declared by hand.
   systemd.user.services.vicinae = {
