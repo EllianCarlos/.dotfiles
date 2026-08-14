@@ -16,8 +16,12 @@
 # has to land in the upstream repo (or your fork) and get re-pinned here.
 #
 # PostToolUse can't undo a completed tool call, so a formatting failure
-# here can't block the edit. It only routes stderr back to the model
-# (exit 2) so Claude sees it and can react.
+# here can't block the edit. The hook itself never blocks Claude either:
+# the inspect+clean work runs in a detached background job, and the hook
+# returns right away. Trade-off: because the hook exits before that job
+# finishes, it can no longer route a clean failure back to Claude via
+# stderr + exit 2 -- Claude's turn is already over by then. Failures go
+# to LOG_FILE instead; check it by hand if a file looks unclean.
 
 INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
@@ -28,20 +32,30 @@ FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
 SCRIPTS="$HOME/.claude/skills/remove-ai-marks/scripts"
 [ -x "$SCRIPTS" ] || exit 0
 INSPECT_FILE="$SCRIPTS/inspect_file.py"
-[ -x "$INSPECT_FILE" ] || exit 0
+# Skill scripts deploy read-only from the nix store (no exec bit); we run
+# them through `python3`, so only readability matters here, not -x.
+[ -r "$INSPECT_FILE" ] || exit 0
 CLEAN_FILE="$SCRIPTS/clean_file.py"
-[ -x "$CLEAN_FILE" ] || exit 0
+[ -r "$CLEAN_FILE" ] || exit 0
 
-if ! OUTPUT=$(python3 "$INSPECT_FILE" "$FILE_PATH" 2>&1); then
-  echo "[watermarks-remover] inspect failed for $FILE_PATH:" >&2
-  echo "$OUTPUT" >&2
-  exit 2
-fi
+LOG_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/claude"
+LOG_FILE="$LOG_DIR/format-on-write.log"
+mkdir -p "$LOG_DIR"
 
-if ! OUTPUT=$(python3 "$CLEAN_FILE" "$FILE_PATH" -o "$FILE_PATH" 2>&1); then
-  echo "[watermarks-remover] clean file failed for $FILE_PATH:" >&2
-  echo "$OUTPUT" >&2
-  exit 2
-fi
+(
+  {
+    # inspect_file.py exits 1 when it finds marks -- that is its normal
+    # "marks found" result, not a crash, so its exit code must not gate
+    # the clean step below. It runs here only to log a before-picture.
+    echo "[watermarks-remover] $(date -Iseconds) inspect for $FILE_PATH:"
+    python3 "$INSPECT_FILE" "$FILE_PATH" 2>&1
+
+    if ! OUTPUT=$(python3 "$CLEAN_FILE" "$FILE_PATH" -o "$FILE_PATH" 2>&1); then
+      echo "[watermarks-remover] clean file failed for $FILE_PATH:"
+      echo "$OUTPUT"
+    fi
+  } >>"$LOG_FILE" 2>&1
+) &
+disown
 
 exit 0
