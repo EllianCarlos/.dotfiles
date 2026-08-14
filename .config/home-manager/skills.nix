@@ -2,6 +2,7 @@
 let
   pins = import ./pins.nix;
   mattpocockSrc = builtins.fetchTarball "https://github.com/${pins.mattpocock-skills.owner}/${pins.mattpocock-skills.repo}/archive/${pins.mattpocock-skills.rev}.tar.gz";
+  mattpocockPersonalSrc = builtins.fetchTarball "https://github.com/${pins.mattpocock-skills-personal.owner}/${pins.mattpocock-skills-personal.repo}/archive/${pins.mattpocock-skills-personal.rev}.tar.gz";
   watermarks-remover = builtins.fetchTarball "https://github.com/${pins.watermarks-remover.owner}/${pins.watermarks-remover.repo}/archive/${pins.watermarks-remover.rev}.tar.gz";
 in
 {
@@ -34,7 +35,7 @@ in
         subdir = "skills/engineering";
       };
       mattpocock-personal = {
-        path = mattpocockSrc;
+        path = mattpocockPersonalSrc;
         subdir = "skills/personal";
       };
       mattpocock-productivity = {

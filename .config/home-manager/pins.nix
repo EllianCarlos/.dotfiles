@@ -25,22 +25,28 @@
   agent-skills-nix = {
     owner = "Kyure-A";
     repo = "agent-skills-nix";
-    rev = "8326df98cf494dc515db99affa9ea9d2bd6666b6";
+    rev = "1594ba479be81a7cb6dd19faabefcb1ed5b3f964";
   };
   loop-engineering = {
     owner = "cobusgreyling";
     repo = "loop-engineering";
-    rev = "42e64a7bddf50847591e2e3d4591857f16b96e47";
+    rev = "16c52e4b1ffe9f59f61117a660a6f6272b5e9c8e";
   };
   superpowers = {
     owner = "obra";
     repo = "superpowers";
-    rev = "3dcbd5c4b48e02263fbf4a3c01e3fe4f81d584d9";
+    rev = "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"; # v6.3.0
   };
   mattpocock-skills = {
     owner = "mattpocock";
     repo = "skills";
+    rev = "8b78b531ab965735c5dc74f6f7a219e1e37326df";
+  };
+  mattpocock-skills-personal = {
+    owner = "mattpocock";
+    repo = "skills";
     rev = "ed37663cc5fbef691ddfecd080dff42f7e7e350d";
+    frozen = true;
   };
   resurrect-wezterm = {
     owner = "MLFlexer";
