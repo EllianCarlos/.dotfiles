@@ -2,6 +2,7 @@
 let
   pins = import ./pins.nix;
   mattpocockSrc = builtins.fetchTarball "https://github.com/${pins.mattpocock-skills.owner}/${pins.mattpocock-skills.repo}/archive/${pins.mattpocock-skills.rev}.tar.gz";
+  watermarks-remover = builtins.fetchTarball "https://github.com/${pins.watermarks-remover.owner}/${pins.watermarks-remover.repo}/archive/${pins.watermarks-remover.rev}.tar.gz";
 in
 {
   # Claude Code's skills-dir loader only looks for SKILL.md directly inside
@@ -43,6 +44,10 @@ in
       mattpocock-misc = {
         path = mattpocockSrc;
         subdir = "skills/misc";
+      };
+      remove-ai-marks = {
+        path = watermarks-remover;
+        subdir = "skills/remove-ai-marks";
       };
     };
 

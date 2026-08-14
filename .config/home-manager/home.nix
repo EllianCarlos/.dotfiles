@@ -295,6 +295,12 @@ in
       source = ./hooks/validate-config.sh;
       executable = true;
     };
+
+    # --- watermarks-remover ---
+    ".claude/hooks/format-on-write.sh" = {
+      source = ./hooks/format-on-write.sh;
+      executable = true;
+    };
   };
 
   # --- Session variables ------------------------------------------------------
@@ -347,6 +353,8 @@ in
       audio-headset = "audio-to alsa_output.usb-Logitech_G535_Wireless_Gaming_Headset-00.analog-stereo";
       audio-hdmi = "audio-to alsa_output.pci-0000_03_00.1.hdmi-stereo-extra1";
       audio-combine = "audio-to combine-sink";
+
+      caffeinate = "systemd-inhibit --what=idle:sleep --mode=block --why='coding-through-the-phone' sleep infinity";
     };
 
     autosuggestion.enable = true;
@@ -874,9 +882,14 @@ in
         # --- mnemon hooks ---
         hooks = {
           SessionStart = [{ hooks = [{ type = "command"; command = "${hooksDir}/prime.sh"; }]; }];
-          Stop = [{ hooks = [{ type = "command"; command = "${hooksDir}/stop.sh"; }]; }];
+          Stop = [
+            { hooks = [{ type = "command"; command = "${hooksDir}/stop.sh"; }]; }
+          ];
           UserPromptSubmit = [{ hooks = [{ type = "command"; command = "${hooksDir}/user_prompt.sh"; }]; }];
-          PostToolUse = [{ matcher = "Edit|Write"; hooks = [{ type = "command"; command = "${claudeHooksDir}/validate-config.sh"; }]; }];
+          PostToolUse = [
+            { matcher = "Edit|Write"; hooks = [{ type = "command"; command = "${claudeHooksDir}/validate-config.sh"; }]; }
+            { matcher = "Edit|MultiEdit|Write"; hooks = [{ type = "command"; command = "${claudeHooksDir}/format-on-write.sh"; }]; }
+          ];
         };
       });
       # --- MCP servers (~/.claude.json, ~/.gemini/settings.json) ---

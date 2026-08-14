@@ -47,4 +47,9 @@
     repo = "resurrect.wezterm";
     rev = "65cbbbf6d2c76f3e36af7610a356fc190fcb6147";
   };
+  watermarks-remover = {
+    owner = "guillaumemeyer";
+    repo = "watermarks-remover";
+    rev = "a3c5859a61e37e0e8d401f3b78e424185b849fde"; # v0.4.0
+  };
 }
