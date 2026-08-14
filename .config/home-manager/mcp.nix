@@ -47,7 +47,13 @@ let
   # for both Claude Code and Gemini CLI.
   sharedPrograms = {
     context7.enable = true;
-    playwright.enable = true;
+    # --extension attaches to the user's real Chrome/Edge via the
+    # Playwright MCP browser extension, instead of launching a separate
+    # headless Chromium. Requires the extension to be installed.
+    playwright = {
+      enable = true;
+      args = [ "--extension" ];
+    };
     "sequential-thinking".enable = true;
     github = {
       enable = true;

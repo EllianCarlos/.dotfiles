@@ -152,6 +152,11 @@ in
     stress-ng
     jq
 
+    # --- Linux kernel review (lore.kernel.org) ---
+    b4 # fetch + review (b4 review TUI) patch series from public-inbox
+    public-inbox # provides `lei`, for search/pull of kernel-list mail
+    delta # readable diffs when reading patches in the terminal
+
     # --- Wayland / Hyprland ---
     grim
     slurp
