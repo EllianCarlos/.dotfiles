@@ -113,9 +113,8 @@ let
   };
 
   # Remote HTTP servers -- shape differs per client. Claude Code wants
-  # `type = "http"; url = ...`. Gemini CLI has no `type` field and infers
-  # streamable-HTTP transport from `httpUrl` instead
-  # (https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md).
+  # `type = "http"; url = ...`. Antigravity CLI wants `serverUrl = ...`
+  # instead, with no `type` field (https://antigravity.google/docs/cli/mcp/).
   httpServerUrls = {
     cockroachdb-cloud = "https://cockroachlabs.cloud/mcp";
     # OAuth-based: connecting triggers a consent screen to authorize
@@ -126,17 +125,17 @@ let
   httpServersFor = flavor:
     lib.mapAttrs
       (_: url:
-        if flavor == "gemini"
-        then { httpUrl = url; }
+        if flavor == "antigravity"
+        then { serverUrl = url; }
         else { type = "http"; inherit url; })
       httpServerUrls;
 
   mkClientConfig = flavor: extraSettings:
     mcp-services-nix.lib.mkConfig pkgs {
-      # mcp-servers-nix has no "gemini" flavor, but "claude-code" already
-      # emits the same bare `{ mcpServers = {...} }` shape Gemini CLI's
-      # settings.json expects, so it's reused for both -- only the HTTP
-      # server shapes above actually differ per client.
+      # mcp-servers-nix has no "antigravity" flavor, but "claude-code"
+      # already emits the same bare `{ mcpServers = {...} }` shape
+      # Antigravity CLI's mcp_config.json expects, so it's reused for both
+      # -- only the HTTP server shapes above actually differ per client.
       flavor = "claude-code";
       programs = sharedPrograms;
       settings.servers = stdioServers // (httpServersFor flavor) // extraSettings;
@@ -144,5 +143,5 @@ let
 in
 {
   claude = mkClientConfig "claude" { };
-  gemini = mkClientConfig "gemini" { };
+  antigravity = mkClientConfig "antigravity" { };
 }

@@ -6,6 +6,8 @@ let
 
   resurrectSrc = builtins.fetchTarball "https://github.com/${pins.resurrect-wezterm.owner}/${pins.resurrect-wezterm.repo}/archive/${pins.resurrect-wezterm.rev}.tar.gz";
 
+  antigravityCli = pkgs.callPackage ./antigravity-cli.nix { };
+
   # --- Font family verification -------------------------------------------
   fontPackages =
     if osConfig == null
@@ -169,7 +171,7 @@ in
 
     vicinae
 
-    gemini-cli
+    antigravityCli
     # kiro
     # code-cursor
     claude-code
@@ -375,7 +377,7 @@ in
     initExtra = ''
       [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-      # --- Gemini CLI: API-key auth, no interactive /auth needed -----------
+      # --- Antigravity CLI (agy): API-key auth, no interactive login -------
       # Requires: pass insert gemini
       export GEMINI_API_KEY="$(${pkgs.pass}/bin/pass show gemini 2>/dev/null)"
 
@@ -904,7 +906,7 @@ in
           ];
         };
       });
-      # --- MCP servers (~/.claude.json, ~/.gemini/settings.json) ---
+      # --- MCP servers (~/.claude.json, ~/.gemini/config/mcp_config.json) ---
       mcpFiles = import ./mcp.nix { inherit pkgs; };
       claudeMcpFile = mcpFiles.claude;
     in
@@ -950,32 +952,45 @@ in
       ${herdr}/bin/herdr integration install claude
     '';
 
-  # --- Gemini CLI settings -----------------------------------------------------
+  # --- Antigravity CLI settings -------------------------------------------------
   # Pins auth to the API key path (GEMINI_API_KEY, exported from `pass` in
-  # programs.zsh.initExtra) so `gemini` never drops into the interactive
-  # /auth OAuth flow. Deep-merged over whatever's on disk so unmanaged state
-  # (history, installation_id, etc. live in separate files anyway) survives.
-  # mcpServers is wholesale-replaced rather than deep-merged, same reasoning
-  # as the .claude.json fix above: a deep merge would let a server removed
-  # from mcp.nix survive forever as a stale leftover key.
-  home.activation.geminiSettings =
+  # programs.zsh.initExtra) so `agy` never drops into the interactive
+  # browser/keyring login flow. Antigravity CLI splits its config across two
+  # files (unlike Claude Code / the old Gemini CLI, which keep mcpServers
+  # inside the main settings file):
+  #   - ~/.gemini/antigravity-cli/settings.json -- modelProvider, deep-merged
+  #     over whatever's on disk so unmanaged state survives.
+  #   - ~/.gemini/config/mcp_config.json -- mcpServers, wholesale-replaced
+  #     rather than deep-merged, same reasoning as the .claude.json fix
+  #     above: a deep merge would let a server removed from mcp.nix survive
+  #     forever as a stale leftover key.
+  home.activation.antigravitySettings =
     let
-      geminiMcpFile = (import ./mcp.nix { inherit pkgs; }).gemini;
-      geminiSettingsFile = pkgs.writeText "gemini-settings.json" (builtins.toJSON {
-        security.auth.selectedType = "gemini-api-key";
+      antigravityMcpFile = (import ./mcp.nix { inherit pkgs; }).antigravity;
+      antigravitySettingsFile = pkgs.writeText "antigravity-cli-settings.json" (builtins.toJSON {
+        modelProvider = "gemini";
       });
     in
     config.lib.dag.entryAfter [ "writeBoundary" ] ''
-      mkdir -p "$HOME/.gemini"
+      mkdir -p "$HOME/.gemini/antigravity-cli" "$HOME/.gemini/config"
 
-      [ -f "$HOME/.gemini/settings.json" ] || echo '{}' > "$HOME/.gemini/settings.json"
+      # --- settings.json (auth/model provider) ---
+      [ -f "$HOME/.gemini/antigravity-cli/settings.json" ] || echo '{}' > "$HOME/.gemini/antigravity-cli/settings.json"
 
-      ${pkgs.jq}/bin/jq -s \
-        '.[0] as $old | .[1] as $new | .[2] as $mcp | ($old * $new) | .mcpServers = $mcp.mcpServers' \
-        "$HOME/.gemini/settings.json" ${geminiSettingsFile} ${geminiMcpFile} \
-        > "$HOME/.gemini/settings.json.tmp"
-      mv "$HOME/.gemini/settings.json.tmp" "$HOME/.gemini/settings.json"
-      chmod 644 "$HOME/.gemini/settings.json"
+      ${pkgs.jq}/bin/jq -s '.[0] * .[1]' \
+        "$HOME/.gemini/antigravity-cli/settings.json" ${antigravitySettingsFile} \
+        > "$HOME/.gemini/antigravity-cli/settings.json.tmp"
+      mv "$HOME/.gemini/antigravity-cli/settings.json.tmp" "$HOME/.gemini/antigravity-cli/settings.json"
+      chmod 644 "$HOME/.gemini/antigravity-cli/settings.json"
+
+      # --- mcp_config.json (mcpServers) ---
+      [ -f "$HOME/.gemini/config/mcp_config.json" ] || echo '{}' > "$HOME/.gemini/config/mcp_config.json"
+
+      ${pkgs.jq}/bin/jq -s '.[0] as $old | .[1] as $new | ($old * $new) | .mcpServers = $new.mcpServers' \
+        "$HOME/.gemini/config/mcp_config.json" ${antigravityMcpFile} \
+        > "$HOME/.gemini/config/mcp_config.json.tmp"
+      mv "$HOME/.gemini/config/mcp_config.json.tmp" "$HOME/.gemini/config/mcp_config.json"
+      chmod 644 "$HOME/.gemini/config/mcp_config.json"
     '';
 
   # --- Home Manager itself ----------------------------------------------------

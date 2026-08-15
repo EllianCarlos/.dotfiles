@@ -58,4 +58,16 @@
     repo = "watermarks-remover";
     rev = "a3c5859a61e37e0e8d401f3b78e424185b849fde"; # v0.4.0
   };
+  # Closed-source binary release (see antigravity-cli.nix), not a git repo --
+  # no owner/repo/rev for check-nix-pins to git-ls-remote against, so this
+  # is frozen. To bump: fetch
+  # https://antigravity-cli-auto-updater-974169037036.us-central1.run.app/manifests/linux_amd64.json
+  # (this is what upstream's install.sh itself queries) and copy its
+  # version/url/sha512 here together.
+  antigravity-cli = {
+    version = "1.1.13";
+    url = "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.1.13-6057583128215552/linux-x64/cli_linux_x64.tar.gz";
+    sha512 = "89c6881b6c1999cb8236e7181c2192ae8f372b0413396c0f7bcff83d27ac9c0cc1202795cc0d629ec1ecbf4937d1c294cf4f5e4f9f8e05b1e972e27198313442";
+    frozen = true;
+  };
 }
