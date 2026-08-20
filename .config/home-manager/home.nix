@@ -166,6 +166,10 @@ in
       zip
       stress-ng
       jq
+      vicinae
+      tuicr
+      super-productivity
+      pass
 
       # --- Linux kernel review (lore.kernel.org) ---
       b4 # fetch + review (b4 review TUI) patch series from public-inbox
@@ -182,25 +186,18 @@ in
 
       zsh-powerlevel10k
 
-      vicinae
-
+      # --- AI Agents ---
       antigravityCli
       # kiro
       # code-cursor
       claude-code
       mnemon
-      tuicr
+      opencode
 
       # --- Herdr / Collie (github.com/AltanS/collie) ---
       bun
       herdr
-      # herdr's Claude Code integration hook (herdr-agent-state.sh) shells out to
-      # python3 to report the session id over the herdr socket. NixOS ships no
-      # system Python, so without this package the hook runs, finds no python3
-      # on PATH, and silently no-ops (see `command -v python3` in the script) —
-      # herdr never learns the session id, and Collie's History icon never
-      # appears, no matter how many times the Claude Code session restarts.
-      python3
+      python3 # only needed by herdr, could be patched with a custom flake in the future, but herdr will also be added to nixpkgs
 
       cliphist # Clipboard manager
       libnotify # Desktop notifications
@@ -212,10 +209,6 @@ in
       libguestfs-with-appliance
       guestfs-tools
       wget
-
-      super-productivity
-
-      pass
     ]
     ++ [
       # --- Verifiers ---
@@ -511,9 +504,6 @@ in
     enable = true;
   };
 
-  # Notification daemon: mako is built for wlroots compositors (Hyprland,
-  # Sway), so it works out of the box here. This module also starts and
-  # manages its own systemd user service -- no exec-once line needed.
   services.mako = {
     enable = true;
   };
