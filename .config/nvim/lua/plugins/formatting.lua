@@ -40,10 +40,14 @@ return {
       zsh = { "shfmt" },
       
       -- Nix
-      nix = { "nixpkgs_fmt" },
+      nix = { "nixfmt" },
       
       -- Kotlin
       kotlin = { "ktlint" },
+
+      -- C / C++
+      c = { "clang-format" },
+      cpp = { "clang-format" },
     },
 
     -- Enable Format on Save

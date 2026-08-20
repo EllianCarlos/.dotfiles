@@ -15,12 +15,12 @@
   mcp-servers-nix = {
     owner = "natsukium";
     repo = "mcp-servers-nix";
-    rev = "4c03cc7e3088420b8b84d8d0937036abe13bf7a7";
+    rev = "c157da8e48b9b0756c436fd81abfaa337785198e";
   };
   claude-code-nix = {
     owner = "sadjow";
     repo = "claude-code-nix";
-    rev = "0d3cd1d6260b6f0ed232224c274c565407446fa1";
+    rev = "fd727a3f341b079ba5387b770c5caef86bdae3e6";
   };
   agent-skills-nix = {
     owner = "Kyure-A";
@@ -30,7 +30,7 @@
   loop-engineering = {
     owner = "cobusgreyling";
     repo = "loop-engineering";
-    rev = "16c52e4b1ffe9f59f61117a660a6f6272b5e9c8e";
+    rev = "e4247dfa6e31598efb53a86995ce84171b5d5421";
   };
   superpowers = {
     owner = "obra";
@@ -40,7 +40,7 @@
   mattpocock-skills = {
     owner = "mattpocock";
     repo = "skills";
-    rev = "8b78b531ab965735c5dc74f6f7a219e1e37326df";
+    rev = "068b6e0c62393147daf03530149cdce209c93da8";
   };
   mattpocock-skills-personal = {
     owner = "mattpocock";
@@ -56,7 +56,9 @@
   watermarks-remover = {
     owner = "guillaumemeyer";
     repo = "watermarks-remover";
-    rev = "a3c5859a61e37e0e8d401f3b78e424185b849fde"; # v0.4.0
+    rev = "dc0ff78f39bedfe0a1986eef54efb297645372ba"; # v0.5.0 -- upstream HEAD
+    # (c2ac8eeef3ff1a17aaab0cdb86889c7ad21675a7) is 3 commits past this tag
+    # with no new release cut yet; see project-pin-bump-prefer-tagged-release.
   };
   # Closed-source binary release (see antigravity-cli.nix), not a git repo --
   # no owner/repo/rev for check-nix-pins to git-ls-remote against, so this

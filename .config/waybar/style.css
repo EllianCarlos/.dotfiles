@@ -75,6 +75,7 @@ window#waybar {
 #custom-power,
 #workspaces,
 #custom-media,
+#custom-language,
 #custom-PBPbattery {
   padding: 0.15rem 0.5rem;
   margin: 1px 3px;
@@ -97,6 +98,10 @@ window#waybar {
 
 #custom-weather {
   color: #f5c2e7; /* Mocha Pink */
+}
+
+#custom-language {
+  color: #a6e3a1; /* Mocha Green */
 }
 
 #battery {

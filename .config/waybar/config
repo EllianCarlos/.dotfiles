@@ -25,6 +25,7 @@
         "temperature",
         "memory",
         "cpu",
+        "custom/language",
         // "custom/keyboard-layout",
         //"custom/PBPbattery",
         // "backlight#icon",
@@ -81,6 +82,14 @@
         },
         "tooltip-format": "CPU: {usage}%\nLoad: {load}\nCores: {avg_frequency}GHz",
         "on-click": "wezterm start -- ~/.config/waybar/bottom-cpu.sh",
+    },
+
+    "custom/language": {
+        "exec": "~/.config/waybar/fcitx5-status.sh",
+        "interval": 1,
+        "format": "  {}", // Icon: input-method
+        "tooltip-format": "Fcitx5 input method\nClick or press SUPER+I to toggle",
+        "on-click": "fcitx5-remote -t",
     },
 
     "custom/keyboard-layout": {

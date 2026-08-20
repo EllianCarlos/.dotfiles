@@ -1,4 +1,10 @@
-{ config, lib, pkgs, osConfig ? null, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  osConfig ? null,
+  ...
+}:
 let
   pins = import ./pins.nix;
   claude-code-flake = builtins.getFlake "github:${pins.claude-code-nix.owner}/${pins.claude-code-nix.repo}/${pins.claude-code-nix.rev}";
@@ -10,55 +16,57 @@ let
 
   # --- Font family verification -------------------------------------------
   fontPackages =
-    if osConfig == null
-    then throw "home.nix: osConfig is unavailable, so the font-family check cannot read fonts.packages. Remove the check or give it an explicit package list rather than letting it silently pass."
-    else osConfig.fonts.packages;
+    if osConfig == null then
+      throw "home.nix: osConfig is unavailable, so the font-family check cannot read fonts.packages. Remove the check or give it an explicit package list rather than letting it silently pass."
+    else
+      osConfig.fonts.packages;
 
-  checkFontFamilies = pkgs.runCommand "check-font-families"
-    { nativeBuildInputs = [ pkgs.fontconfig.bin ]; } ''
-    dirs=""
-    for d in ${lib.escapeShellArgs (map (p: "${p}/share/fonts") fontPackages)}; do
-      [ -d "$d" ] && dirs="$dirs $d"
-    done
+  checkFontFamilies =
+    pkgs.runCommand "check-font-families" { nativeBuildInputs = [ pkgs.fontconfig.bin ]; }
+      ''
+        dirs=""
+        for d in ${lib.escapeShellArgs (map (p: "${p}/share/fonts") fontPackages)}; do
+          [ -d "$d" ] && dirs="$dirs $d"
+        done
 
-    fc-scan --format '%{family}\n' $dirs 2>/dev/null \
-      | tr ',' '\n' | sed 's/^[ "]*//; s/[ "]*$//' | grep -v '^$' | sort -u > installed
+        fc-scan --format '%{family}\n' $dirs 2>/dev/null \
+          | tr ',' '\n' | sed 's/^[ "]*//; s/[ "]*$//' | grep -v '^$' | sort -u > installed
 
-    wezterm_font=$(sed -n 's/^local font_family[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' ${../wezterm/wezterm.lua})
-    if [ -z "$wezterm_font" ]; then
-      echo "" >&2
-      echo 'error: could not find a `local font_family = "..."` line in wezterm.lua.' >&2
-      echo "It was probably renamed or reformatted; update the sed in home.nix to match," >&2
-      echo "otherwise this font check silently verifies nothing for wezterm." >&2
-      exit 1
-    fi
+        wezterm_font=$(sed -n 's/^local font_family[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' ${../wezterm/wezterm.lua})
+        if [ -z "$wezterm_font" ]; then
+          echo "" >&2
+          echo 'error: could not find a `local font_family = "..."` line in wezterm.lua.' >&2
+          echo "It was probably renamed or reformatted; update the sed in home.nix to match," >&2
+          echo "otherwise this font check silently verifies nothing for wezterm." >&2
+          exit 1
+        fi
 
-    {
-      echo "$wezterm_font"
-      sed -n 's/^font_family[[:space:]]\+//p' ${../kitty/kitty.conf}
-      sed -n 's/.*font-family:[[:space:]]*\([^;]*\);.*/\1/p' ${../waybar/style.css}
-    } | tr ',' '\n' | sed 's/^[ "]*//; s/[ "]*$//' | grep -v '^$' | sort -u > wanted
+        {
+          echo "$wezterm_font"
+          sed -n 's/^font_family[[:space:]]\+//p' ${../kitty/kitty.conf}
+          sed -n 's/.*font-family:[[:space:]]*\([^;]*\);.*/\1/p' ${../waybar/style.css}
+        } | tr ',' '\n' | sed 's/^[ "]*//; s/[ "]*$//' | grep -v '^$' | sort -u > wanted
 
-    missing=$(grep -Fxv -f installed wanted || true)
-    if [ -n "$missing" ]; then
-      echo "" >&2
-      echo "error: these font families are referenced by config, but no installed" >&2
-      echo "font package provides them (fontconfig would silently fall back):" >&2
-      echo "" >&2
-      echo "$missing" | while IFS= read -r fam; do
-        echo "  - $fam" >&2
-        key=$(printf '%s' "$fam" | tr -d ' ' | tr '[:upper:]' '[:lower:]')
-        awk -v k="$key" \
-          '{ n = tolower($0); gsub(/ /, "", n); if (index(n, k)) print "      did you mean: " $0 }' \
-          installed >&2
-      done
-      echo "" >&2
-      echo "($(wc -l < installed) families installed; run 'fc-list : family' to list them)" >&2
-      exit 1
-    fi
+        missing=$(grep -Fxv -f installed wanted || true)
+        if [ -n "$missing" ]; then
+          echo "" >&2
+          echo "error: these font families are referenced by config, but no installed" >&2
+          echo "font package provides them (fontconfig would silently fall back):" >&2
+          echo "" >&2
+          echo "$missing" | while IFS= read -r fam; do
+            echo "  - $fam" >&2
+            key=$(printf '%s' "$fam" | tr -d ' ' | tr '[:upper:]' '[:lower:]')
+            awk -v k="$key" \
+              '{ n = tolower($0); gsub(/ /, "", n); if (index(n, k)) print "      did you mean: " $0 }' \
+              installed >&2
+          done
+          echo "" >&2
+          echo "($(wc -l < installed) families installed; run 'fc-list : family' to list them)" >&2
+          exit 1
+        fi
 
-    mkdir -p "$out"
-  '';
+        mkdir -p "$out"
+      '';
   mnemon = pkgs.stdenv.mkDerivation {
     pname = "mnemon";
     version = "0.1.3";
@@ -89,7 +97,10 @@ let
       hash = "sha256-THdLmB0vc9/2dfUJpGzgfvaro+oSfhZnCqqAE0afaAs=";
     };
     nativeBuildInputs = [ pkgs.autoPatchelfHook ];
-    buildInputs = [ pkgs.stdenv.cc.cc.lib pkgs.zlib ];
+    buildInputs = [
+      pkgs.stdenv.cc.cc.lib
+      pkgs.zlib
+    ];
     unpackPhase = "tar xzf $src";
     dontBuild = true;
     installPhase = ''
@@ -135,78 +146,82 @@ in
   nixpkgs.overlays = [ claude-code-flake.overlays.default ];
 
   # --- Packages -------------------------------------------------------------
-  home.packages = with pkgs; [
-    oh-my-zsh
+  home.packages =
+    with pkgs;
+    [
+      oh-my-zsh
 
-    # --- Applications ---
-    wezterm
-    kitty
-    obsidian
-    firefox
-    discord
-    spotify
-    mplayer
-    sxiv
-    tmux
-    devenv
-    ticker
-    zip
-    stress-ng
-    jq
+      # --- Applications ---
+      wezterm
+      kitty
+      obsidian
+      firefox
+      discord
+      spotify
+      mplayer
+      sxiv
+      tmux
+      devenv
+      ticker
+      zip
+      stress-ng
+      jq
 
-    # --- Linux kernel review (lore.kernel.org) ---
-    b4 # fetch + review (b4 review TUI) patch series from public-inbox
-    public-inbox # provides `lei`, for search/pull of kernel-list mail
-    delta # readable diffs when reading patches in the terminal
+      # --- Linux kernel review (lore.kernel.org) ---
+      b4 # fetch + review (b4 review TUI) patch series from public-inbox
+      public-inbox # provides `lei`, for search/pull of kernel-list mail
+      delta # readable diffs when reading patches in the terminal
 
-    # --- Wayland / Hyprland ---
-    grim
-    slurp
-    waybar
-    hyprlock
-    hyprpaper
-    hypridle
+      # --- Wayland / Hyprland ---
+      grim
+      slurp
+      waybar
+      hyprlock
+      hyprpaper
+      hypridle
 
-    zsh-powerlevel10k
+      zsh-powerlevel10k
 
-    vicinae
+      vicinae
 
-    antigravityCli
-    # kiro
-    # code-cursor
-    claude-code
-    mnemon
-    tuicr
+      antigravityCli
+      # kiro
+      # code-cursor
+      claude-code
+      mnemon
+      tuicr
 
-    # --- Herdr / Collie (github.com/AltanS/collie) ---
-    bun
-    herdr
-    # herdr's Claude Code integration hook (herdr-agent-state.sh) shells out to
-    # python3 to report the session id over the herdr socket. NixOS ships no
-    # system Python, so without this package the hook runs, finds no python3
-    # on PATH, and silently no-ops (see `command -v python3` in the script) —
-    # herdr never learns the session id, and Collie's History icon never
-    # appears, no matter how many times the Claude Code session restarts.
-    python3
+      # --- Herdr / Collie (github.com/AltanS/collie) ---
+      bun
+      herdr
+      # herdr's Claude Code integration hook (herdr-agent-state.sh) shells out to
+      # python3 to report the session id over the herdr socket. NixOS ships no
+      # system Python, so without this package the hook runs, finds no python3
+      # on PATH, and silently no-ops (see `command -v python3` in the script) —
+      # herdr never learns the session id, and Collie's History icon never
+      # appears, no matter how many times the Claude Code session restarts.
+      python3
 
-    cliphist # Clipboard manager
-    libnotify # Desktop notifications
-    wl-clipboard # Wayland clipboard utilities
+      cliphist # Clipboard manager
+      libnotify # Desktop notifications
+      wl-clipboard # Wayland clipboard utilities
 
-    xournalpp
+      xournalpp
 
-    libvirt
-    libguestfs-with-appliance
-    guestfs-tools
-    wget
+      libvirt
+      libguestfs-with-appliance
+      guestfs-tools
+      wget
 
-    super-productivity
+      super-productivity
 
-    pass
-  ] ++ [
-    # --- Verifiers ---
-    checkFontFamilies
-  ] ++ (import ./loop-tools.nix { inherit pkgs; });
+      pass
+    ]
+    ++ [
+      # --- Verifiers ---
+      checkFontFamilies
+    ]
+    ++ (import ./loop-tools.nix { inherit pkgs; });
 
   xdg.configFile = {
     "hypr".source = ../hypr;
@@ -262,11 +277,63 @@ in
     };
   };
 
+  # --- Japanese input (fcitx5 + Mozc) -----------------------------------------
+  # Toggle with SUPER+I (hyprland.conf, via `fcitx5-remote -t`) or by
+  # clicking the language module in waybar. fcitx5's own TriggerKeys are
+  # cleared below so it never grabs a hotkey on its own -- this is what
+  # keeps Ctrl+Space free for nvim's completion menu.
+  i18n.inputMethod = {
+    enable = true;
+    type = "fcitx5";
+    fcitx5 = {
+      # Registers fcitx5 as a Wayland input-method (input-method-v2), so
+      # Wayland-native apps (wezterm, GTK4/Qt6 apps) get IME support without
+      # relying on the GTK_IM_MODULE/QT_IM_MODULE env vars below.
+      waylandFrontend = true;
+      addons = with pkgs; [
+        fcitx5-mozc
+        fcitx5-gtk
+      ];
+      settings = {
+        globalOptions."Hotkey" = {
+          TriggerKeys = "";
+          AltTriggerKeys = "";
+          EnumerateWithTriggerKeys = "False";
+        };
+        inputMethod = {
+          "Groups/0" = {
+            Name = "Default";
+            "Default Layout" = "us";
+            DefaultIM = "keyboard-us";
+          };
+          # Blank Layout inherits kb_layout/kb_variant from hyprland.conf
+          # (us intl), so normal typing is unaffected when Mozc is off.
+          "Groups/0/Items/0" = {
+            Name = "keyboard-us";
+            Layout = "";
+          };
+          "Groups/0/Items/1" = {
+            Name = "mozc";
+            Layout = "";
+          };
+          GroupOrder."0" = "Default";
+        };
+      };
+    };
+  };
 
   # --- Dotfiles ---------------------------------------------------------------
   home.file = {
     ".p10k.zsh".source = ./p10k.zsh;
     ".ticker.yaml".source = ../.ticker.yaml;
+
+    # --- Compose-key accents (replaces the old GTK "cedilla" module) ---
+    # "%L" pulls in the system's default Compose table for the current
+    # locale, which already defines ç, é, ã, õ, ü, etc. The Menu key is set
+    # as the Compose key in hyprland.conf (kb_options = compose:menu).
+    ".XCompose".text = ''
+      include "%L"
+    '';
 
     # --- mnemon ---
     ".mnemon/prompt/guide.md".source = ./mnemon/guide.md;
@@ -287,6 +354,9 @@ in
 
     # --- nixapply ---
     ".claude/skills/nixapply/SKILL.md".source = ./nixapply/skill.md;
+
+    # --- global Claude Code instructions ---
+    ".claude/CLAUDE.md".source = ./claude/CLAUDE.md;
 
     # --- output styles ---
     ".claude/output-styles/asd-ste100.md".source = ./output-styles/asd-ste100.md;
@@ -311,10 +381,12 @@ in
   };
 
   # --- Session variables ------------------------------------------------------
-  home.sessionVariables = {
-    GTK_IM_MODULE = "cedilla";
-    QT_IM_MODULE = "cedilla";
-  };
+  # GTK_IM_MODULE / QT_IM_MODULE / XMODIFIERS / SDL_IM_MODULE are no longer
+  # set here: i18n.inputMethod.fcitx5.sessionVariables (below) sets them to
+  # "fcitx" itself. Cedilla/accent input moved from the old GTK-only
+  # "cedilla" module to a Compose key (see kb_options in hyprland.conf and
+  # ~/.XCompose below).
+  home.sessionVariables = { };
 
   programs.fzf = {
     enable = true;
@@ -361,7 +433,8 @@ in
       audio-hdmi = "audio-to alsa_output.pci-0000_03_00.1.hdmi-stereo-extra1";
       audio-combine = "audio-to combine-sink";
 
-      caffeinate = "systemd-inhibit --what=idle:sleep --mode=block --why='coding-through-the-phone' sleep infinity";
+      caffeinate = "systemd-inhibit --what=idle:sleep:handle-lid-switch --why='coding-through-the-phone' sleep infinity";
+
     };
 
     autosuggestion.enable = true;
@@ -378,7 +451,6 @@ in
       [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
       # --- Antigravity CLI (agy): API-key auth, no interactive login -------
-      # Requires: pass insert gemini
       export GEMINI_API_KEY="$(${pkgs.pass}/bin/pass show gemini 2>/dev/null)"
 
       audio-to() {
@@ -518,6 +590,9 @@ in
       ast-grep
       detekt
       nimlangserver
+
+      # --- C / C++ (also covers linux-kernel work) ---
+      clang-tools # clangd (LSP) + clang-format (formatter)
     ];
   };
 
@@ -551,361 +626,404 @@ in
     let
       hooksDir = "${config.home.homeDirectory}/.claude/hooks/mnemon";
       claudeHooksDir = "${config.home.homeDirectory}/.claude/hooks";
-      claudeSettingsFile = pkgs.writeText "claude-settings.json" (builtins.toJSON {
-        outputStyle = "ASD-STE100";
-        permissions = {
-          allow = [
-            "WebFetch(domain:github.com)"
-            "WebFetch(domain:raw.githubusercontent.com)"
-            "Bash(nix-channel --list)"
+      claudeSettingsFile = pkgs.writeText "claude-settings.json" (
+        builtins.toJSON {
+          outputStyle = "ASD-STE100";
+          permissions = {
+            allow = [
+              "WebFetch(domain:github.com)"
+              "WebFetch(domain:raw.githubusercontent.com)"
+              "Bash(nix-channel --list)"
 
-            "Bash(* --version)"
-            "Bash(* --help *)"
+              "Bash(* --version)"
+              "Bash(* --help *)"
 
-            # --- Hyprland (read-only) ---
-            "Bash(hyprctl monitors)"
-            "Bash(hyprctl monitors *)"
-            "Bash(hyprctl configerrors)"
-            "Bash(hyprctl version)"
-            "Bash(hyprctl systeminfo)"
-            "Bash(hyprctl instances)"
-            "Bash(hyprctl dispatchers)"
-            "Bash(hyprctl cursorpos)"
-            "Bash(hyprctl clients)"
-            "Bash(hyprctl clients *)"
-            "Bash(hyprctl workspaces)"
-            "Bash(hyprctl workspaces *)"
-            "Bash(hyprctl activewindow)"
-            "Bash(hyprctl activewindow *)"
-            "Bash(hyprctl getoption *)"
-            "Bash(hyprctl binds)"
-            "Bash(hyprctl devices)"
+              # --- Hyprland (read-only) ---
+              "Bash(hyprctl monitors)"
+              "Bash(hyprctl monitors *)"
+              "Bash(hyprctl configerrors)"
+              "Bash(hyprctl version)"
+              "Bash(hyprctl systeminfo)"
+              "Bash(hyprctl instances)"
+              "Bash(hyprctl dispatchers)"
+              "Bash(hyprctl cursorpos)"
+              "Bash(hyprctl clients)"
+              "Bash(hyprctl clients *)"
+              "Bash(hyprctl workspaces)"
+              "Bash(hyprctl workspaces *)"
+              "Bash(hyprctl activewindow)"
+              "Bash(hyprctl activewindow *)"
+              "Bash(hyprctl getoption *)"
+              "Bash(hyprctl binds)"
+              "Bash(hyprctl devices)"
 
-            # --- Crash inspection / fonts ---
-            "Bash(coredumpctl list *)"
-            "Bash(coredumpctl info *)"
-            "Bash(fc-match *)"
-            "Bash(fc-list)"
-            "Bash(fc-list *)"
+              # --- Crash inspection / fonts ---
+              "Bash(coredumpctl list *)"
+              "Bash(coredumpctl info *)"
+              "Bash(fc-match *)"
+              "Bash(fc-list)"
+              "Bash(fc-list *)"
 
-            "Agent(*)"
-            "Bash(run_in_backgroun:true)"
+              "Agent(*)"
+              "Bash(run_in_backgroun:true)"
 
-            "Bash(mnemon recall *)"
-            "Read(*)"
+              "Bash(mnemon recall *)"
+              "Read(*)"
 
-            # --- Built-in tools ---
-            "Skill"
-            "TaskCreate"
-            "TaskUpdate"
-            "TaskGet"
-            "TaskList"
-            "TaskOutput"
-            "ListMcpResourcesTool"
-            "ReadMcpResourceTool"
-            "ReadMcpResourceDirTool"
-            "LSP"
-            "Monitor"
-            "WebSearch"
+              # --- Built-in tools ---
+              "Skill"
+              "TaskCreate"
+              "TaskUpdate"
+              "TaskGet"
+              "TaskList"
+              "TaskOutput"
+              "ListMcpResourcesTool"
+              "ReadMcpResourceTool"
+              "ReadMcpResourceDirTool"
+              "LSP"
+              "Monitor"
+              "WebSearch"
 
-            # --- Filesystem (read-only) ---
-            "Bash(ls)"
-            "Bash(ls *)"
-            "Bash(cat *)"
-            "Bash(grep *)"
-            "Bash(pwd)"
+              # --- Filesystem (read-only) ---
+              "Bash(ls)"
+              "Bash(ls *)"
+              "Bash(cat *)"
+              "Bash(grep *)"
+              "Bash(pwd)"
 
-            # --- Git (read-only) ---
-            "Bash(git status)"
-            "Bash(git status *)"
-            "Bash(git diff)"
-            "Bash(git diff *)"
-            "Bash(git log)"
-            "Bash(git log *)"
-            "Bash(git show *)"
-            "Bash(git remote -v)"
-            "Bash(git stash list)"
-            "Bash(git branch)"
-            "Bash(git branch -a)"
-            "Bash(git branch -v)"
-            "Bash(git branch --show-current)"
+              # --- Git (read-only) ---
+              "Bash(git status)"
+              "Bash(git status *)"
+              "Bash(git diff)"
+              "Bash(git diff *)"
+              "Bash(git log)"
+              "Bash(git log *)"
+              "Bash(git show *)"
+              "Bash(git remote -v)"
+              "Bash(git stash list)"
+              "Bash(git branch)"
+              "Bash(git branch -a)"
+              "Bash(git branch -v)"
+              "Bash(git branch --show-current)"
 
-            # --- System / process info ---
-            "Bash(whoami)"
-            "Bash(id)"
-            "Bash(uname *)"
-            "Bash(free *)"
-            "Bash(uptime)"
-            "Bash(df -h)"
-            "Bash(df -h *)"
-            "Bash(du *)"
-            "Bash(ps *)"
-            "Bash(lsblk)"
-            "Bash(lsblk *)"
-            "Bash(lscpu)"
-            "Bash(lsusb)"
-            "Bash(lspci)"
-            "Bash(hostnamectl)"
-            "Bash(hostnamectl status)"
+              # --- System / process info ---
+              "Bash(whoami)"
+              "Bash(id)"
+              "Bash(uname *)"
+              "Bash(free *)"
+              "Bash(uptime)"
+              "Bash(df -h)"
+              "Bash(df -h *)"
+              "Bash(du *)"
+              "Bash(ps *)"
+              "Bash(lsblk)"
+              "Bash(lsblk *)"
+              "Bash(lscpu)"
+              "Bash(lsusb)"
+              "Bash(lspci)"
+              "Bash(hostnamectl)"
+              "Bash(hostnamectl status)"
 
-            # --- systemd (status / list only) ---
-            "Bash(systemctl status *)"
-            "Bash(systemctl --user status *)"
-            "Bash(systemctl list-units *)"
-            "Bash(systemctl list-unit-files *)"
+              # --- systemd (status / list only) ---
+              "Bash(systemctl status *)"
+              "Bash(systemctl --user status *)"
+              "Bash(systemctl list-units *)"
+              "Bash(systemctl list-unit-files *)"
 
-            # --- Nix (read-only) ---
-            "Bash(nix flake show *)"
-            "Bash(nix flake metadata *)"
-            "Bash(nix search *)"
-            "Bash(nix-store -q *)"
-            "Bash(nix-env -q)"
-            "Bash(nix-env --query)"
-            "Bash(home-manager --list-generations)"
+              # --- Nix (read-only) ---
+              "Bash(nix flake show *)"
+              "Bash(nix flake metadata *)"
+              "Bash(nix search *)"
+              "Bash(nix-store -q *)"
+              "Bash(nix-env -q)"
+              "Bash(nix-env --query)"
+              "Bash(home-manager --list-generations)"
 
-            # --- Dev tools ---
-            "Bash(npm install)"
-            "Bash(npm install *)"
-            "Bash(npm ci)"
-            "Bash(npm run *)"
-            "Bash(npm test)"
-            "Bash(npm test *)"
-            "Bash(npm start)"
-            "Bash(npm outdated)"
-            "Bash(npm outdated *)"
-            "Bash(npm list)"
-            "Bash(npm list *)"
-            "Bash(npm view *)"
+              # --- Dev tools ---
+              "Bash(npm install)"
+              "Bash(npm install *)"
+              "Bash(npm ci)"
+              "Bash(npm run *)"
+              "Bash(npm test)"
+              "Bash(npm test *)"
+              "Bash(npm start)"
+              "Bash(npm outdated)"
+              "Bash(npm outdated *)"
+              "Bash(npm list)"
+              "Bash(npm list *)"
+              "Bash(npm view *)"
 
-            "Bash(bun install)"
-            "Bash(bun install *)"
-            "Bash(bun add *)"
-            "Bash(bun run *)"
-            "Bash(bun test)"
-            "Bash(bun test *)"
-            "Bash(bun x *)"
+              "Bash(bun install)"
+              "Bash(bun install *)"
+              "Bash(bun add *)"
+              "Bash(bun run *)"
+              "Bash(bun test)"
+              "Bash(bun test *)"
+              "Bash(bun x *)"
 
-            "Bash(cargo build)"
-            "Bash(cargo build *)"
-            "Bash(cargo run)"
-            "Bash(cargo run *)"
-            "Bash(cargo test)"
-            "Bash(cargo test *)"
-            "Bash(cargo check)"
-            "Bash(cargo check *)"
-            "Bash(cargo fmt)"
-            "Bash(cargo fmt *)"
-            "Bash(cargo clippy)"
-            "Bash(cargo clippy *)"
-            "Bash(cargo add *)"
-            "Bash(cargo doc *)"
-            "Bash(rustup show)"
-            "Bash(rustup show *)"
-            "Bash(rustup toolchain list)"
+              "Bash(cargo build)"
+              "Bash(cargo build *)"
+              "Bash(cargo run)"
+              "Bash(cargo run *)"
+              "Bash(cargo test)"
+              "Bash(cargo test *)"
+              "Bash(cargo check)"
+              "Bash(cargo check *)"
+              "Bash(cargo fmt)"
+              "Bash(cargo fmt *)"
+              "Bash(cargo clippy)"
+              "Bash(cargo clippy *)"
+              "Bash(cargo add *)"
+              "Bash(cargo doc *)"
+              "Bash(rustup show)"
+              "Bash(rustup show *)"
+              "Bash(rustup toolchain list)"
 
-            "Bash(devenv shell)"
-            "Bash(devenv shell *)"
-            "Bash(devenv up)"
-            "Bash(devenv up *)"
-            "Bash(devenv test)"
-            "Bash(devenv test *)"
-            "Bash(devenv info)"
-            "Bash(devenv tasks *)"
+              "Bash(devenv shell)"
+              "Bash(devenv shell *)"
+              "Bash(devenv up)"
+              "Bash(devenv up *)"
+              "Bash(devenv test)"
+              "Bash(devenv test *)"
+              "Bash(devenv info)"
+              "Bash(devenv tasks *)"
 
-            "Bash(direnv status)"
-            "Bash(direnv status *)"
-            "Bash(direnv reload)"
-            "Bash(direnv reload *)"
-            "Bash(direnv allow)"
-            "Bash(direnv allow *)"
+              "Bash(direnv status)"
+              "Bash(direnv status *)"
+              "Bash(direnv reload)"
+              "Bash(direnv reload *)"
+              "Bash(direnv allow)"
+              "Bash(direnv allow *)"
 
-            # --- Nix (non-mutating builds / eval) ---
-            "Bash(nix path-info *)"
-            "Bash(nix why-depends *)"
-            "Bash(nix show-derivation *)"
-            "Bash(nix registry list)"
-            "Bash(nix eval *)"
-            "Bash(nix build --dry-run *)"
-            "Bash(nix-instantiate --parse *)"
-            "Bash(nix-instantiate --eval *)"
-            "Bash(nixos-rebuild dry-build *)"
-            "Bash(nixos-rebuild build *)"
+              # --- Nix (non-mutating builds / eval) ---
+              "Bash(nix path-info *)"
+              "Bash(nix why-depends *)"
+              "Bash(nix show-derivation *)"
+              "Bash(nix registry list)"
+              "Bash(nix eval *)"
+              "Bash(nix build --dry-run *)"
+              "Bash(nix-instantiate --parse *)"
+              "Bash(nix-instantiate --eval *)"
+              "Bash(nixos-rebuild dry-build *)"
+              "Bash(nixos-rebuild build *)"
 
-            # --- Built-in search tools ---
-            "Grep"
-            "Glob"
+              # --- Built-in search tools ---
+              "Grep"
+              "Glob"
 
-            # --- MCP: postgres ---
-            "mcp__postgres__analyze_db_health"
-            "mcp__postgres__analyze_query_indexes"
-            "mcp__postgres__analyze_workload_indexes"
-            "mcp__postgres__explain_query"
-            "mcp__postgres__get_object_details"
-            "mcp__postgres__get_top_queries"
-            "mcp__postgres__list_objects"
-            "mcp__postgres__list_schemas"
+              # --- MCP: postgres ---
+              "mcp__postgres__analyze_db_health"
+              "mcp__postgres__analyze_query_indexes"
+              "mcp__postgres__analyze_workload_indexes"
+              "mcp__postgres__explain_query"
+              "mcp__postgres__get_object_details"
+              "mcp__postgres__get_top_queries"
+              "mcp__postgres__list_objects"
+              "mcp__postgres__list_schemas"
 
-            "mcp__context7__*"
-            "mcp__nixos__*"
-            "mcp__sequential-thinking__*"
-            "mcp__time__*"
+              "mcp__context7__*"
+              "mcp__nixos__*"
+              "mcp__sequential-thinking__*"
+              "mcp__time__*"
 
-            # --- MCP: obsidian (seekstone) ---
-            "mcp__obsidian-mestrado__search"
-            "mcp__obsidian-mestrado__query_notes"
-            "mcp__obsidian-mestrado__read_note"
-            "mcp__obsidian-mestrado__list_notes"
-            "mcp__obsidian-mestrado__list_tags"
-            "mcp__obsidian-mestrado__outline_note"
-            "mcp__obsidian-mestrado__get_backlinks"
-            "mcp__obsidian-mestrado__get_links"
-            "mcp__obsidian-mestrado__append_note"
-            "mcp__obsidian-mestrado__get_periodic_note"
-            "mcp__obsidian-mestrado__append_periodic_note"
+              # --- MCP: obsidian (seekstone) ---
+              "mcp__obsidian-mestrado__search"
+              "mcp__obsidian-mestrado__query_notes"
+              "mcp__obsidian-mestrado__read_note"
+              "mcp__obsidian-mestrado__list_notes"
+              "mcp__obsidian-mestrado__list_tags"
+              "mcp__obsidian-mestrado__outline_note"
+              "mcp__obsidian-mestrado__get_backlinks"
+              "mcp__obsidian-mestrado__get_links"
+              "mcp__obsidian-mestrado__append_note"
+              "mcp__obsidian-mestrado__get_periodic_note"
+              "mcp__obsidian-mestrado__append_periodic_note"
 
-            "mcp__obsidian-second-brain__search"
-            "mcp__obsidian-second-brain__query_notes"
-            "mcp__obsidian-second-brain__read_note"
-            "mcp__obsidian-second-brain__list_notes"
-            "mcp__obsidian-second-brain__list_tags"
-            "mcp__obsidian-second-brain__outline_note"
-            "mcp__obsidian-second-brain__get_backlinks"
-            "mcp__obsidian-second-brain__get_links"
-            "mcp__obsidian-second-brain__append_note"
-            "mcp__obsidian-second-brain__get_periodic_note"
-            "mcp__obsidian-second-brain__append_periodic_note"
+              "mcp__obsidian-second-brain__search"
+              "mcp__obsidian-second-brain__query_notes"
+              "mcp__obsidian-second-brain__read_note"
+              "mcp__obsidian-second-brain__list_notes"
+              "mcp__obsidian-second-brain__list_tags"
+              "mcp__obsidian-second-brain__outline_note"
+              "mcp__obsidian-second-brain__get_backlinks"
+              "mcp__obsidian-second-brain__get_links"
+              "mcp__obsidian-second-brain__append_note"
+              "mcp__obsidian-second-brain__get_periodic_note"
+              "mcp__obsidian-second-brain__append_periodic_note"
 
-            "mcp__git__git_status"
-            "mcp__git__git_diff"
-            "mcp__git__git_diff_staged"
-            "mcp__git__git_diff_unstaged"
-            "mcp__git__git_log"
-            "mcp__git__git_show"
-            "mcp__git__git_branch"
+              "mcp__git__git_status"
+              "mcp__git__git_diff"
+              "mcp__git__git_diff_staged"
+              "mcp__git__git_diff_unstaged"
+              "mcp__git__git_log"
+              "mcp__git__git_show"
+              "mcp__git__git_branch"
 
-            "mcp__filesystem__directory_tree"
-            "mcp__filesystem__get_file_info"
-            "mcp__filesystem__list_allowed_directories"
-            "mcp__filesystem__list_directory"
-            "mcp__filesystem__list_directory_with_sizes"
-            "mcp__filesystem__read_file"
-            "mcp__filesystem__read_media_file"
-            "mcp__filesystem__read_multiple_files"
-            "mcp__filesystem__read_text_file"
-            "mcp__filesystem__search_files"
+              "mcp__filesystem__directory_tree"
+              "mcp__filesystem__get_file_info"
+              "mcp__filesystem__list_allowed_directories"
+              "mcp__filesystem__list_directory"
+              "mcp__filesystem__list_directory_with_sizes"
+              "mcp__filesystem__read_file"
+              "mcp__filesystem__read_media_file"
+              "mcp__filesystem__read_multiple_files"
+              "mcp__filesystem__read_text_file"
+              "mcp__filesystem__search_files"
 
-            "mcp__github__get_commit"
-            "mcp__github__get_file_contents"
-            "mcp__github__get_label"
-            "mcp__github__get_latest_release"
-            "mcp__github__get_me"
-            "mcp__github__get_release_by_tag"
-            "mcp__github__get_tag"
-            "mcp__github__get_team_members"
-            "mcp__github__get_teams"
-            "mcp__github__issue_read"
-            "mcp__github__list_branches"
-            "mcp__github__list_commits"
-            "mcp__github__list_issue_fields"
-            "mcp__github__list_issue_types"
-            "mcp__github__list_issues"
-            "mcp__github__list_pull_requests"
-            "mcp__github__list_releases"
-            "mcp__github__list_repository_collaborators"
-            "mcp__github__list_tags"
-            "mcp__github__pull_request_read"
-            "mcp__github__search_code"
-            "mcp__github__search_commits"
-            "mcp__github__search_issues"
-            "mcp__github__search_pull_requests"
-            "mcp__github__search_repositories"
-            "mcp__github__search_users"
+              "mcp__github__get_commit"
+              "mcp__github__get_file_contents"
+              "mcp__github__get_label"
+              "mcp__github__get_latest_release"
+              "mcp__github__get_me"
+              "mcp__github__get_release_by_tag"
+              "mcp__github__get_tag"
+              "mcp__github__get_team_members"
+              "mcp__github__get_teams"
+              "mcp__github__issue_read"
+              "mcp__github__list_branches"
+              "mcp__github__list_commits"
+              "mcp__github__list_issue_fields"
+              "mcp__github__list_issue_types"
+              "mcp__github__list_issues"
+              "mcp__github__list_pull_requests"
+              "mcp__github__list_releases"
+              "mcp__github__list_repository_collaborators"
+              "mcp__github__list_tags"
+              "mcp__github__pull_request_read"
+              "mcp__github__search_code"
+              "mcp__github__search_commits"
+              "mcp__github__search_issues"
+              "mcp__github__search_pull_requests"
+              "mcp__github__search_repositories"
+              "mcp__github__search_users"
 
-            "mcp__playwright__browser_snapshot"
-            "mcp__playwright__browser_console_messages"
-            "mcp__playwright__browser_network_requests"
-            "mcp__playwright__browser_network_request"
-            "mcp__playwright__browser_take_screenshot"
-            "mcp__playwright__browser_find"
-            "mcp__playwright__browser_wait_for"
+              "mcp__playwright__browser_snapshot"
+              "mcp__playwright__browser_console_messages"
+              "mcp__playwright__browser_network_requests"
+              "mcp__playwright__browser_network_request"
+              "mcp__playwright__browser_take_screenshot"
+              "mcp__playwright__browser_find"
+              "mcp__playwright__browser_wait_for"
 
-            "mcp__fetch__fetch"
+              "mcp__fetch__fetch"
 
-            # --- MCP: claude.ai connectors ---
-            "mcp__claude_ai_Anthropic_Economic_Index__*"
-            "mcp__claude_ai_Context7__*"
+              # --- MCP: claude.ai connectors ---
+              "mcp__claude_ai_Anthropic_Economic_Index__*"
+              "mcp__claude_ai_Context7__*"
 
-            "mcp__claude_ai_Gmail__get_message"
-            "mcp__claude_ai_Gmail__get_thread"
-            "mcp__claude_ai_Gmail__list_drafts"
-            "mcp__claude_ai_Gmail__list_labels"
-            "mcp__claude_ai_Gmail__search_threads"
+              "mcp__claude_ai_Gmail__get_message"
+              "mcp__claude_ai_Gmail__get_thread"
+              "mcp__claude_ai_Gmail__list_drafts"
+              "mcp__claude_ai_Gmail__list_labels"
+              "mcp__claude_ai_Gmail__search_threads"
 
-            "mcp__claude_ai_Google_Calendar__get_event"
-            "mcp__claude_ai_Google_Calendar__list_calendars"
-            "mcp__claude_ai_Google_Calendar__list_events"
-            "mcp__claude_ai_Google_Calendar__search_events"
-            "mcp__claude_ai_Google_Calendar__suggest_time"
+              "mcp__claude_ai_Google_Calendar__get_event"
+              "mcp__claude_ai_Google_Calendar__list_calendars"
+              "mcp__claude_ai_Google_Calendar__list_events"
+              "mcp__claude_ai_Google_Calendar__search_events"
+              "mcp__claude_ai_Google_Calendar__suggest_time"
 
-            "mcp__claude_ai_Google_Drive__download_file_content"
-            "mcp__claude_ai_Google_Drive__get_file_metadata"
-            "mcp__claude_ai_Google_Drive__get_file_permissions"
-            "mcp__claude_ai_Google_Drive__list_recent_files"
-            "mcp__claude_ai_Google_Drive__read_file_content"
-            "mcp__claude_ai_Google_Drive__search_files"
+              "mcp__claude_ai_Google_Drive__download_file_content"
+              "mcp__claude_ai_Google_Drive__get_file_metadata"
+              "mcp__claude_ai_Google_Drive__get_file_permissions"
+              "mcp__claude_ai_Google_Drive__list_recent_files"
+              "mcp__claude_ai_Google_Drive__read_file_content"
+              "mcp__claude_ai_Google_Drive__search_files"
 
-            "mcp__claude_ai_Notion__notion-fetch"
-            "mcp__claude_ai_Notion__notion-download-attachment"
-            "mcp__claude_ai_Notion__notion-get-async-task"
-            "mcp__claude_ai_Notion__notion-get-comments"
-            "mcp__claude_ai_Notion__notion-get-teams"
-            "mcp__claude_ai_Notion__notion-get-users"
-            "mcp__claude_ai_Notion__notion-query-data-sources"
-            "mcp__claude_ai_Notion__notion-query-database-view"
-            "mcp__claude_ai_Notion__notion-query-meeting-notes"
-            "mcp__claude_ai_Notion__notion-search"
+              "mcp__claude_ai_Notion__notion-fetch"
+              "mcp__claude_ai_Notion__notion-download-attachment"
+              "mcp__claude_ai_Notion__notion-get-async-task"
+              "mcp__claude_ai_Notion__notion-get-comments"
+              "mcp__claude_ai_Notion__notion-get-teams"
+              "mcp__claude_ai_Notion__notion-get-users"
+              "mcp__claude_ai_Notion__notion-query-data-sources"
+              "mcp__claude_ai_Notion__notion-query-database-view"
+              "mcp__claude_ai_Notion__notion-query-meeting-notes"
+              "mcp__claude_ai_Notion__notion-search"
 
-            "mcp__claude_ai_Excalidraw__read_checkpoint"
-            "mcp__claude_ai_Excalidraw__read_me"
-          ];
-          deny = [
-            "Read(~/.secrets/**)"
-            "Read(~/.ssh/**)"
-            "Read(~/.aws/**)"
-            "Read(~/.gnupg/**)"
-            "Read(**/*.env)"
-            "Grep(~/.secrets/**)"
-            "Grep(~/.ssh/**)"
-            "Grep(~/.aws/**)"
-            "Grep(~/.gnupg/**)"
-            "Grep(**/*.env)"
-            "Bash(*~/.secrets/*)"
-            "Bash(*~/.ssh/*)"
-            "Bash(*~/.aws/*)"
-            "Bash(*~/.gnupg/*)"
-            "Bash(*.env)"
-            "Bash(*.env *)"
-            "Bash(pass *)"
-          ];
-          defaultMode = "auto";
-        };
-        statusLine = {
-          type = "command";
-          command = "${config.home.homeDirectory}/.claude/statusline-command.sh";
-        };
-        # --- mnemon hooks ---
-        hooks = {
-          SessionStart = [{ hooks = [{ type = "command"; command = "${hooksDir}/prime.sh"; }]; }];
-          Stop = [
-            { hooks = [{ type = "command"; command = "${hooksDir}/stop.sh"; }]; }
-          ];
-          UserPromptSubmit = [{ hooks = [{ type = "command"; command = "${hooksDir}/user_prompt.sh"; }]; }];
-          PostToolUse = [
-            { matcher = "Edit|Write"; hooks = [{ type = "command"; command = "${claudeHooksDir}/validate-config.sh"; }]; }
-            { matcher = "Edit|MultiEdit|Write"; hooks = [{ type = "command"; command = "${claudeHooksDir}/format-on-write.sh"; }]; }
-          ];
-        };
-      });
+              "mcp__claude_ai_Excalidraw__read_checkpoint"
+              "mcp__claude_ai_Excalidraw__read_me"
+            ];
+            deny = [
+              "Read(~/.secrets/**)"
+              "Read(~/.ssh/**)"
+              "Read(~/.aws/**)"
+              "Read(~/.gnupg/**)"
+              "Read(**/*.env)"
+              "Grep(~/.secrets/**)"
+              "Grep(~/.ssh/**)"
+              "Grep(~/.aws/**)"
+              "Grep(~/.gnupg/**)"
+              "Grep(**/*.env)"
+              "Bash(*~/.secrets/*)"
+              "Bash(*~/.ssh/*)"
+              "Bash(*~/.aws/*)"
+              "Bash(*~/.gnupg/*)"
+              "Bash(*.env)"
+              "Bash(*.env *)"
+              "Bash(pass *)"
+            ];
+            defaultMode = "auto";
+          };
+          statusLine = {
+            type = "command";
+            command = "${config.home.homeDirectory}/.claude/statusline-command.sh";
+          };
+          # --- mnemon hooks ---
+          hooks = {
+            SessionStart = [
+              {
+                hooks = [
+                  {
+                    type = "command";
+                    command = "${hooksDir}/prime.sh";
+                  }
+                ];
+              }
+            ];
+            Stop = [
+              {
+                hooks = [
+                  {
+                    type = "command";
+                    command = "${hooksDir}/stop.sh";
+                  }
+                ];
+              }
+            ];
+            UserPromptSubmit = [
+              {
+                hooks = [
+                  {
+                    type = "command";
+                    command = "${hooksDir}/user_prompt.sh";
+                  }
+                ];
+              }
+            ];
+            PostToolUse = [
+              {
+                matcher = "Edit|Write";
+                hooks = [
+                  {
+                    type = "command";
+                    command = "${claudeHooksDir}/validate-config.sh";
+                  }
+                ];
+              }
+              {
+                matcher = "Edit|MultiEdit|Write";
+                hooks = [
+                  {
+                    type = "command";
+                    command = "${claudeHooksDir}/format-on-write.sh";
+                  }
+                ];
+              }
+            ];
+          };
+        }
+      );
       # --- MCP servers (~/.claude.json, ~/.gemini/config/mcp_config.json) ---
       mcpFiles = import ./mcp.nix { inherit pkgs; };
       claudeMcpFile = mcpFiles.claude;
@@ -947,10 +1065,9 @@ in
   #
   # `herdr integration install claude` is safe to re-run: it writes the same
   # hook file and settings entry every time and exits 0.
-  home.activation.herdrClaudeIntegration =
-    config.lib.dag.entryAfter [ "claudeSettings" ] ''
-      ${herdr}/bin/herdr integration install claude
-    '';
+  home.activation.herdrClaudeIntegration = config.lib.dag.entryAfter [ "claudeSettings" ] ''
+    ${herdr}/bin/herdr integration install claude
+  '';
 
   # --- Antigravity CLI settings -------------------------------------------------
   # Pins auth to the API key path (GEMINI_API_KEY, exported from `pass` in
@@ -967,9 +1084,11 @@ in
   home.activation.antigravitySettings =
     let
       antigravityMcpFile = (import ./mcp.nix { inherit pkgs; }).antigravity;
-      antigravitySettingsFile = pkgs.writeText "antigravity-cli-settings.json" (builtins.toJSON {
-        modelProvider = "gemini";
-      });
+      antigravitySettingsFile = pkgs.writeText "antigravity-cli-settings.json" (
+        builtins.toJSON {
+          modelProvider = "gemini";
+        }
+      );
     in
     config.lib.dag.entryAfter [ "writeBoundary" ] ''
       mkdir -p "$HOME/.gemini/antigravity-cli" "$HOME/.gemini/config"

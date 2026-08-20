@@ -19,6 +19,7 @@ return {
       "jsonls",
       "html",
       "cssls",
+      "clangd",
     }
 
     for _, server in ipairs(servers) do
