@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   lanzaboote = builtins.getFlake "github:nix-community/lanzaboote/v1.1.0";
@@ -61,6 +66,10 @@ in
     enable = true;
     dns = "default";
   };
+  networking.nameservers = [
+    "1.1.1.1"
+    "8.8.8.8"
+  ];
   networking.nat = {
     enable = true;
     internalInterfaces = [ "virbr0" ];
@@ -73,7 +82,10 @@ in
   # Keymap and display manager
   services.xserver = {
     enable = false;
-    xkb = { layout = "us"; variant = "intl"; };
+    xkb = {
+      layout = "us";
+      variant = "intl";
+    };
     displayManager.lightdm.enable = false;
   };
   console.keyMap = "us-acentos";
@@ -132,4 +144,3 @@ in
 
   system.stateVersion = "25.05";
 }
-
