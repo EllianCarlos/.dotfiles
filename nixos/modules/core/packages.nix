@@ -17,7 +17,7 @@
     git zsh vim
     killall bottom ripgrep fd
     wl-clipboard wireplumber
-    brightnessctl nixfmt-rfc-style
+    brightnessctl nixfmt
     via vial wget curl
     unrar
   ];

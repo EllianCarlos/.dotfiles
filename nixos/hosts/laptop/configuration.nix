@@ -48,7 +48,7 @@
 
   # Hardware specifics
   hardware = {
-    opengl.enable = true;
+    graphics.enable = true;
     keyboard.qmk.enable = true;
   };
   services.udev.packages = [ pkgs.via ];

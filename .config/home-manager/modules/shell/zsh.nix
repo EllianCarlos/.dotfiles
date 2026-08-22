@@ -56,13 +56,12 @@
     enableCompletion = true;
     syntaxHighlighting.enable = true;
 
+    # Merged into one initContent block, rather than split across
+    # initContent/initExtra, because both options are deprecated-adjacent
+    # (initExtra) or module-position-sensitive (initContent's merge order
+    # with other modules' contributions), and a single string removes any
+    # ambiguity about relative ordering.
     initContent = ''
-      if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
-        source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
-      fi
-    '';
-
-    initExtra = ''
       [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
       # --- Antigravity CLI (agy): API-key auth, no interactive login -------
@@ -74,6 +73,10 @@
           pactl move-sink-input "$i" "$1" 2>/dev/null
         done
       }
+
+      if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
+        source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
+      fi
     '';
 
     oh-my-zsh = {

@@ -94,7 +94,6 @@ in
 
   # Hardware specifics
   hardware = {
-    opengl.enable = true;
     # mwProCapture.enable = true;
     keyboard.qmk.enable = true;
     graphics = {
