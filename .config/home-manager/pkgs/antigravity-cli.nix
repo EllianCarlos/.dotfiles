@@ -10,7 +10,7 @@
 # self-updater can silently overwrite.
 { pkgs, lib, ... }:
 let
-  pin = (import ./pins.nix).antigravity-cli;
+  pin = (import ../pins.nix).antigravity-cli;
 in
 pkgs.stdenv.mkDerivation {
   pname = "antigravity-cli";

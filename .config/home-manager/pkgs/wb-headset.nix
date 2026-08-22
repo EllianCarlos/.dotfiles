@@ -4,7 +4,7 @@
 # https://github.com/Henriklmao/waybar-headsetcontrol -- not in nixpkgs.
 { pkgs, lib, ... }:
 let
-  pin = (import ./pins.nix).wb-headset;
+  pin = (import ../pins.nix).wb-headset;
   src = pkgs.fetchFromGitHub {
     inherit (pin) owner repo rev;
     hash = "sha256-c9PXgPBYoNvj6U5NitRzNQ9mbzOrHIj9Cqf/Zr2mj+U=";

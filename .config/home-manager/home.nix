@@ -12,8 +12,7 @@ let
 
   resurrectSrc = builtins.fetchTarball "https://github.com/${pins.resurrect-wezterm.owner}/${pins.resurrect-wezterm.repo}/archive/${pins.resurrect-wezterm.rev}.tar.gz";
 
-  antigravityCli = pkgs.callPackage ./antigravity-cli.nix { };
-  wbHeadset = pkgs.callPackage ./wb-headset.nix { };
+  custom = import ./pkgs { inherit pkgs; };
 
   # --- Font family verification -------------------------------------------
   fontPackages =
@@ -68,79 +67,6 @@ let
 
         mkdir -p "$out"
       '';
-  mnemon = pkgs.stdenv.mkDerivation {
-    pname = "mnemon";
-    version = "0.1.3";
-    src = pkgs.fetchurl {
-      url = "https://github.com/mnemon-dev/mnemon/releases/download/v0.1.3/mnemon_0.1.3_linux_amd64.tar.gz";
-      hash = "sha256-38pH9YNNSv0yycdufodqvJ+8ofrI5QFm9qm6NnPOQbA=";
-    };
-    unpackPhase = "tar xzf $src";
-    dontBuild = true;
-    installPhase = ''
-      mkdir -p $out/bin
-      install -m755 mnemon $out/bin/mnemon
-    '';
-  };
-  # tuicr (https://tuicr.dev) -- terminal UI for code review, with vim
-  # keybindings. Not in nixpkgs; upstream ships a per-platform release
-  # tarball, so this mirrors the mnemon derivation above. Unlike mnemon,
-  # this binary is dynamically linked against glibc/libz/libgcc_s/libm
-  # (verified with `patchelf --print-needed`) rather than static, so it
-  # needs autoPatchelfHook -- without it, NixOS fails with "Could not
-  # start dynamically linked executable" because /lib64/ld-linux-*.so.2
-  # doesn't exist outside an FHS environment.
-  tuicr = pkgs.stdenv.mkDerivation {
-    pname = "tuicr";
-    version = "0.21.0";
-    src = pkgs.fetchurl {
-      url = "https://github.com/agavra/tuicr/releases/download/v0.21.0/tuicr-0.21.0-x86_64-unknown-linux-gnu.tar.gz";
-      hash = "sha256-THdLmB0vc9/2dfUJpGzgfvaro+oSfhZnCqqAE0afaAs=";
-    };
-    nativeBuildInputs = [ pkgs.autoPatchelfHook ];
-    buildInputs = [
-      pkgs.stdenv.cc.cc.lib
-      pkgs.zlib
-    ];
-    unpackPhase = "tar xzf $src";
-    dontBuild = true;
-    installPhase = ''
-      mkdir -p $out/bin
-      install -m755 tuicr $out/bin/tuicr
-    '';
-  };
-  # dsh (https://deepseek.com/harness, github.com/deepseek-ai/deepseek-harness)
-  # -- DeepSeek's open-source AI coding-agent harness. Not in nixpkgs, and it
-  # ships no binary releases (its dsh-v0.1.0-rc.* tags are source-only) --
-  # the only distribution channel is npm, as @deepseek-ai/dsh. It is also in
-  # fast-moving developer preview (a new rc roughly every two days), so
-  # vendoring a pinned build here would go stale almost immediately. This
-  # wraps `bunx` instead, using the `bun` already installed below, so `dsh`
-  # always resolves the latest published npm version at run time -- the
-  # same behaviour `npx` would give, without adding a Node.js dependency.
-  deepseekHarness = pkgs.writeShellScriptBin "dsh" ''
-    exec ${pkgs.bun}/bin/bunx --bun @deepseek-ai/dsh "$@"
-  '';
-  # herdr (https://herdr.dev) -- agent orchestration runtime that
-  # github.com/AltanS/collie (a phone UI for the agent herd) plugs into.
-  # Not in nixpkgs; upstream ships a single static binary per release
-  # rather than a tarball, so this mirrors the mnemon derivation above
-  # minus the unpack step. Collie itself is installed at runtime via
-  # `herdr plugin install AltanS/collie`, not packaged here.
-  herdr = pkgs.stdenv.mkDerivation {
-    pname = "herdr";
-    version = "0.8.0";
-    src = pkgs.fetchurl {
-      url = "https://github.com/herdrdev/herdr/releases/download/v0.8.0/herdr-linux-x86_64";
-      hash = "sha256-uHLqfkD6LLF+hXrJtisb8m23tAPGIvXS8/WzX26azSg=";
-    };
-    dontUnpack = true;
-    dontBuild = true;
-    installPhase = ''
-      mkdir -p $out/bin
-      install -m755 $src $out/bin/herdr
-    '';
-  };
 in
 {
   imports = [
@@ -181,7 +107,7 @@ in
       stress-ng
       jq
       vicinae
-      tuicr
+      custom.tuicr
       super-productivity
       pass
       google-chrome
@@ -202,21 +128,21 @@ in
       zsh-powerlevel10k
 
       # --- Audio ---
-      wbHeadset
+      custom.wb-headset
 
       # --- AI Agents ---
-      antigravityCli
+      custom.antigravity-cli
       # kiro
       # code-cursor
       claude-code
-      mnemon
+      custom.mnemon
       opencode
-      deepseekHarness
+      custom.dsh
       pi-coding-agent
 
       # --- Herdr / Collie (github.com/AltanS/collie) ---
       bun
-      herdr
+      custom.herdr
       python3 # only needed by herdr, could be patched with a custom flake in the future, but herdr will also be added to nixpkgs
 
       cliphist # Clipboard manager
@@ -234,7 +160,7 @@ in
       # --- Verifiers ---
       checkFontFamilies
     ]
-    ++ (import ./loop-tools.nix { inherit pkgs; });
+    ++ custom.loop-tools;
 
   xdg.configFile = {
     "hypr".source = ../hypr;
@@ -1071,7 +997,7 @@ in
   # `herdr integration install claude` is safe to re-run: it writes the same
   # hook file and settings entry every time and exits 0.
   home.activation.herdrClaudeIntegration = config.lib.dag.entryAfter [ "claudeSettings" ] ''
-    ${herdr}/bin/herdr integration install claude
+    ${custom.herdr}/bin/herdr integration install claude
   '';
 
   # --- Antigravity CLI settings -------------------------------------------------
