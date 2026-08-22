@@ -23,7 +23,8 @@ pkgs.runCommand "check-font-families" { nativeBuildInputs = [ pkgs.fontconfig.bi
     if [ -z "$wezterm_font" ]; then
       echo "" >&2
       echo 'error: could not find a `local font_family = "..."` line in wezterm.lua.' >&2
-      echo "It was probably renamed or reformatted; update the sed in home.nix to match," >&2
+      echo "It was probably renamed or reformatted; update the sed in" >&2
+      echo "checks/font-families.nix to match," >&2
       echo "otherwise this font check silently verifies nothing for wezterm." >&2
       exit 1
     fi

@@ -8,7 +8,18 @@ This repository manages my system configurations, bridging system-level configur
 *   **Multi-Host Support:** Distinct configurations for my Desktop and Laptop are maintained under `nixos/hosts/`. They share the core modules but define their own hardware profiles, networking constraints, and bootloader setups.
 *   **Separation of Concerns:** 
     *   **NixOS (`/nixos`):** Strictly handles system bootstrap, hardware drivers, audio (Pipewire), networking, core CLI utilities, and virtualization.
-    *   **Home Manager (`.config/home-manager`):** Manages user-specific applications (browsers, media, coding tools), terminal setup (Zsh, Neovim), visual environment (Catppuccin GTK), and automatically symlinks dotfiles for Hyprland, Waybar, Kitty, etc.
+    *   **Home Manager (`.config/home-manager`):** Manages the user
+        environment, split by responsibility:
+        *   `home.nix` — a ~40-line index; identity and the imports list.
+        *   `modules/` — Home Manager modules, mirroring `nixos/modules/`:
+            `shell/`, `editor/`, `desktop/`, `mail/`, `hardware/`, `dev/`, `ai/`.
+        *   `pkgs/` — derivations for software not in nixpkgs
+            (mnemon, tuicr, herdr, dsh, wb-headset, antigravity-cli, loop-tools).
+        *   `checks/` — build-time verifiers that fail the build rather than
+            warn at run time, plus `eval-check.nix`, the harness for
+            checking a change without a rebuild.
+        *   `files/` — static payloads (Claude Code instructions, hooks,
+            skills, statusline, p10k config). No Nix in this directory.
 *   **Declarative Dotfiles:** Configuration folders for apps inside `.config/` are automatically mapped to the user's home directory by Home Manager via `xdg.configFile`, keeping everything tracked in Git.
 
 ---
@@ -44,7 +55,7 @@ The Home Manager configuration manages user packages and automatically handles t
 
 Because Home Manager is integrated directly as a NixOS module (via `modules/core/user.nix`), **you do not use the standalone `home-manager` command**. 
 
-Any changes made to `~/.config/home-manager/home.nix` or the related dotfiles are automatically applied alongside your system updates. 
+Any changes made to `~/.config/home-manager/` or the related dotfiles are automatically applied alongside your system updates. 
 
 To apply user settings, packages, and symlink updates:
 ```bash
@@ -53,7 +64,22 @@ sudo nixos-rebuild switch
 
 ## Dependency Pinning
 
-Since this repo has no root `flake.nix`, external dependencies fetched directly in Home Manager (`mcp-servers-nix`, `claude-code-nix`, `agent-skills-nix`, and the `loop-engineering`/`superpowers`/`mattpocock/skills` skill sources) are pinned to exact commits in `.config/home-manager/pins.nix` rather than tracking `main`/`master`, so an upstream change can't silently break the build. A `check-nix-pins` command (also run automatically by a weekly systemd user timer, see `.config/home-manager/pin-check.nix`) compares each pin against upstream `HEAD` and sends a desktop notification if one has drifted; bumping a pin is just editing its `rev` in `pins.nix`.
+Since this repo has no root `flake.nix`, external dependencies fetched directly in Home Manager (`mcp-servers-nix`, `claude-code-nix`, `agent-skills-nix`, and the `loop-engineering`/`superpowers`/`mattpocock/skills` skill sources) are pinned to exact commits in `.config/home-manager/pins.nix` rather than tracking `main`/`master`, so an upstream change can't silently break the build. A `check-nix-pins` command (also run automatically by a weekly systemd user timer, see `.config/home-manager/modules/dev/pin-check.nix`) compares each pin against upstream `HEAD` and sends a desktop notification if one has drifted; bumping a pin is just editing its `rev` in `pins.nix`.
+
+## Verifying a Home Manager change without a rebuild
+
+`nixos-rebuild` currently fails on a `home-manager`-master vs
+`nixpkgs`-unstable skew in `programs.neovim`, and a full rebuild is slow
+besides. `.config/home-manager/checks/eval-check.nix` evaluates the real
+config with that one module force-disabled.
+
+```bash
+nix-instantiate '<nixpkgs/nixos>' -A config.home-manager.users.elliancarlos.home.activationPackage -I nixos-config=$PWD/.config/home-manager/checks/eval-check.nix
+```
+
+A refactor that changes nothing must print the same
+`home-manager-generation.drv` hash before and after. A change that alters
+behaviour must print a different one.
 
 ## Kernel Patch Review
 
