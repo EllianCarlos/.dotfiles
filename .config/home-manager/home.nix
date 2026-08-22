@@ -495,11 +495,6 @@ in
         file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
       }
       {
-        name = "p10k-config";
-        src = ./.;
-        file = ".p10k.zsh";
-      }
-      {
         name = "zsh-completions";
         src = pkgs.fetchFromGitHub {
           owner = "zsh-users";
