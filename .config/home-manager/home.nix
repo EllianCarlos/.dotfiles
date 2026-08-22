@@ -13,6 +13,7 @@ let
   resurrectSrc = builtins.fetchTarball "https://github.com/${pins.resurrect-wezterm.owner}/${pins.resurrect-wezterm.repo}/archive/${pins.resurrect-wezterm.rev}.tar.gz";
 
   antigravityCli = pkgs.callPackage ./antigravity-cli.nix { };
+  wbHeadset = pkgs.callPackage ./wb-headset.nix { };
 
   # --- Font family verification -------------------------------------------
   fontPackages =
@@ -108,6 +109,18 @@ let
       install -m755 tuicr $out/bin/tuicr
     '';
   };
+  # dsh (https://deepseek.com/harness, github.com/deepseek-ai/deepseek-harness)
+  # -- DeepSeek's open-source AI coding-agent harness. Not in nixpkgs, and it
+  # ships no binary releases (its dsh-v0.1.0-rc.* tags are source-only) --
+  # the only distribution channel is npm, as @deepseek-ai/dsh. It is also in
+  # fast-moving developer preview (a new rc roughly every two days), so
+  # vendoring a pinned build here would go stale almost immediately. This
+  # wraps `bunx` instead, using the `bun` already installed below, so `dsh`
+  # always resolves the latest published npm version at run time -- the
+  # same behaviour `npx` would give, without adding a Node.js dependency.
+  deepseekHarness = pkgs.writeShellScriptBin "dsh" ''
+    exec ${pkgs.bun}/bin/bunx --bun @deepseek-ai/dsh "$@"
+  '';
   # herdr (https://herdr.dev) -- agent orchestration runtime that
   # github.com/AltanS/collie (a phone UI for the agent herd) plugs into.
   # Not in nixpkgs; upstream ships a single static binary per release
@@ -134,6 +147,7 @@ in
     agentSkillsFlake.homeManagerModules.default
     ./skills.nix
     ./pin-check.nix
+    ./g535-audio.nix
   ];
 
   nixpkgs.config.allowUnfree = true;
@@ -170,6 +184,7 @@ in
       tuicr
       super-productivity
       pass
+      google-chrome
 
       # --- Linux kernel review (lore.kernel.org) ---
       b4 # fetch + review (b4 review TUI) patch series from public-inbox
@@ -186,6 +201,9 @@ in
 
       zsh-powerlevel10k
 
+      # --- Audio ---
+      wbHeadset
+
       # --- AI Agents ---
       antigravityCli
       # kiro
@@ -193,6 +211,8 @@ in
       claude-code
       mnemon
       opencode
+      deepseekHarness
+      pi-coding-agent
 
       # --- Herdr / Collie (github.com/AltanS/collie) ---
       bun

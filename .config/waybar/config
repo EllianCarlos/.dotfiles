@@ -30,6 +30,7 @@
         //"custom/PBPbattery",
         // "backlight#icon",
         // "backlight#value",
+        "custom/headsetcontrol",
         "pulseaudio",
     "pulseaudio#microphone",
         // "battery" removed: desktop has no battery; module crashes waybar (SIGABRT) on transient /sys/class/power_supply devices
@@ -64,6 +65,20 @@
     "custom/PBPbattery": {
         "exec": "~/.config/waybar/scripts/PBPbattery.sh",
         "format": "{}",
+    },
+
+    // G535 headset battery, via wb-headset (wraps headsetcontrol). Left
+    // click opens the sidetone TUI in a new wezterm window; right click
+    // toggles sidetone. Auto-hides (empty exec output) when the headset's
+    // USB dongle is unplugged.
+    "custom/headsetcontrol": {
+        "exec": "wb-headset --waybar-status",
+        "return-type": "json",
+        "interval": 10,
+        "format": "{text}",
+        "tooltip": true,
+        "on-click": "wezterm start -- wb-headset",
+        "on-click-right": "wb-headset --toggle-sidetone &",
     },
 
     "clock": {

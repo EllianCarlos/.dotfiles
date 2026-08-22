@@ -53,6 +53,16 @@
     repo = "resurrect.wezterm";
     rev = "65cbbbf6d2c76f3e36af7610a356fc190fcb6147";
   };
+  wb-headset = {
+    owner = "Henriklmao";
+    repo = "waybar-headsetcontrol";
+    rev = "523ebf9e440167b3206b0b36632095c1cee9810c"; # upstream HEAD, not the
+    # v0.1.5 tag (977a1a8) -- HEAD is 5 commits past that tag, and one of
+    # those commits ("Add Cargo.lock") is what buildRustPackage's
+    # cargoLock.lockFile needs; the tagged release predates it. See
+    # project-pin-bump-prefer-tagged-release for why tag is normally
+    # preferred -- this is the documented exception.
+  };
   watermarks-remover = {
     owner = "guillaumemeyer";
     repo = "watermarks-remover";

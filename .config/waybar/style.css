@@ -76,7 +76,8 @@ window#waybar {
 #workspaces,
 #custom-media,
 #custom-language,
-#custom-PBPbattery {
+#custom-PBPbattery,
+#custom-headsetcontrol {
   padding: 0.15rem 0.5rem;
   margin: 1px 3px;
   background-color: rgba(
