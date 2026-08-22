@@ -11,6 +11,8 @@ in
 {
   nixpkgs.config.allowUnfree = true;
 
+  home.file.".ticker.yaml".source = ../../.ticker.yaml;
+
   home.packages =
     with pkgs;
     [
