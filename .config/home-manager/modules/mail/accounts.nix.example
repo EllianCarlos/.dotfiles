@@ -1,0 +1,41 @@
+# Copy to accounts.nix and fill in. accounts.nix is gitignored because it
+# names a real address and a `pass` entry.
+#
+#   cp modules/mail/accounts.nix.example modules/mail/accounts.nix
+{ pkgs, ... }: {
+  personal = {
+    flavor = "gmail.com";
+    primary = true;
+    address = "you@example.com";
+    userName = "you@example.com";
+    realName = "Your Name";
+
+    passwordCommand = "${pkgs.pass}/bin/pass show gmail_password";
+
+    folders = {
+      inbox = "INBOX";
+      drafts = "[Gmail]/Drafts";
+      sent = "[Gmail]/Sent Mail";
+      trash = "[Gmail]/Trash";
+    };
+
+    neomutt.enable = true;
+
+    mbsync = {
+      enable = true;
+      create = "maildir";
+      expunge = "both";
+
+      patterns = [
+        "INBOX"
+        "[Gmail]/Sent Mail"
+        "[Gmail]/Drafts"
+        "[Gmail]/Trash"
+      ];
+
+      extraConfig.channel = {
+        MaxMessages = 5000;
+      };
+    };
+  };
+}

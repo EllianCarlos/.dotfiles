@@ -4,7 +4,7 @@ let
   # the store at build time -- the script gets a fixed, immutable path to
   # `nix eval` regardless of cwd or whether ~/Projects/.dotfiles still
   # exists/is checked out on this machine.
-  pinsFile = ./pins.nix;
+  pinsFile = ../../pins.nix;
 
   check-nix-pins = pkgs.writeShellApplication {
     name = "check-nix-pins";

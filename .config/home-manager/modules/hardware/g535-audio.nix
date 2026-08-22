@@ -1,7 +1,7 @@
 # Auto-routes PipeWire's default sink/source to the Logitech G535 headset
 # when its USB dongle connects, and back to the built-in audio when it
 # disconnects. Triggered by a udev rule in
-# ../../nixos/modules/hardware/audio.nix, which sets
+# ../../../../nixos/modules/hardware/audio.nix, which sets
 # ENV{SYSTEMD_USER_WANTS} on the G535's USB add/remove events -- this is
 # the supported way for a root udev rule to start a --user systemd unit in
 # the active graphical session. It does not depend on
