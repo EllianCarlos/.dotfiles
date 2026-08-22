@@ -1,0 +1,17 @@
+{
+  "name": "opencode-extensions",
+  "private": true,
+  "dependencies": {
+    "oh-my-opencode": "*",
+    "opencode-pty": "*",
+    "opencode-websearch": "*",
+    "opencode-plugin-inspector": "*",
+    "opencode-goal-mode": "*",
+    "opencode-vibeguard": "*",
+    "opencode-wakatime": "*",
+    "@plannotator/opencode": "*",
+    "@nick-vi/opencode-type-inject": "*",
+    "@tarquinen/opencode-dcp": "*",
+    "opencode-notification": "*"
+  }
+}

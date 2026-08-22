@@ -1,0 +1,7 @@
+{
+  "name": "opencode-claude-vendor",
+  "private": true,
+  "dependencies": {
+    "@openchamber/opencode-claude": "0.14.0"
+  }
+}

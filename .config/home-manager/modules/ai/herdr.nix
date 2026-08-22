@@ -12,12 +12,33 @@
 #
 # `herdr integration install claude` is safe to re-run: it writes the same
 # hook file and settings entry every time and exits 0.
+#
+# Antigravity CLI and pi get the same treatment. Both drop a standalone hook
+# file (~/.gemini/config/hooks/, ~/.pi/agent/extensions/) instead of writing
+# into a settings.json this repo also manages, so neither needs an
+# entryAfter guard against antigravitySettings -- there is nothing to wipe.
+#
+# opencode is left out. Its installer refuses to run until
+# ~/.config/opencode already exists (opencode itself creates that on first
+# launch), so it is guarded rather than unconditional -- an unguarded call
+# would fail `home-manager switch` on a machine that has never run opencode.
 { config, pkgs, ... }:
-let
-  custom = import ../../pkgs { inherit pkgs; };
-in
 {
   home.activation.herdrClaudeIntegration = config.lib.dag.entryAfter [ "claudeSettings" ] ''
-    ${custom.herdr}/bin/herdr integration install claude
+    ${pkgs.herdr}/bin/herdr integration install claude
+  '';
+
+  home.activation.herdrAntigravityIntegration = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    ${pkgs.herdr}/bin/herdr integration install antigravity-cli
+  '';
+
+  home.activation.herdrPiIntegration = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    ${pkgs.herdr}/bin/herdr integration install pi
+  '';
+
+  home.activation.herdrOpencodeIntegration = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    if [ -d "$HOME/.config/opencode" ]; then
+      ${pkgs.herdr}/bin/herdr integration install opencode
+    fi
   '';
 }

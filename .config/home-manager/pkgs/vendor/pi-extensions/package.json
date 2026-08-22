@@ -1,0 +1,21 @@
+{
+  "name": "pi-extensions",
+  "private": true,
+  "dependencies": {
+    "pi-claude-bridge": "*",
+    "pi-subagents": "*",
+    "pi-mcp-adapter": "*",
+    "pi-web-access": "*",
+    "context-mode": "*",
+    "pi-background-tasks": "*",
+    "@companion-ai/feynman": "*",
+    "@plannotator/pi-extension": "*",
+    "@dietrichgebert/ponytail": "*",
+    "pi-lens": "*",
+    "@ff-labs/pi-fff": "*",
+    "pi-goal-x": "*",
+    "@narumitw/pi-plan-mode": "*",
+    "@mjasnikovs/pi-task": "*",
+    "pi-vim": "*"
+  }
+}

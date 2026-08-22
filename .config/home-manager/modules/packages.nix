@@ -34,7 +34,7 @@ in
       stress-ng
       jq
       vicinae
-      custom.tuicr
+      tuicr
       super-productivity
       pass
       google-chrome
@@ -58,7 +58,7 @@ in
       custom.wb-headset
 
       # --- AI Agents ---
-      custom.antigravity-cli
+      antigravity-cli
       # kiro
       # code-cursor
       claude-code
@@ -69,8 +69,8 @@ in
 
       # --- Herdr / Collie (github.com/AltanS/collie) ---
       bun
-      custom.herdr
-      python3 # only needed by herdr, could be patched with a custom flake in the future, but herdr will also be added to nixpkgs
+      herdr
+      python3 # only needed by herdr
 
       cliphist # Clipboard manager
       libnotify # Desktop notifications

@@ -66,6 +66,10 @@
 
       # --- Antigravity CLI (agy): API-key auth, no interactive login -------
       export GEMINI_API_KEY="$(${pkgs.pass}/bin/pass show gemini 2>/dev/null)"
+      # opencode's Google provider (ai-sdk) reads a different variable name
+      # for the same key -- without this, opencode's google/* models fail
+      # with AI_LoadAPIKeyError even though agy authenticates fine.
+      export GOOGLE_GENERATIVE_AI_API_KEY="$GEMINI_API_KEY"
 
       audio-to() {
         pactl set-default-sink "$1"
