@@ -20,6 +20,7 @@ in
     agentSkillsFlake.homeManagerModules.default
     ./modules/packages.nix
     ./modules/shell/zsh.nix
+    ./modules/editor/neovim.nix
     ./modules/ai/claude-code.nix
     ./modules/ai/antigravity.nix
     ./modules/ai/herdr.nix
@@ -184,63 +185,6 @@ in
       KillMode = "process";
     };
     Install.WantedBy = [ "graphical-session.target" ];
-  };
-
-  programs.neovim = {
-    enable = true;
-    defaultEditor = true;
-    viAlias = true;
-    vimAlias = true;
-
-    extraPackages = with pkgs; [
-      gcc
-      gnumake
-      unzip
-      wget
-      curl
-      tree-sitter
-
-      fzf
-      trash-cli
-      diffutils
-      ghostscript
-      tectonic
-
-      lua-language-server
-      stylua
-
-      nil
-      nixpkgs-fmt
-
-      nodejs_22
-
-      vscode-langservers-extracted
-
-      prettier
-      prettierd
-      eslint_d
-      biome
-      stylelint
-
-      pyright
-      black
-
-      rust-analyzer
-      rustfmt
-
-      kotlin-language-server
-      ktlint
-
-      shfmt
-      shellcheck
-
-      ast-grep
-      detekt
-      nimlangserver
-
-      # --- C / C++ (also covers linux-kernel work) ---
-      clang-tools # clangd (LSP) + clang-format (formatter)
-    ];
   };
 
   programs.neomutt = {
