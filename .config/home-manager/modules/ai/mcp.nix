@@ -2,7 +2,7 @@
 let
   lib = pkgs.lib;
   secretsEnvFile = /home/elliancarlos/.secrets/.env;
-  pins = import ./pins.nix;
+  pins = import ../../pins.nix;
   mcp-services-nix = import (fetchTarball "https://github.com/${pins.mcp-servers-nix.owner}/${pins.mcp-servers-nix.repo}/archive/${pins.mcp-servers-nix.rev}.tar.gz") { inherit pkgs; };
 
   # uv's managed-Python downloads are generic dynamically-linked binaries

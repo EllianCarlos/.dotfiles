@@ -20,7 +20,9 @@ in
     agentSkillsFlake.homeManagerModules.default
     ./modules/packages.nix
     ./modules/ai/claude-code.nix
-    ./skills.nix
+    ./modules/ai/antigravity.nix
+    ./modules/ai/herdr.nix
+    ./modules/ai/skills.nix
     ./pin-check.nix
     ./g535-audio.nix
   ];
@@ -379,68 +381,6 @@ in
     enable = true;
     pinentry.package = pkgs.pinentry-curses;
   };
-
-  # --- Herdr Claude integration -------------------------------------------------
-  # Installs herdr's session-identity hook for Claude Code. Without this hook,
-  # herdr cannot read a pane's Claude Code session id. Collie then shows no
-  # History icon for that pane, because Collie gates it on `hasSession`
-  # (bridge/types.ts in AltanS/collie, keyed on herdr's agent_session report).
-  #
-  # Runs after claudeSettings on purpose, not before. Herdr's own installer
-  # merges its SessionStart hook entry into settings.json without touching
-  # other entries. The claudeSettings jq merge above replaces the whole
-  # hooks.SessionStart array instead of merging it (jq's `*` does not
-  # concatenate arrays), so if this ran first, the next `home-manager switch`
-  # would wipe herdr's entry straight back out.
-  #
-  # `herdr integration install claude` is safe to re-run: it writes the same
-  # hook file and settings entry every time and exits 0.
-  home.activation.herdrClaudeIntegration = config.lib.dag.entryAfter [ "claudeSettings" ] ''
-    ${custom.herdr}/bin/herdr integration install claude
-  '';
-
-  # --- Antigravity CLI settings -------------------------------------------------
-  # Pins auth to the API key path (GEMINI_API_KEY, exported from `pass` in
-  # programs.zsh.initExtra) so `agy` never drops into the interactive
-  # browser/keyring login flow. Antigravity CLI splits its config across two
-  # files (unlike Claude Code / the old Gemini CLI, which keep mcpServers
-  # inside the main settings file):
-  #   - ~/.gemini/antigravity-cli/settings.json -- modelProvider, deep-merged
-  #     over whatever's on disk so unmanaged state survives.
-  #   - ~/.gemini/config/mcp_config.json -- mcpServers, wholesale-replaced
-  #     rather than deep-merged, same reasoning as the .claude.json fix
-  #     above: a deep merge would let a server removed from mcp.nix survive
-  #     forever as a stale leftover key.
-  home.activation.antigravitySettings =
-    let
-      antigravityMcpFile = (import ./mcp.nix { inherit pkgs; }).antigravity;
-      antigravitySettingsFile = pkgs.writeText "antigravity-cli-settings.json" (
-        builtins.toJSON {
-          modelProvider = "gemini";
-        }
-      );
-    in
-    config.lib.dag.entryAfter [ "writeBoundary" ] ''
-      mkdir -p "$HOME/.gemini/antigravity-cli" "$HOME/.gemini/config"
-
-      # --- settings.json (auth/model provider) ---
-      [ -f "$HOME/.gemini/antigravity-cli/settings.json" ] || echo '{}' > "$HOME/.gemini/antigravity-cli/settings.json"
-
-      ${pkgs.jq}/bin/jq -s '.[0] * .[1]' \
-        "$HOME/.gemini/antigravity-cli/settings.json" ${antigravitySettingsFile} \
-        > "$HOME/.gemini/antigravity-cli/settings.json.tmp"
-      mv "$HOME/.gemini/antigravity-cli/settings.json.tmp" "$HOME/.gemini/antigravity-cli/settings.json"
-      chmod 644 "$HOME/.gemini/antigravity-cli/settings.json"
-
-      # --- mcp_config.json (mcpServers) ---
-      [ -f "$HOME/.gemini/config/mcp_config.json" ] || echo '{}' > "$HOME/.gemini/config/mcp_config.json"
-
-      ${pkgs.jq}/bin/jq -s '.[0] as $old | .[1] as $new | ($old * $new) | .mcpServers = $new.mcpServers' \
-        "$HOME/.gemini/config/mcp_config.json" ${antigravityMcpFile} \
-        > "$HOME/.gemini/config/mcp_config.json.tmp"
-      mv "$HOME/.gemini/config/mcp_config.json.tmp" "$HOME/.gemini/config/mcp_config.json"
-      chmod 644 "$HOME/.gemini/config/mcp_config.json"
-    '';
 
   # --- Home Manager itself ----------------------------------------------------
   programs.home-manager.enable = true;

@@ -1,6 +1,6 @@
 { pkgs, ... }:
 let
-  pins = import ./pins.nix;
+  pins = import ../../pins.nix;
   mattpocockSrc = builtins.fetchTarball "https://github.com/${pins.mattpocock-skills.owner}/${pins.mattpocock-skills.repo}/archive/${pins.mattpocock-skills.rev}.tar.gz";
   mattpocockPersonalSrc = builtins.fetchTarball "https://github.com/${pins.mattpocock-skills-personal.owner}/${pins.mattpocock-skills-personal.repo}/archive/${pins.mattpocock-skills-personal.rev}.tar.gz";
   watermarks-remover = builtins.fetchTarball "https://github.com/${pins.watermarks-remover.owner}/${pins.watermarks-remover.repo}/archive/${pins.watermarks-remover.rev}.tar.gz";
@@ -15,7 +15,8 @@ in
   # show up. Fix: no idPrefix anywhere, and each mattpocock category pointed
   # at directly via `subdir` so every skill lands as its own flat top-level
   # ~/.claude/skills/<skill-name>/SKILL.md -- structurally identical to how
-  # the working `mnemon` skill (home.nix's home.file entry) is laid out.
+  # the working `mnemon` skill (modules/ai/claude-code.nix's home.file entry)
+  # is laid out.
   programs.agent-skills = {
     enable = true;
 
@@ -58,9 +59,9 @@ in
 
     # Default is only ["/.system"] -- setting this option replaces rather
     # than merges the module's default, so both must be listed explicitly.
-    # "/mnemon" and "/nixapply" protect the hand-managed skills (home.nix's
-    # home.file entries) from the rsync --delete this module runs on every
-    # activation.
+    # "/mnemon" and "/nixapply" protect the hand-managed skills
+    # (modules/ai/claude-code.nix's home.file entries) from the rsync
+    # --delete this module runs on every activation.
     excludePatterns = [ "/.system" "/mnemon" "/nixapply" ];
   };
 }

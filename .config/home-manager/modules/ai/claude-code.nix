@@ -77,7 +77,7 @@ let
     }
   );
 
-  claudeMcpFile = (import ../../mcp.nix { inherit pkgs; }).claude;
+  claudeMcpFile = (import ./mcp.nix { inherit pkgs; }).claude;
 in
 {
   home.file = {
