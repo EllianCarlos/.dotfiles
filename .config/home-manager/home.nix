@@ -14,69 +14,15 @@ let
 
   custom = import ./pkgs { inherit pkgs; };
 
-  # --- Font family verification -------------------------------------------
-  fontPackages =
-    if osConfig == null then
-      throw "home.nix: osConfig is unavailable, so the font-family check cannot read fonts.packages. Remove the check or give it an explicit package list rather than letting it silently pass."
-    else
-      osConfig.fonts.packages;
-
-  checkFontFamilies =
-    pkgs.runCommand "check-font-families" { nativeBuildInputs = [ pkgs.fontconfig.bin ]; }
-      ''
-        dirs=""
-        for d in ${lib.escapeShellArgs (map (p: "${p}/share/fonts") fontPackages)}; do
-          [ -d "$d" ] && dirs="$dirs $d"
-        done
-
-        fc-scan --format '%{family}\n' $dirs 2>/dev/null \
-          | tr ',' '\n' | sed 's/^[ "]*//; s/[ "]*$//' | grep -v '^$' | sort -u > installed
-
-        wezterm_font=$(sed -n 's/^local font_family[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' ${../wezterm/wezterm.lua})
-        if [ -z "$wezterm_font" ]; then
-          echo "" >&2
-          echo 'error: could not find a `local font_family = "..."` line in wezterm.lua.' >&2
-          echo "It was probably renamed or reformatted; update the sed in home.nix to match," >&2
-          echo "otherwise this font check silently verifies nothing for wezterm." >&2
-          exit 1
-        fi
-
-        {
-          echo "$wezterm_font"
-          sed -n 's/^font_family[[:space:]]\+//p' ${../kitty/kitty.conf}
-          sed -n 's/.*font-family:[[:space:]]*\([^;]*\);.*/\1/p' ${../waybar/style.css}
-        } | tr ',' '\n' | sed 's/^[ "]*//; s/[ "]*$//' | grep -v '^$' | sort -u > wanted
-
-        missing=$(grep -Fxv -f installed wanted || true)
-        if [ -n "$missing" ]; then
-          echo "" >&2
-          echo "error: these font families are referenced by config, but no installed" >&2
-          echo "font package provides them (fontconfig would silently fall back):" >&2
-          echo "" >&2
-          echo "$missing" | while IFS= read -r fam; do
-            echo "  - $fam" >&2
-            key=$(printf '%s' "$fam" | tr -d ' ' | tr '[:upper:]' '[:lower:]')
-            awk -v k="$key" \
-              '{ n = tolower($0); gsub(/ /, "", n); if (index(n, k)) print "      did you mean: " $0 }' \
-              installed >&2
-          done
-          echo "" >&2
-          echo "($(wc -l < installed) families installed; run 'fc-list : family' to list them)" >&2
-          exit 1
-        fi
-
-        mkdir -p "$out"
-      '';
 in
 {
   imports = [
     agentSkillsFlake.homeManagerModules.default
+    ./modules/packages.nix
     ./skills.nix
     ./pin-check.nix
     ./g535-audio.nix
   ];
-
-  nixpkgs.config.allowUnfree = true;
 
   # --- Identity -------------------------------------------------------------
   home.username = "elliancarlos";
@@ -85,82 +31,6 @@ in
 
   nixpkgs.overlays = [ claude-code-flake.overlays.default ];
 
-  # --- Packages -------------------------------------------------------------
-  home.packages =
-    with pkgs;
-    [
-      oh-my-zsh
-
-      # --- Applications ---
-      wezterm
-      kitty
-      obsidian
-      firefox
-      discord
-      spotify
-      mplayer
-      sxiv
-      tmux
-      devenv
-      ticker
-      zip
-      stress-ng
-      jq
-      vicinae
-      custom.tuicr
-      super-productivity
-      pass
-      google-chrome
-
-      # --- Linux kernel review (lore.kernel.org) ---
-      b4 # fetch + review (b4 review TUI) patch series from public-inbox
-      public-inbox # provides `lei`, for search/pull of kernel-list mail
-      delta # readable diffs when reading patches in the terminal
-
-      # --- Wayland / Hyprland ---
-      grim
-      slurp
-      waybar
-      hyprlock
-      hyprpaper
-      hypridle
-
-      zsh-powerlevel10k
-
-      # --- Audio ---
-      custom.wb-headset
-
-      # --- AI Agents ---
-      custom.antigravity-cli
-      # kiro
-      # code-cursor
-      claude-code
-      custom.mnemon
-      opencode
-      custom.dsh
-      pi-coding-agent
-
-      # --- Herdr / Collie (github.com/AltanS/collie) ---
-      bun
-      custom.herdr
-      python3 # only needed by herdr, could be patched with a custom flake in the future, but herdr will also be added to nixpkgs
-
-      cliphist # Clipboard manager
-      libnotify # Desktop notifications
-      wl-clipboard # Wayland clipboard utilities
-
-      xournalpp
-
-      libvirt
-      libguestfs-with-appliance
-      guestfs-tools
-      wget
-    ]
-    ++ [
-      # --- Verifiers ---
-      checkFontFamilies
-    ]
-    ++ custom.loop-tools;
 
   xdg.configFile = {
     "hypr".source = ../hypr;
