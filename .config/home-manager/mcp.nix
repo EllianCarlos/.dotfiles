@@ -80,7 +80,12 @@ let
           extraEnv = [ uvPythonEnv ];
           withSecrets = true;
           exe = "${pkgs.uv}/bin/uvx";
-          args = [ "postgres-mcp" "--access-mode=restricted" ];
+          # Pin mcp<2.0.0: postgres-mcp 0.3.0 still imports the old
+          # mcp.server.fastmcp path, which mcp 2.0.0 renamed/removed.
+          # Without this pin, uvx resolves the newest mcp and the server
+          # crashes on start with "ModuleNotFoundError: No module named
+          # 'mcp.server.fastmcp'".
+          args = [ "--with" "mcp<2.0.0" "postgres-mcp" "--access-mode=restricted" ];
         }}/bin/postgres-mcp-wrapped";
     };
     obsidian-mestrado = {
