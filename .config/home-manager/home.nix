@@ -19,6 +19,7 @@ in
   imports = [
     agentSkillsFlake.homeManagerModules.default
     ./modules/packages.nix
+    ./modules/shell/zsh.nix
     ./modules/ai/claude-code.nix
     ./modules/ai/antigravity.nix
     ./modules/ai/herdr.nix
@@ -136,7 +137,6 @@ in
 
   # --- Dotfiles ---------------------------------------------------------------
   home.file = {
-    ".p10k.zsh".source = ./p10k.zsh;
     ".ticker.yaml".source = ../.ticker.yaml;
 
     # --- Compose-key accents (replaces the old GTK "cedilla" module) ---
@@ -156,120 +156,6 @@ in
   # "cedilla" module to a Compose key (see kb_options in hyprland.conf and
   # ~/.XCompose below).
   home.sessionVariables = { };
-
-  programs.fzf = {
-    enable = true;
-    enableZshIntegration = true;
-  };
-
-  programs.zsh = {
-    enable = true;
-
-    localVariables = {
-      ZSH_DISABLE_COMPFIX = "true";
-    };
-
-    shellAliases = {
-      # --- Files & editor ---------------------------------------------------
-      la = "ls -la";
-      ll = "ls -l";
-      v = "nvim";
-
-      # --- NixOS ------------------------------------------------------------
-      # Copy the local config to /etc/nixos, then rebuild
-      update = "sudo cp -r ~/Projects/.dotfiles/nixos/* /etc/nixos/ && sudo nixos-rebuild switch";
-      # Quick garbage collection
-      gc = "nix-collect-garbage -d && sudo nix-collect-garbage -d";
-
-      # --- System history (atop) --------------------------------------------
-      # atopsar summaries read today's log automatically.
-      atop-mem = "atopsar -m"; # memory + swap over time
-      atop-swap = "atopsar -s"; # swap pressure
-      atop-cpu = "atopsar -c"; # cpu utilisation
-      atop-procs = "atopsar -G"; # top memory-consuming processes
-      atop-cpuprocs = "atopsar -p"; # top cpu-consuming processes
-      # Interactive replay. Inside atop: t/T step through samples, m sorts by
-      # memory, c shows full command lines, q quits. For any other day:
-      #   atop -r /var/log/atop/atop_20260807 -b 15:10
-      atop-today = "atop -r /var/log/atop/atop_$(date +%Y%m%d)";
-      atop-yday = "atop -r /var/log/atop/atop_$(date -d yesterday +%Y%m%d)";
-      # What the kernel or earlyoom killed this boot
-      oom-log = "journalctl -b | grep -iE 'oom|killed process|earlyoom'";
-
-      # --- Audio ------------------------------------------------------------
-      # Change default sink
-      audio-headset = "audio-to alsa_output.usb-Logitech_G535_Wireless_Gaming_Headset-00.analog-stereo";
-      audio-hdmi = "audio-to alsa_output.pci-0000_03_00.1.hdmi-stereo-extra1";
-      audio-combine = "audio-to combine-sink";
-
-      caffeinate = "systemd-inhibit --what=idle:sleep:handle-lid-switch --why='coding-through-the-phone' sleep infinity";
-
-    };
-
-    autosuggestion.enable = true;
-    enableCompletion = true;
-    syntaxHighlighting.enable = true;
-
-    initContent = ''
-      if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
-        source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
-      fi
-    '';
-
-    initExtra = ''
-      [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-      # --- Antigravity CLI (agy): API-key auth, no interactive login -------
-      export GEMINI_API_KEY="$(${pkgs.pass}/bin/pass show gemini 2>/dev/null)"
-
-      audio-to() {
-        pactl set-default-sink "$1"
-        for i in $(pactl list short sink-inputs | cut -f1); do
-          pactl move-sink-input "$i" "$1" 2>/dev/null
-        done
-      }
-    '';
-
-    oh-my-zsh = {
-      enable = true;
-
-      plugins = [
-        "git"
-        "z"
-        "copyfile"
-        "history"
-        "dirhistory"
-      ];
-
-      theme = "";
-    };
-
-    plugins = [
-      {
-        name = "powerlevel10k";
-        src = pkgs.zsh-powerlevel10k;
-        file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
-      }
-      {
-        name = "zsh-completions";
-        src = pkgs.fetchFromGitHub {
-          owner = "zsh-users";
-          repo = "zsh-completions";
-          rev = "0.35.0";
-          hash = "sha256-GFHlZjIHUWwyeVoCpszgn4AmLPSSE8UVNfRmisnhkpg=";
-        };
-      }
-      {
-        name = "zsh-syntax-highlighting";
-        src = pkgs.fetchFromGitHub {
-          owner = "zsh-users";
-          repo = "zsh-syntax-highlighting";
-          rev = "0.8.0";
-          hash = "sha256-iJdWopZwHpSyYl5/FQXEW7gl/SrKaYDEtTH9cGP7iPo=";
-        };
-      }
-    ];
-  };
 
   programs.wofi = {
     enable = true;
