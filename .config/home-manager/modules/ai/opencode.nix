@@ -47,10 +47,54 @@ in
     [ -f "$HOME/.config/opencode/opencode.jsonc" ] \
       || echo '{"$schema": "https://opencode.ai/config.json"}' > "$HOME/.config/opencode/opencode.jsonc"
 
+    # .model picks the default model on launch (google/* auth comes from
+    # GOOGLE_GENERATIVE_AI_API_KEY, exported from `pass show gemini` in
+    # programs.zsh.initContent -- see antigravity.nix). Only set when
+    # missing, so a model picked by hand in the TUI survives a rebuild.
+    # "ollama" provider talks to the local ollama.service (127.0.0.1:11434,
+    # see nixos/modules/services/ollama.nix) over its OpenAI-compatible API.
+    # Add more entries to `models` here as you pull more models locally.
+    # "local" agent pins the ollama model and strips every tool but read/
+    # grep/glob -- each disabled tool's schema is removed from the system
+    # prompt entirely (not just blocked), which matters since the model's
+    # whole budget is 12288 tokens. Select it in opencode with Tab or
+    # /agent local. Add more `tools.<name> = false` entries if `/tools`
+    # inside opencode shows other plugin tools still loaded for it.
     ${pkgs.jq}/bin/jq \
       --argjson plugins ${pkgs.lib.escapeShellArg (builtins.toJSON pluginUrls)} \
       '.plugin = ((.plugin // []) + $plugins | unique)
-       | .provider = ((.provider // {}) * { "claude-code": { "name": "Claude Code" } })' \
+       | .provider = ((.provider // {}) * {
+           "claude-code": { "name": "Claude Code" },
+           "ollama": {
+             "npm": "@ai-sdk/openai-compatible",
+             "name": "Ollama (local)",
+             "options": { "baseURL": "http://127.0.0.1:11434/v1" },
+             "models": {
+               "deepseek-r1:7b": {
+                 "name": "DeepSeek R1 7B (local)",
+                 "limit": { "context": 12288, "output": 3072 }
+               }
+             }
+           }
+         })
+       | .agent = ((.agent // {}) * {
+           "local": {
+             "description": "Minimal agent pinned to the on-device ollama model (deepseek-r1:7b), read/grep/glob only, kept small to fit its 12288-token context budget.",
+             "mode": "primary",
+             "model": "ollama/deepseek-r1:7b",
+             "tools": {
+               "write": false,
+               "edit": false,
+               "patch": false,
+               "bash": false,
+               "task": false,
+               "todowrite": false,
+               "todoread": false,
+               "webfetch": false
+             }
+           }
+         })
+       | .model = (.model // "google/gemini-3.6-flash")' \
       "$HOME/.config/opencode/opencode.jsonc" > "$HOME/.config/opencode/opencode.jsonc.tmp"
     mv "$HOME/.config/opencode/opencode.jsonc.tmp" "$HOME/.config/opencode/opencode.jsonc"
   '';

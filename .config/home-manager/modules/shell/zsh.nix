@@ -50,6 +50,13 @@
 
       caffeinate = "systemd-inhibit --what=idle:sleep:handle-lid-switch --why='coding-through-the-phone' sleep infinity";
 
+      # --- Ollama -------------------------------------------------------------
+      # Stop frees the RAM/VRAM the loaded model holds; it does not auto-restart
+      # until next boot or until you run ollama-start again.
+      ollama-start = "sudo systemctl start ollama";
+      ollama-stop = "sudo systemctl stop ollama";
+      ollama-status = "systemctl status ollama";
+
     };
 
     autosuggestion.enable = true;
@@ -63,6 +70,14 @@
     # ambiguity about relative ordering.
     initContent = ''
       [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+      # gpg-agent picks the tty for pinentry-curses from GPG_TTY. Without
+      # this, a shell started inside a nested terminal (neovim's
+      # :terminal, tmux) keeps a stale tty from the parent shell, and any
+      # gpg call (directly, or via `pass` below) hangs or corrupts that
+      # other terminal instead of prompting where you can see it.
+      export GPG_TTY="$(tty)"
+      ${pkgs.gnupg}/bin/gpg-connect-agent updatestartuptty /bye >/dev/null 2>&1
 
       # --- Antigravity CLI (agy): API-key auth, no interactive login -------
       export GEMINI_API_KEY="$(${pkgs.pass}/bin/pass show gemini 2>/dev/null)"

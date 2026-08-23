@@ -1,17 +1,48 @@
 # Everything installed into the user profile, plus the build-time
 # verifiers that must fail the build rather than warn at run time.
-{ pkgs, lib, osConfig ? null, ... }:
+{
+  pkgs,
+  lib,
+  osConfig ? null,
+  ...
+}:
 let
   custom = import ../pkgs { inherit pkgs; };
 
   checkFontFamilies = import ../checks/font-families.nix {
     inherit pkgs lib osConfig;
   };
+
+  pins = import ../pins.nix;
+  zenBrowserFlake = builtins.getFlake "github:${pins.zen-browser.owner}/${pins.zen-browser.repo}/${pins.zen-browser.rev}";
 in
 {
+  imports = [ zenBrowserFlake.homeModules.beta ];
+
   nixpkgs.config.allowUnfree = true;
 
   home.file.".ticker.yaml".source = ../../.ticker.yaml;
+
+  programs.zen-browser = {
+
+    enable = true;
+
+    # Catppuccin theme (catppuccin/zen-browser), symlinked into the profile's
+    # chrome/catppuccin and loaded via userChrome/userContent imports.
+    profiles.default.presets.catppuccin = {
+      enable = true;
+      flavor = "Mocha"; # Frappe | Latte | Macchiato | Mocha
+      accent = "Mauve"; # Blue, Flamingo, Green, Lavender, Maroon, Mauve, ...
+    };
+
+    # Betterfox for Zen (yokoffing/Betterfox zen/user.js, aka BetterZen):
+    # privacy/telemetry/performance prefs applied as mkDefault settings —
+    # any profile `settings` entry wins.
+    profiles.default.presets.betterfox.enable = true;
+
+    # arkenfox for Zen (arkenfox/user.js)
+    profiles.default.presets.arkenfox.enable = true;
+  };
 
   home.packages =
     with pkgs;

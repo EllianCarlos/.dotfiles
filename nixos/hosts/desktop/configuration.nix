@@ -28,6 +28,7 @@ in
     ../../modules/hardware/printer.nix
     ../../modules/services/tailscale.nix
     ../../modules/services/virtualisation.nix
+    ../../modules/services/ollama.nix
   ];
 
   # Bootloader

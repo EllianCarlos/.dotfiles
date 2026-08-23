@@ -70,4 +70,12 @@
     # (c2ac8eeef3ff1a17aaab0cdb86889c7ad21675a7) is 3 commits past this tag
     # with no new release cut yet; see project-pin-bump-prefer-tagged-release.
   };
+  zen-browser = {
+    owner = "0xc000022070";
+    repo = "zen-browser-flake";
+    rev = "b49e5b7b3f925b78b2af9ca21e81e8c0d1a4711e"; # HEAD -- upstream's
+    # tags are named "twilight-<hash>" per Zen Browser build, not per
+    # flake release, so they track a different thing than this pin does.
+    # HEAD is the flake's own moving pin to the latest Zen build.
+  };
 }

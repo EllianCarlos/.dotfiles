@@ -57,9 +57,15 @@ in
     mkdir -p "$HOME/.pi/agent"
     [ -f "$HOME/.pi/agent/settings.json" ] || echo '{}' > "$HOME/.pi/agent/settings.json"
 
+    # defaultProvider/defaultModel pin auth to GEMINI_API_KEY (exported from
+    # `pass show gemini` in programs.zsh.initContent -- see antigravity.nix),
+    # so pi never drops into an interactive login flow. Only set when
+    # missing, so a provider/model picked by hand survives a rebuild.
     ${pkgs.jq}/bin/jq \
       --argjson paths ${pkgs.lib.escapeShellArg (builtins.toJSON localPaths)} \
-      '.packages = ($paths + ((.packages // []) - $paths))' \
+      '.packages = ($paths + ((.packages // []) - $paths))
+       | .defaultProvider = (.defaultProvider // "google")
+       | .defaultModel = (.defaultModel // "gemini-3.6-flash")' \
       "$HOME/.pi/agent/settings.json" > "$HOME/.pi/agent/settings.json.tmp"
     mv "$HOME/.pi/agent/settings.json.tmp" "$HOME/.pi/agent/settings.json"
   '';
