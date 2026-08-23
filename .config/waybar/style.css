@@ -273,3 +273,11 @@ window#waybar {
 #temperature.critical {
   color: #f38ba8; /* Mocha Red */
 }
+
+#idle_inhibitor.activated {
+  color: #f9e2af; /* Mocha Yellow */
+}
+
+#idle_inhibitor.deactivated {
+  color: #a6adc8; /* Mocha Subtext 0 */
+}

@@ -20,7 +20,7 @@
 
     "modules-right": [
         "tray",
-        // "idle_inhibitor",
+        "idle_inhibitor",
         "disk",
         "temperature",
         "memory",
@@ -32,19 +32,25 @@
         // "backlight#value",
         "custom/headsetcontrol",
         "pulseaudio",
-    "pulseaudio#microphone",
+        "pulseaudio#microphone",
         // "battery" removed: desktop has no battery; module crashes waybar (SIGABRT) on transient /sys/class/power_supply devices
         "network"
     ],
 
     // Modules
 
+    // Native Hyprland idle inhibitor. It holds a wlr-idle-inhibit lock,
+    // which hypridle checks before running any of its timeouts (dim,
+    // lock, dpms off, suspend), so one click here blocks all of them.
+    // Click toggles the lock; the icon and tooltip reflect the real state.
     "idle_inhibitor": {
-        "format": "{icon} ",
-        "format-icons":{
+        "format": "{icon}",
+        "format-icons": {
             "activated": "",
             "deactivated": ""
-        }
+        },
+        "tooltip-format-activated": "Idle inhibitor: on (screen stays awake)",
+        "tooltip-format-deactivated": "Idle inhibitor: off (normal idle behavior)"
     },
 
     "battery": {
