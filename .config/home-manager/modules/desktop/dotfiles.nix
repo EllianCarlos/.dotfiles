@@ -1,5 +1,5 @@
 # Symlinks the app config directories in .config/ into place.
-{ ... }:
+{ config, ... }:
 let
   pins = import ../../pins.nix;
   resurrectSrc = builtins.fetchTarball "https://github.com/${pins.resurrect-wezterm.owner}/${pins.resurrect-wezterm.repo}/archive/${pins.resurrect-wezterm.rev}.tar.gz";
@@ -28,7 +28,10 @@ in
       source = ../../../herdr;
       recursive = true;
     };
-    "nvim".source = ../../../nvim;
+    # An out-of-store symlink, not a store copy: lazy.nvim writes lazy-lock.json
+    # (plugin commit pins) back into this directory when installing/updating
+    # plugins, which the read-only Nix store wouldn't allow.
+    "nvim".source = config.lib.file.mkOutOfStoreSymlink ../../../nvim;
     "wofi".source = ../../../wofi;
     "neofetch".source = ../../../neofetch;
     "wallpapers".source = ../../../wallpapers;

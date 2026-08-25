@@ -115,6 +115,19 @@ let
           args = [ "-y" "super-productivity-mcp" ];
         }}/bin/supper-productivity-wrapped";
     };
+    exa = {
+      command =
+        "${mkWrapper {
+          name = "exa-mcp-wrapped";
+          extraEnv = [ nodePathEnv ];
+          # Needs EXA_API_KEY from dashboard.exa.ai/api-keys in the secrets
+          # file; withSecrets exports the whole file rather than just this
+          # one key, matching the postgres/github servers above.
+          withSecrets = true;
+          exe = "${pkgs.nodejs}/bin/npx";
+          args = [ "-y" "exa-mcp-server" ];
+        }}/bin/exa-mcp-wrapped";
+    };
   };
 
   # Remote HTTP servers -- shape differs per client. Claude Code wants

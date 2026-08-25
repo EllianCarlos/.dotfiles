@@ -15,7 +15,7 @@ let
 
   claudeSettingsFile = pkgs.writeText "claude-settings.json" (
     builtins.toJSON {
-      outputStyle = "ASD-STE100";
+      outputStyle = "Concise";
       permissions = claudePermissions;
       statusLine = {
         type = "command";

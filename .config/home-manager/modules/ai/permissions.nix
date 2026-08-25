@@ -196,6 +196,7 @@
     "mcp__postgres__list_schemas"
 
     "mcp__context7__*"
+    "mcp__exa__*"
     "mcp__nixos__*"
     "mcp__sequential-thinking__*"
     "mcp__time__*"

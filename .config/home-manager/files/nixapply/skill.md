@@ -18,9 +18,9 @@ Follow every step. Do not skip to "done" without the command output proving it.
    and every changed `.json`/`.jsonc` file with `jq . <file>`. Fix any
    failure before continuing.
 3. Rebuild: `sudo cp -r ~/Projects/.dotfiles/nixos/* /etc/nixos/ && sudo nixos-rebuild switch`.
-   This needs sudo — if it can't be run non-interactively, stop and print the
-   exact command for the user to run themselves, then wait for them to
-   confirm it succeeded (and paste the output if it failed).
+   This needs sudo. Do not run it and do not probe for passwordless sudo.
+   Print the exact command for the user to run themselves, then wait for
+   them to confirm it succeeded (and paste the output if it failed).
 4. Verify the GENERATED file actually changed, not just the source — e.g.
    `cat ~/.claude/settings.json`, `cat ~/.claude.json`, `ls ~/.claude/skills/`,
    `readlink -f ~/.claude/hooks/<name>`. A clean rebuild with no diff in the

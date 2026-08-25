@@ -15,12 +15,13 @@
   mcp-servers-nix = {
     owner = "natsukium";
     repo = "mcp-servers-nix";
-    rev = "c157da8e48b9b0756c436fd81abfaa337785198e";
+    rev = "c30be6c96fceae9a91ac3b145862b507466a625d"; # upstream HEAD -- repo
+    # cuts no tags.
   };
   claude-code-nix = {
     owner = "sadjow";
     repo = "claude-code-nix";
-    rev = "fd727a3f341b079ba5387b770c5caef86bdae3e6";
+    rev = "a652fdf13cf7ac39be23fafbca3e1d6290eff001"; # v2.1.241, also upstream HEAD
   };
   agent-skills-nix = {
     owner = "Kyure-A";
@@ -30,7 +31,10 @@
   loop-engineering = {
     owner = "cobusgreyling";
     repo = "loop-engineering";
-    rev = "e4247dfa6e31598efb53a86995ce84171b5d5421";
+    rev = "1485cd64e9a87f6222eebef420e6f9a29ffdb397"; # upstream HEAD -- this
+    # repo's tags (loop-worktree-vX, readiness-core-vX, vX) are per-subtool,
+    # not one release line for the whole repo, so there's no single "latest
+    # tag" to prefer over HEAD here; see project-pin-bump-prefer-tagged-release.
   };
   superpowers = {
     owner = "obra";
@@ -40,7 +44,10 @@
   mattpocock-skills = {
     owner = "mattpocock";
     repo = "skills";
-    rev = "068b6e0c62393147daf03530149cdce209c93da8";
+    rev = "6acc160e4e0cd062dbbbd7a1b26ae92855edf07e"; # v1.2.3 -- still the
+    # latest tag; upstream HEAD (5b15a47f2d7150f545fbcacbfe381787fc0230dc) is
+    # a few commits past it with no new release cut yet; see
+    # project-pin-bump-prefer-tagged-release.
   };
   mattpocock-skills-personal = {
     owner = "mattpocock";
@@ -67,8 +74,16 @@
     owner = "guillaumemeyer";
     repo = "watermarks-remover";
     rev = "dc0ff78f39bedfe0a1986eef54efb297645372ba"; # v0.5.0 -- upstream HEAD
-    # (c2ac8eeef3ff1a17aaab0cdb86889c7ad21675a7) is 3 commits past this tag
-    # with no new release cut yet; see project-pin-bump-prefer-tagged-release.
+    # (0148d764794b30623edebf3215e1d14272460e7d) is further commits past
+    # this tag with no new release cut yet; see
+    # project-pin-bump-prefer-tagged-release.
+  };
+  academic-research-skills = {
+    owner = "Imbad0202";
+    repo = "academic-research-skills";
+    rev = "37704469a1cdc09f7a1c05d22b0f91d11a1705bf"; # v3.21.0 -- upstream
+    # HEAD (385bc064e19ac1ddab3438025946dd049f490fcd) is past this tag with
+    # no new release cut yet; see project-pin-bump-prefer-tagged-release.
   };
   zen-browser = {
     owner = "0xc000022070";

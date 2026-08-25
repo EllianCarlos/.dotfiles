@@ -48,6 +48,16 @@ return {
       -- C / C++
       c = { "clang-format" },
       cpp = { "clang-format" },
+
+      -- LaTeX
+      tex = { "latexindent" },
+    },
+
+    -- Nixpkgs only ships the script as `latexindent.pl`, not `latexindent`
+    formatters = {
+      latexindent = {
+        command = "latexindent.pl",
+      },
     },
 
     -- Enable Format on Save

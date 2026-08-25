@@ -57,6 +57,9 @@
 
       # --- C / C++ (also covers linux-kernel work) ---
       clang-tools # clangd (LSP) + clang-format (formatter)
+
+      # --- LaTeX ---
+      perlPackages.LatexIndent # provides latexindent.pl, used as the tex formatter
     ];
   };
 }

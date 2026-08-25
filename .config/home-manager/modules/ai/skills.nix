@@ -4,6 +4,7 @@ let
   mattpocockSrc = builtins.fetchTarball "https://github.com/${pins.mattpocock-skills.owner}/${pins.mattpocock-skills.repo}/archive/${pins.mattpocock-skills.rev}.tar.gz";
   mattpocockPersonalSrc = builtins.fetchTarball "https://github.com/${pins.mattpocock-skills-personal.owner}/${pins.mattpocock-skills-personal.repo}/archive/${pins.mattpocock-skills-personal.rev}.tar.gz";
   watermarks-remover = builtins.fetchTarball "https://github.com/${pins.watermarks-remover.owner}/${pins.watermarks-remover.repo}/archive/${pins.watermarks-remover.rev}.tar.gz";
+  academic-research-skills = builtins.fetchTarball "https://github.com/${pins.academic-research-skills.owner}/${pins.academic-research-skills.repo}/archive/${pins.academic-research-skills.rev}.tar.gz";
 in
 {
   # Claude Code's skills-dir loader only looks for SKILL.md directly inside
@@ -50,6 +51,12 @@ in
       remove-ai-marks = {
         path = watermarks-remover;
         subdir = "skills/remove-ai-marks";
+      };
+      # Skill dirs (academic-paper, academic-paper-reviewer, academic-pipeline,
+      # deep-research) sit directly at repo root -- default subdir "." finds
+      # them via agent-skills-nix's recursive SKILL.md scan.
+      academic-research-skills = {
+        path = academic-research-skills;
       };
     };
 
