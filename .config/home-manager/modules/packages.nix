@@ -69,6 +69,7 @@ in
       super-productivity
       pass
       google-chrome
+      zotero
 
       # --- Linux kernel review (lore.kernel.org) ---
       b4 # fetch + review (b4 review TUI) patch series from public-inbox
