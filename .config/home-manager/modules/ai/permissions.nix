@@ -204,6 +204,9 @@
     # --- MCP: engram (per-project working memory) ---
     "mcp__engram__*"
 
+    # --- MCP: rag (local hybrid RAG over ~/rag) ---
+    "mcp__rag__*"
+
     # --- MCP: obsidian (seekstone) ---
     "mcp__obsidian-mestrado__search"
     "mcp__obsidian-mestrado__query_notes"

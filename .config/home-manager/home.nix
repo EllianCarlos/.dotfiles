@@ -34,6 +34,7 @@ in
     ./modules/ai/pi.nix
     ./modules/ai/opencode.nix
     ./modules/ai/skills.nix
+    ./modules/ai/rag.nix
   ];
 
   # --- Identity -------------------------------------------------------------

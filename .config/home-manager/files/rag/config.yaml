@@ -1,0 +1,21 @@
+# agent-rag-mcp configuration.
+#
+# Read from the server process's CWD, which the `rag-mcp` launcher
+# (pkgs/rag-mcp.nix) sets to ~/rag before exec. Embeddings run locally via
+# Ollama; the vector store is a local ChromaDB (SQLite-backed) under ~/rag.
+#
+# NOTE: the embedding model must be pulled once on the machine:
+#   ollama pull qwen3-embedding:0.6b
+# Changing the model later changes the vector dimension -> delete
+# ~/rag/chroma_db and run `rag-reindex` to rebuild.
+embeddings:
+  provider: "ollama"
+  ollama_base_url: "http://localhost:11434"
+  ollama_model: "qwen3-embedding:0.6b"
+
+database:
+  persist_directory: "/home/elliancarlos/rag/chroma_db"
+
+document_processing:
+  chunk_size: 1000
+  chunk_overlap: 200

@@ -11,6 +11,7 @@
   wb-headset = pkgs.callPackage ./wb-headset.nix { };
   mnemon = pkgs.callPackage ./mnemon.nix { };
   engram = pkgs.callPackage ./engram.nix { };
+  rag-mcp = pkgs.callPackage ./rag-mcp.nix { };
   dsh = pkgs.callPackage ./dsh.nix { };
   omniroute = pkgs.callPackage ./omniroute.nix { };
   pi-extensions = pkgs.callPackage ./pi-extensions.nix { };
