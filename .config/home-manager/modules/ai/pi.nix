@@ -63,8 +63,12 @@ in
     # missing, so a provider/model picked by hand survives a rebuild.
     ${pkgs.jq}/bin/jq \
       --argjson paths ${pkgs.lib.escapeShellArg (builtins.toJSON localPaths)} \
+      --arg ragCmd ${pkgs.lib.escapeShellArg "${custom.rag-mcp}/bin/rag-mcp"} \
       '.packages = ($paths + ((.packages // []) - $paths))
        | .defaultProvider = (.defaultProvider // "google")
+       | .mcpServers = ((.mcpServers // {}) * {
+           "rag": { "command": $ragCmd, "args": [] }
+         })
        | .defaultModel = (.defaultModel // "gemini-3.6-flash")' \
       "$HOME/.pi/agent/settings.json" > "$HOME/.pi/agent/settings.json.tmp"
     mv "$HOME/.pi/agent/settings.json.tmp" "$HOME/.pi/agent/settings.json"

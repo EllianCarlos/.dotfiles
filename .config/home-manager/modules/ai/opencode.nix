@@ -62,6 +62,7 @@ in
     # inside opencode shows other plugin tools still loaded for it.
     ${pkgs.jq}/bin/jq \
       --argjson plugins ${pkgs.lib.escapeShellArg (builtins.toJSON pluginUrls)} \
+      --arg ragCmd ${pkgs.lib.escapeShellArg "${custom.rag-mcp}/bin/rag-mcp"} \
       '.plugin = ((.plugin // []) + $plugins | unique)
        | .provider = ((.provider // {}) * {
            "claude-code": { "name": "Claude Code" },
@@ -93,6 +94,9 @@ in
                "webfetch": false
              }
            }
+         })
+       | .mcp = ((.mcp // {}) * {
+           "rag": { "type": "local", "command": [$ragCmd], "enabled": true }
          })
        | .model = (.model // "google/gemini-3.6-flash")' \
       "$HOME/.config/opencode/opencode.jsonc" > "$HOME/.config/opencode/opencode.jsonc.tmp"
