@@ -95,6 +95,7 @@ in
       # code-cursor
       claude-code
       custom.mnemon
+      custom.engram
       opencode
       custom.dsh
       pi-coding-agent

@@ -10,6 +10,7 @@
 {
   wb-headset = pkgs.callPackage ./wb-headset.nix { };
   mnemon = pkgs.callPackage ./mnemon.nix { };
+  engram = pkgs.callPackage ./engram.nix { };
   dsh = pkgs.callPackage ./dsh.nix { };
   pi-extensions = pkgs.callPackage ./pi-extensions.nix { };
   opencode-claude = pkgs.callPackage ./opencode-claude.nix { };

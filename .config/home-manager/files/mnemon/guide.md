@@ -1,14 +1,28 @@
-### Recall — before responding
+### Two memory stores (split by scope)
 
-**Default: recall on every new user message**, unless ALL of these apply:
-- Direct follow-up within a topic already fully in context
-- No reference to past sessions, decisions, or preferences
-- No knowledge dependency beyond the current conversation
+- **mnemon** — GLOBAL, cross-project knowledge: user preferences, decisions,
+  identity, cross-cutting facts that should follow you into every repo.
+- **engram** — PER-PROJECT working memory (MCP `mem_*`): bugfixes, architecture
+  decisions, discoveries, conventions, and session handoffs scoped to the CURRENT
+  repo.
 
-**Before web search**: always recall first — stored context sharpens queries.
+Routing rule: a fact about the USER or spanning repos → mnemon. A fact about
+THIS codebase/project → engram. Never store the same fact in both.
 
-To recall: `mnemon recall "<query>" --limit 5`.
+### Recall — automatic
+
+Global mnemon memories are **auto-recalled every turn** by the UserPromptSubmit
+hook and injected under `[mnemon:recall]`. You do NOT need to run `mnemon recall`
+for general context — it is already in front of you.
+
+Run `mnemon recall "<focused query>" --limit 5` manually only for a *targeted*
+deep lookup the auto-recall missed (a specific past decision, entity, or file).
 Craft a focused, keyword-rich query — do not pass the raw user prompt.
+
+For project/codebase history, use engram instead (`mem_search`, `mem_context`).
+
+**Before web search**: check the auto-recalled context first — stored context
+sharpens queries.
 
 ### Remember — after responding
 
@@ -52,6 +66,10 @@ Use the full 1-5 scale intentionally:
 Aim for a rough distribution: ~20% at 4-5, ~50% at 2-3, ~30% at 1.
 Avoid defaulting everything to 4-5 — that defeats the scoring system.
 
+**Where to store**: global/user/cross-project facts → mnemon (this decision tree).
+Facts scoped to the current repo/codebase → engram `mem_save` instead. The Stop
+hook is a blocking gate: at end of turn it forces this evaluation, so make the
+store decision deliberately rather than skipping it.
 **What to store**: both conclusions AND context. Prefer storing a little too much over missing something useful.
 **How to store**: delegate to a Task sub-agent (`subagent_type="general-purpose"`, `model="sonnet"`).
 Only provide what to store — content, category, importance, entities, and create/update intent.
