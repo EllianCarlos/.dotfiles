@@ -3,6 +3,7 @@ let
   lib = pkgs.lib;
   secretsEnvFile = /home/elliancarlos/.secrets/.env;
   pins = import ../../pins.nix;
+  custom = import ../../pkgs { inherit pkgs; };
   mcp-services-nix = import (fetchTarball "https://github.com/${pins.mcp-servers-nix.owner}/${pins.mcp-servers-nix.repo}/archive/${pins.mcp-servers-nix.rev}.tar.gz") { inherit pkgs; };
 
   # uv's managed-Python downloads are generic dynamically-linked binaries
@@ -73,6 +74,16 @@ let
 
   # Hand-defined stdio servers -- also identical shape across clients.
   stdioServers = {
+    # engram -- per-project working memory (SQLite + FTS5) over MCP stdio.
+    # Complements mnemon (global CLI knowledge, cross-project); engram is
+    # scoped to the current repo via cwd/.engram/config.json detection.
+    # `--tools=agent` exposes the curated agent-facing tool set (mem_save,
+    # mem_search, mem_context, mem_session_summary, ...). Absolute store path
+    # so it resolves regardless of the stripped env Claude Code launches with.
+    engram = {
+      command = "${custom.engram}/bin/engram";
+      args = [ "mcp" "--tools=agent" ];
+    };
     postgres = {
       command =
         "${mkWrapper {

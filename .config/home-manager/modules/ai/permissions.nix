@@ -201,6 +201,9 @@
     "mcp__sequential-thinking__*"
     "mcp__time__*"
 
+    # --- MCP: engram (per-project working memory) ---
+    "mcp__engram__*"
+
     # --- MCP: obsidian (seekstone) ---
     "mcp__obsidian-mestrado__search"
     "mcp__obsidian-mestrado__query_notes"
