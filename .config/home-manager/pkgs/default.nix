@@ -12,6 +12,7 @@
   mnemon = pkgs.callPackage ./mnemon.nix { };
   engram = pkgs.callPackage ./engram.nix { };
   dsh = pkgs.callPackage ./dsh.nix { };
+  omniroute = pkgs.callPackage ./omniroute.nix { };
   pi-extensions = pkgs.callPackage ./pi-extensions.nix { };
   opencode-claude = pkgs.callPackage ./opencode-claude.nix { };
   opencode-extensions = pkgs.callPackage ./opencode-extensions.nix { };

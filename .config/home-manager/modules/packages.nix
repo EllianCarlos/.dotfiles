@@ -98,6 +98,7 @@ in
       custom.engram
       opencode
       custom.dsh
+      custom.omniroute
       pi-coding-agent
 
       # --- Herdr / Collie (github.com/AltanS/collie) ---
