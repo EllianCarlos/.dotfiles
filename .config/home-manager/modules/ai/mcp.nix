@@ -6,15 +6,6 @@ let
   custom = import ../../pkgs { inherit pkgs; };
   mcp-services-nix = import (fetchTarball "https://github.com/${pins.mcp-servers-nix.owner}/${pins.mcp-servers-nix.repo}/archive/${pins.mcp-servers-nix.rev}.tar.gz") { inherit pkgs; };
 
-  # uv's managed-Python downloads are generic dynamically-linked binaries
-  # that NixOS can't run without nix-ld -- force uv to use nixpkgs' own
-  # Python instead of fetching its own. Verified: without this, `uvx`
-  # fails with "Could not start dynamically linked executable".
-  uvPythonEnv = ''
-    export UV_PYTHON=${pkgs.python312}/bin/python3.12
-    export UV_PYTHON_PREFERENCE=only-system
-  '';
-
   # Claude Code spawns MCP servers with a stripped env, not a login shell's
   # PATH -- so "$PATH" here can be empty, and npx also shells out to `sh`
   # internally. Without /usr/bin:/bin explicitly present, that spawn fails
@@ -55,16 +46,11 @@ let
       enable = true;
       args = [ "--extension" ];
     };
-    "sequential-thinking".enable = true;
     github = {
       enable = true;
       # Never hardcode the token in env/settings.json -- /nix/store is world-readable.
       # This file is read live off disk at launch, never copied into the store.
       envFile = /home/elliancarlos/.secrets/.env;
-    };
-    filesystem = {
-      enable = true;
-      args = [ "/home/elliancarlos/" ];
     };
     nixos.enable = true;
     git.enable = true;
@@ -74,6 +60,37 @@ let
 
   # Hand-defined stdio servers -- also identical shape across clients.
   stdioServers = {
+    # filesystem/sequential-thinking -- run via npx against the published,
+    # pre-built npm packages instead of `programs.filesystem` /
+    # `programs.sequential-thinking` (mcp-servers-nix's own nix-built
+    # packages): those compile from source through generic-ts.nix, whose
+    # `npmWorkspace = "src/<name>"` doesn't pull in the reference-servers
+    # monorepo's root @types/node devDependency that each workspace's
+    # tsconfig relies on for ambient `process` types -- build fails with
+    # "Cannot find name 'process'" at tsc. Broken at every mcp-servers-nix
+    # commit through the pinned reference-servers version (2026.7.10,
+    # unchanged upstream since Jul 25). The npm packages ship compiled
+    # dist/, so there's no tsc step to hit the bug. Revert to
+    # `programs.<name>.enable` once upstream fixes generic-ts.nix's
+    # workspace devDependency handling.
+    filesystem = {
+      command =
+        "${mkWrapper {
+          name = "filesystem-mcp-wrapped";
+          extraEnv = [ nodePathEnv ];
+          exe = "${pkgs.nodejs}/bin/npx";
+          args = [ "-y" "@modelcontextprotocol/server-filesystem" "/home/elliancarlos/" ];
+        }}/bin/filesystem-mcp-wrapped";
+    };
+    "sequential-thinking" = {
+      command =
+        "${mkWrapper {
+          name = "sequential-thinking-mcp-wrapped";
+          extraEnv = [ nodePathEnv ];
+          exe = "${pkgs.nodejs}/bin/npx";
+          args = [ "-y" "@modelcontextprotocol/server-sequential-thinking" ];
+        }}/bin/sequential-thinking-mcp-wrapped";
+    };
     # agent-rag-mcp -- local hybrid RAG over ~/rag/corpus (ChromaDB + Ollama
     # qwen3-embedding). The rag-mcp launcher (pkgs/rag-mcp.nix) cds into ~/rag
     # so the server finds its config.yaml, then execs `uvx agent-rag-mcp`.
@@ -90,21 +107,6 @@ let
     engram = {
       command = "${custom.engram}/bin/engram";
       args = [ "mcp" "--tools=agent" ];
-    };
-    postgres = {
-      command =
-        "${mkWrapper {
-          name = "postgres-mcp-wrapped";
-          extraEnv = [ uvPythonEnv ];
-          withSecrets = true;
-          exe = "${pkgs.uv}/bin/uvx";
-          # Pin mcp<2.0.0: postgres-mcp 0.3.0 still imports the old
-          # mcp.server.fastmcp path, which mcp 2.0.0 renamed/removed.
-          # Without this pin, uvx resolves the newest mcp and the server
-          # crashes on start with "ModuleNotFoundError: No module named
-          # 'mcp.server.fastmcp'".
-          args = [ "--with" "mcp<2.0.0" "postgres-mcp" "--access-mode=restricted" ];
-        }}/bin/postgres-mcp-wrapped";
     };
     obsidian-mestrado = {
       command =

@@ -25,7 +25,7 @@ in
 
   programs.zen-browser = {
 
-    enable = true;
+    enable = false;
 
     # Catppuccin theme (catppuccin/zen-browser), symlinked into the profile's
     # chrome/catppuccin and loaded via userChrome/userContent imports.

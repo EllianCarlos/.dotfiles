@@ -22,8 +22,9 @@
       v = "nvim";
 
       # --- NixOS ------------------------------------------------------------
-      # Copy the local config to /etc/nixos, then rebuild
-      update = "sudo cp -r ~/Projects/.dotfiles/nixos/* /etc/nixos/ && sudo nixos-rebuild switch";
+      # Mirror the local config into /etc/nixos (deleting files removed from
+      # the repo, unlike a plain `cp`), then rebuild.
+      update = "sudo rsync -a --delete ~/Projects/.dotfiles/nixos/ /etc/nixos/ && sudo nixos-rebuild switch";
       # Quick garbage collection
       gc = "nix-collect-garbage -d && sudo nix-collect-garbage -d";
 

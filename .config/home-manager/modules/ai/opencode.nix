@@ -54,12 +54,28 @@ in
     # "ollama" provider talks to the local ollama.service (127.0.0.1:11434,
     # see nixos/modules/services/ollama.nix) over its OpenAI-compatible API.
     # Add more entries to `models` here as you pull more models locally.
-    # "local" agent pins the ollama model and strips every tool but read/
-    # grep/glob -- each disabled tool's schema is removed from the system
-    # prompt entirely (not just blocked), which matters since the model's
-    # whole budget is 12288 tokens. Select it in opencode with Tab or
-    # /agent local. Add more `tools.<name> = false` entries if `/tools`
-    # inside opencode shows other plugin tools still loaded for it.
+    # Two agents pin the two on-device models (nixos/modules/services/
+    # ollama.nix's loadModels) and both strip every tool but read/grep/glob
+    # -- each disabled tool's schema is removed from the system prompt
+    # entirely (not just blocked), which matters since the context budget
+    # is small. Select in opencode with Tab or /agent local[-coder].
+    #   - "local": deepseek-r1:7b, a reasoning model -- its <think> tokens
+    #     eat into the output budget on every turn, so it gets more context
+    #     headroom relative to output.
+    #   - "local-coder": qwen2.5-coder:7b, non-reasoning -- no <think> tax,
+    #     so more of the window is available for actual output per turn.
+    # Both limits assume OLLAMA_CONTEXT_LENGTH=24576 with
+    # OLLAMA_KV_CACHE_TYPE=q8_0 (see ollama.nix) -- keep these in sync with
+    # that file if the context length or KV quant changes.
+    #
+    # tools was previously an allowlist-by-exception (only the 8 built-ins
+    # were set to false), which left every MCP server's tools -- ~20
+    # servers' worth of tool schemas -- included by default. That alone
+    # blew past the (then 12288-token) budget before any actual
+    # conversation, so the model was stuck immediately autocompacting every
+    # turn. `"*": false` denies everything (built-in and MCP alike; last
+    # matching glob rule wins), then read/grep/glob are re-allowed
+    # explicitly.
     ${pkgs.jq}/bin/jq \
       --argjson plugins ${pkgs.lib.escapeShellArg (builtins.toJSON pluginUrls)} \
       --arg ragCmd ${pkgs.lib.escapeShellArg "${custom.rag-mcp}/bin/rag-mcp"} \
@@ -73,25 +89,36 @@ in
              "models": {
                "deepseek-r1:7b": {
                  "name": "DeepSeek R1 7B (local)",
-                 "limit": { "context": 12288, "output": 3072 }
+                 "limit": { "context": 24576, "output": 6144 }
+               },
+               "qwen2.5-coder:7b": {
+                 "name": "Qwen2.5 Coder 7B (local)",
+                 "limit": { "context": 24576, "output": 8192 }
                }
              }
            }
          })
        | .agent = ((.agent // {}) * {
            "local": {
-             "description": "Minimal agent pinned to the on-device ollama model (deepseek-r1:7b), read/grep/glob only, kept small to fit its 12288-token context budget.",
+             "description": "Minimal agent pinned to the on-device ollama reasoning model (deepseek-r1:7b), read/grep/glob only, kept small to fit its context budget.",
              "mode": "primary",
              "model": "ollama/deepseek-r1:7b",
              "tools": {
-               "write": false,
-               "edit": false,
-               "patch": false,
-               "bash": false,
-               "task": false,
-               "todowrite": false,
-               "todoread": false,
-               "webfetch": false
+               "*": false,
+               "read": true,
+               "grep": true,
+               "glob": true
+             }
+           },
+           "local-coder": {
+             "description": "Minimal agent pinned to the on-device ollama coding model (qwen2.5-coder:7b, non-reasoning), read/grep/glob only, kept small to fit its context budget.",
+             "mode": "primary",
+             "model": "ollama/qwen2.5-coder:7b",
+             "tools": {
+               "*": false,
+               "read": true,
+               "grep": true,
+               "glob": true
              }
            }
          })
