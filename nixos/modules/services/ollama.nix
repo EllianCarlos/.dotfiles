@@ -15,14 +15,17 @@
     group = "ollama";
     home = "/mnt/nixdata/ollama"; # modelsDir defaults to "${home}/models"
 
-    # deepseek-r1:7b: highest-scoring model in `llmfit fit --perfect` that
-    # also has a direct Ollama tag (score 87.8, 24.7 tok/s est. on the RX
-    # 6600, Q6_K quant) -- a reasoning model, so it burns real output budget
-    # on <think> tokens. qwen2.5-coder:7b sits alongside it as a
-    # non-reasoning coding model: no <think> tax, so the same context budget
-    # goes further per agentic turn. Both are wired into opencode as
-    # separate agents (see opencode.nix's "local" vs "local-coder").
-    loadModels = [ "deepseek-r1:7b" "qwen2.5-coder:7b" ];
+    # Started with deepseek-r1:7b + qwen2.5-coder:7b (llmfit-picked reasoning
+    # + coding pair) and briefly added phi4-mini:3.8b alongside qwen3.5:4b
+    # and lfm2.5:8b; dropped back down to just these two newer, smaller
+    # models per user request. qwen3.5:4b is thinking+tool-use capable;
+    # lfm2.5:8b is a MoE (~1B active params) purpose-built for tool calling
+    # on consumer hardware. Each is wired into opencode as its own agent
+    # (see opencode.nix's "local-qwen" / "local-lfm").
+    loadModels = [
+      "qwen3.5:4b"
+      "lfm2.5:8b"
+    ];
 
     # Ollama's own default context is 4096 (sometimes 2048), far too small
     # for agentic coding requests (system prompt + tool schemas + file

@@ -26,9 +26,11 @@ in
     ../../modules/desktop/hyprland.nix
     ../../modules/hardware/audio.nix
     ../../modules/hardware/printer.nix
+    ../../modules/hardware/extprojects.nix
     ../../modules/services/tailscale.nix
     ../../modules/services/virtualisation.nix
     ../../modules/services/ollama.nix
+    ../../modules/services/openlogi.nix
   ];
 
   # Bootloader
