@@ -1,3 +1,4 @@
+onboarding = false
 # Ctrl+b -> TMUX
 # Ctrl+a -> WezTerm
 # Ctrl+space -> herdr
@@ -6,4 +7,3 @@ prefix = "ctrl+space"
 
 navigate_workspace_up = "k"
 navigate_workspace_down = "j"
-

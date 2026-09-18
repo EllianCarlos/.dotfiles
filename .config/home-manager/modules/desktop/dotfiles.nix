@@ -23,11 +23,11 @@ in
     "kitty".source = ../../../kitty;
     "waybar".source = ../../../waybar;
     "bottom".source = ../../../bottom;
-    # recursive = true (same reason as wezterm above): herdr writes runtime state (socket/log) into this dir, so it must stay real and writable, not a whole-dir symlink into the read-only store.
-    "herdr" = {
-      source = ../../../herdr;
-      recursive = true;
-    };
+    # Only config.toml is tracked here; herdr writes everything else in this dir
+    # itself at runtime (logs, sockets, session.json, plugins/...), and also
+    # rewrites config.toml in place during onboarding -- so it needs an
+    # out-of-store symlink (same reason as nvim below), not a store copy.
+    "herdr/config.toml".source = config.lib.file.mkOutOfStoreSymlink ../../../herdr/config.toml;
     # An out-of-store symlink, not a store copy: lazy.nvim writes lazy-lock.json
     # (plugin commit pins) back into this directory when installing/updating
     # plugins, which the read-only Nix store wouldn't allow.
