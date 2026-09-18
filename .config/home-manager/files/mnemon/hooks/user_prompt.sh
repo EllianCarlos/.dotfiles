@@ -24,6 +24,19 @@ PROMPT="$(jq -r '.prompt // empty' 2>/dev/null)"
 QUERY="${PROMPT:0:500}"
 
 RESULTS="$(mnemon recall "$QUERY" --limit 5 2>/dev/null)"
+
+# Token-cost proxy logging (bytes, ~/4 = rough tokens) -- see `mnemon-metrics`.
+# This is the automatic, per-turn recall injection: it fires whether or not
+# anything relevant was found, so it's worth tracking separately from the
+# opt-in mem_save/mem_judge calls.
+METRICS_LOG="${HOME}/.mnemon/metrics.log"
+mkdir -p "${HOME}/.mnemon" 2>/dev/null
+if [ -n "$RESULTS" ]; then
+  printf '%s\tmnemon:recall_inject\t%s\n' "$(date -u +%FT%TZ)" "${#RESULTS}" >>"$METRICS_LOG" 2>/dev/null
+else
+  printf '%s\tmnemon:recall_skip\t0\n' "$(date -u +%FT%TZ)" >>"$METRICS_LOG" 2>/dev/null
+fi
+
 [ -n "$RESULTS" ] || exit 0
 
 cat <<EOF

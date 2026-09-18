@@ -1,9 +1,9 @@
 ---
-name: mnemon
-description: Persistent memory CLI for LLM agents. Store facts, recall past knowledge, link related memories, manage lifecycle.
+name: mnemon-dotfiles-snapshot
+description: Superseded, stale in-repo copy of the mnemon skill -- the canonical version is home-manager-vendored to ~/.claude/skills/mnemon from .config/home-manager/files/mnemon/skill.md and applies globally, including in this repo. This copy exists only for git history; do not invoke it. Kept under a distinct name so it doesn't collide with the canonical "mnemon" skill name (a same-name collision across skill sources crashes opencode's system-prompt builder).
 ---
 
-# mnemon
+# mnemon (stale in-repo snapshot -- see ~/.claude/skills/mnemon for the real one)
 
 ## Workflow
 

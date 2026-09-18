@@ -14,6 +14,13 @@ set -uo pipefail
 
 INPUT="$(cat)"
 
+# Token-cost proxy logging (bytes, ~/4 = rough tokens) -- see `mnemon-metrics`.
+METRICS_LOG="${HOME}/.mnemon/metrics.log"
+log_metric() {
+  mkdir -p "${HOME}/.mnemon" 2>/dev/null
+  printf '%s\t%s\t%s\n' "$(date -u +%FT%TZ)" "$1" "${2:-0}" >>"$METRICS_LOG" 2>/dev/null
+}
+
 # No jq -> cannot read stop_hook_active -> must not block. Degrade to a
 # plain (ignorable) reminder rather than risk an infinite stop loop.
 if ! command -v jq >/dev/null 2>&1; then
@@ -22,26 +29,34 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 STOP_ACTIVE="$(printf '%s' "$INPUT" | jq -r '.stop_hook_active // false' 2>/dev/null)"
-[ "$STOP_ACTIVE" = "true" ] && exit 0
+if [ "$STOP_ACTIVE" = "true" ]; then
+  log_metric "mnemon:gate_pass_reentry" 0
+  exit 0
+fi
 
 # If a memory write already landed in the recent transcript tail, capture is
-# done for this turn -- don't nag.
+# done for this turn -- don't nag. An explicit "nothing worth storing"
+# acknowledgment also satisfies the gate: the instructions below tell the
+# model it may decline and stop, so the decline itself must be an accepted
+# exit path, not just a store call -- otherwise a turn with genuinely nothing
+# to store can never clear the gate and re-blocks identically forever.
 TRANSCRIPT="$(printf '%s' "$INPUT" | jq -r '.transcript_path // empty' 2>/dev/null)"
 if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
-  if tail -n 300 "$TRANSCRIPT" 2>/dev/null | grep -qE 'mnemon remember|mem_save'; then
+  if tail -n 300 "$TRANSCRIPT" 2>/dev/null | grep -qiE 'mnemon remember|mem_save|nothing (new |genuinely )?(worth storing|to store)'; then
+    log_metric "mnemon:gate_pass_saved" 0
     exit 0
   fi
 fi
 
 # Block once and make the model decide, explicitly, before it may stop.
-cat >&2 <<'EOF'
-[mnemon] STOP GATE -- evaluate the memory decision tree before ending this turn:
+GATE_MSG='[mnemon] STOP GATE -- evaluate the memory decision tree before ending this turn:
   - Durable USER / cross-project fact, preference, decision, or correction
     -> store with the mnemon remember sub-agent (global memory).
   - Fact, bugfix, or decision scoped to THIS repo/codebase
     -> store with engram mem_save (project memory).
 If genuinely nothing is worth storing, say so in one line, then stop.
-Do not stop silently.
-EOF
+Do not stop silently.'
+echo "$GATE_MSG" >&2
+log_metric "mnemon:gate_block" "${#GATE_MSG}"
 exit 2
 
