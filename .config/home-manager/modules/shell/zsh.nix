@@ -22,9 +22,6 @@
       v = "nvim";
 
       # --- NixOS ------------------------------------------------------------
-      # Mirror the local config into /etc/nixos (deleting files removed from
-      # the repo, unlike a plain `cp`), then rebuild.
-      update = "sudo rsync -a --delete ~/Projects/.dotfiles/nixos/ /etc/nixos/ && sudo nixos-rebuild switch";
       # Quick garbage collection
       gc = "nix-collect-garbage -d && sudo nix-collect-garbage -d";
 
@@ -87,11 +84,90 @@
       # with AI_LoadAPIKeyError even though agy authenticates fine.
       export GOOGLE_GENERATIVE_AI_API_KEY="$GEMINI_API_KEY"
 
+      # Reports the token-cost proxy logged by the mnemon/engram Claude Code
+      # hooks (user_prompt.sh, stop.sh, mem_metrics.sh -- see
+      # ~/.claude/hooks/mnemon/). Each hook invocation appends one
+      # "timestamp\tevent\tbytes" line to ~/.mnemon/metrics.log; bytes/4 is a
+      # rough token estimate, not an exact count from the model's tokenizer.
+      mnemon-metrics() {
+        local log="$HOME/.mnemon/metrics.log"
+        if [[ ! -f "$log" ]]; then
+          echo "No metrics logged yet: $log"
+          return 1
+        fi
+        echo "mnemon/engram token-cost proxy (bytes; ~tokens = bytes/4) -- $log"
+        echo ""
+        awk -F'\t' '
+          { calls[$2]++; bytes[$2]+=$3 }
+          END {
+            printf "%-40s %8s %12s %12s\n", "event", "calls", "bytes", "~tokens"
+            for (k in calls) printf "%-40s %8d %12d %12d\n", k, calls[k], bytes[k], bytes[k]/4
+          }
+        ' "$log" | sort -k1,1
+      }
+
       audio-to() {
         pactl set-default-sink "$1"
         for i in $(pactl list short sink-inputs | cut -f1); do
           pactl move-sink-input "$i" "$1" 2>/dev/null
         done
+      }
+
+      # Mirror the local config into /etc/nixos (deleting files removed from
+      # the repo, unlike a plain `cp`), then rebuild. home-manager's
+      # backupFileExtension = "backup" (nixos/modules/core/user.nix) renames a
+      # pre-existing real file to "<path>.backup" instead of failing
+      # activation when it collides with a Nix-managed one -- diff each one
+      # created this run against what's live now, so we can decide whether to
+      # fold the on-disk change into the repo's .nix source before discarding it.
+      update() {
+        local marker
+        marker="$(mktemp)"
+
+        # nixos/ has no top-level configuration.nix (each host's lives under
+        # hosts/<name>/) so --delete wipes any hand-placed /etc/nixos/configuration.nix
+        # -- point nixos-rebuild at the right host file explicitly instead of
+        # relying on its default nixos-config search path.
+        local host_dir
+        case "$(hostname)" in
+          carmenere) host_dir=desktop ;;
+          nixos) host_dir=laptop ;;
+          *)
+            echo "update: unrecognized hostname '$(hostname)' -- add it to the case in zsh.nix" >&2
+            return 1
+            ;;
+        esac
+
+        sudo rsync -a --delete ~/Projects/.dotfiles/nixos/ /etc/nixos/ \
+          && sudo nixos-rebuild switch -I nixos-config="/etc/nixos/hosts/''${host_dir}/configuration.nix"
+        local rc=$?
+
+        local found=0
+        local root maxd f target
+        for root in "$HOME" "$HOME/.config" "$HOME/.local/share"; do
+          [[ -d "$root" ]] || continue
+          if [[ "$root" == "$HOME" ]]; then maxd=1; else maxd=8; fi
+          while IFS= read -r f; do
+            [[ -n "$f" ]] || continue
+            found=1
+            target="''${f%.backup}"
+            echo ""
+            echo ">>> $target  (backup: $f)"
+            if [[ -e "$target" ]]; then
+              diff -u "$f" "$target" | delta --paging=never
+            else
+              echo "  (no longer present at $target)"
+            fi
+          done < <(find "$root" -maxdepth "$maxd" -type f -name '*.backup' -newer "$marker" 2>/dev/null)
+        done
+        rm -f "$marker"
+
+        if [[ "$found" == 1 ]]; then
+          echo ""
+          echo "Review the diffs above, fold anything worth keeping into the repo's .nix source, then rm the .backup files you no longer need."
+        fi
+
+        return $rc
       }
 
       if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
