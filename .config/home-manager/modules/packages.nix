@@ -15,6 +15,11 @@ let
 
   pins = import ../pins.nix;
   zenBrowserFlake = builtins.getFlake "github:${pins.zen-browser.owner}/${pins.zen-browser.repo}/${pins.zen-browser.rev}";
+
+  opencodePinned =
+    (import (
+      builtins.fetchTarball "https://github.com/${pins.opencode-nixpkgs-pin.owner}/${pins.opencode-nixpkgs-pin.repo}/archive/${pins.opencode-nixpkgs-pin.rev}.tar.gz"
+    ) { inherit (pkgs) system; }).opencode;
 in
 {
   imports = [ zenBrowserFlake.homeModules.beta ];
@@ -24,8 +29,7 @@ in
   home.file.".ticker.yaml".source = ../../.ticker.yaml;
 
   programs.zen-browser = {
-
-    enable = false;
+    enable = true;
 
     # Catppuccin theme (catppuccin/zen-browser), symlinked into the profile's
     # chrome/catppuccin and loaded via userChrome/userContent imports.
@@ -96,7 +100,7 @@ in
       claude-code
       custom.mnemon
       custom.engram
-      opencode
+      opencodePinned
       custom.dsh
       custom.omniroute
       pi-coding-agent

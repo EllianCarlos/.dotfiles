@@ -6,7 +6,6 @@
     "opencode-pty": "*",
     "opencode-websearch": "*",
     "opencode-plugin-inspector": "*",
-    "opencode-goal-mode": "*",
     "opencode-vibeguard": "*",
     "opencode-wakatime": "*",
     "@plannotator/opencode": "*",
