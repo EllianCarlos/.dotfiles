@@ -39,10 +39,23 @@ let
   # verbatim into a single-quoted --argjson value below, where the shell
   # would never expand $HOME.
   vendorLink = "${config.home.homeDirectory}/.local/share/pi-extensions-vendor";
-  localPaths = builtins.map (name: "${vendorLink}/node_modules/${name}") packageNames;
+  # The shunt gate extension (modules/ai/shunt.nix) lives in its own vendor
+  # tree, not inside pi-extensions' node_modules, so its Nix derivation stays
+  # separate from the npmDepsHash-pinned vendored build.
+  localPaths = builtins.map (name: "${vendorLink}/node_modules/${name}") packageNames ++ [
+    config.ai.shunt.piExtensionPath
+  ];
 in
 {
   home.file.".local/share/pi-extensions-vendor".source = custom.pi-extensions;
+
+  # Global instructions, including the Read delegation policy that routes to
+  # the "scout" subagent (pi-subagents' builtin recon role, repinned to
+  # gemini-3.6-flash below). pi auto-discovers AGENTS.md/CLAUDE.md from its
+  # agentDir (~/.pi/agent) as a global context file (see
+  # dist/core/resource-loader.js's loadContextFileFromDir(resolvedAgentDir)
+  # in the vendored pi-coding-agent build).
+  home.file.".pi/agent/AGENTS.md".source = ../../files/pi/AGENTS.md;
 
   # entryAfter writeBoundary: the home.file symlink above must exist first
   # for these paths to resolve.
@@ -64,12 +77,36 @@ in
     ${pkgs.jq}/bin/jq \
       --argjson paths ${pkgs.lib.escapeShellArg (builtins.toJSON localPaths)} \
       --arg ragCmd ${pkgs.lib.escapeShellArg "${custom.rag-mcp}/bin/rag-mcp"} \
+      --arg engramCmd ${pkgs.lib.escapeShellArg "${custom.engram}/bin/engram"} \
       '.packages = ($paths + ((.packages // []) - $paths))
        | .defaultProvider = (.defaultProvider // "google")
        | .mcpServers = ((.mcpServers // {}) * {
-           "rag": { "command": $ragCmd, "args": [] }
+           "rag": { "command": $ragCmd, "args": [] },
+           "engram": { "command": $engramCmd, "args": ["mcp", "--tools=agent"] }
          })
-       | .defaultModel = (.defaultModel // "gemini-3.6-flash")' \
+       | .defaultModel = (.defaultModel // "gemini-3.6-flash")
+       # "scout" is the pi-subagents builtin recon/read role -- see the Read
+       # delegation policy in files/pi/AGENTS.md. Repinned to gemini-3.6-flash
+       # regardless of .defaultModel/.defaultProvider above, so it stays the
+       # cheap delegate even if the parent session is switched to a pricier
+       # model by hand. fallbackModels (a native pi-subagents override field,
+       # see buildBuiltinOverrideConfig in the vendored source) carries the
+       # TPM-ordered shunt chain: flash-latest (highest peak TPM) then the
+       # low-TPM live-preview floor. pi-subagents overrides can only mutate
+       # builtin roles, so pi has no dedicated memory-scribe -- scout is also
+       # the memory-save composition delegate (files/pi/AGENTS.md).
+        | .subagents = ((.subagents // {}) * {
+            "agentOverrides": {
+              "scout": {
+                "model": (.subagents.agentOverrides.scout.model // "google/gemini-3.6-flash"),
+                "fallbackModels": (.subagents.agentOverrides.scout.fallbackModels // [
+                  "google/gemini-flash-latest",
+                  "google/gemini-3.8-flash",
+                  "google/gemini-3.1-flash-live-preview"
+                ])
+              }
+            }
+          })' \
       "$HOME/.pi/agent/settings.json" > "$HOME/.pi/agent/settings.json.tmp"
     mv "$HOME/.pi/agent/settings.json.tmp" "$HOME/.pi/agent/settings.json"
   '';

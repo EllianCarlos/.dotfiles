@@ -31,6 +31,7 @@ in
     ./modules/ai/claude-code.nix
     ./modules/ai/antigravity.nix
     ./modules/ai/herdr.nix
+    ./modules/ai/shunt.nix
     ./modules/ai/pi.nix
     ./modules/ai/opencode.nix
     ./modules/ai/skills.nix

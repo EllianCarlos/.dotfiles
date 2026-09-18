@@ -53,6 +53,30 @@ let
             ];
           }
         ];
+        # shunt hard gate (modules/ai/shunt.nix): mechanically blocks bulk
+        # Read/Bash file reads past ai.shunt.thresholdLines and points the
+        # model at the reader subagent. Same decision/reason wire format as
+        # Spotify portal-ai-plugins' shunt PreToolUse hooks.
+        PreToolUse = [
+          {
+            matcher = "Read";
+            hooks = [
+              {
+                type = "command";
+                command = "${claudeHooksDir}/shunt-gate.sh";
+              }
+            ];
+          }
+          {
+            matcher = "Bash";
+            hooks = [
+              {
+                type = "command";
+                command = "${claudeHooksDir}/shunt-gate.sh";
+              }
+            ];
+          }
+        ];
         PostToolUse = [
           {
             matcher = "Edit|Write";
@@ -69,6 +93,15 @@ let
               {
                 type = "command";
                 command = "${claudeHooksDir}/format-on-write.sh";
+              }
+            ];
+          }
+          {
+            matcher = "mcp__engram__.*";
+            hooks = [
+              {
+                type = "command";
+                command = "${hooksDir}/mem_metrics.sh";
               }
             ];
           }
@@ -97,12 +130,23 @@ in
       source = ../../files/mnemon/hooks/user_prompt.sh;
       executable = true;
     };
+    ".claude/hooks/mnemon/mem_metrics.sh" = {
+      source = ../../files/mnemon/hooks/mem_metrics.sh;
+      executable = true;
+    };
 
     # --- nixapply ---
     ".claude/skills/nixapply/SKILL.md".source = ../../files/nixapply/skill.md;
 
     # --- global Claude Code instructions ---
     ".claude/CLAUDE.md".source = ../../files/claude/CLAUDE.md;
+
+    # --- read-delegation reader subagent (see CLAUDE.md's Read delegation
+    # section) ---
+    ".claude/agents/reader.md".source = ../../files/claude/agents/reader.md;
+
+    # --- memory-save composition subagent (see CLAUDE.md's Memory section) ---
+    ".claude/agents/memory-scribe.md".source = ../../files/claude/agents/memory-scribe.md;
 
     # --- output styles ---
     ".claude/output-styles/asd-ste100.md".source = ../../files/claude/output-styles/asd-ste100.md;

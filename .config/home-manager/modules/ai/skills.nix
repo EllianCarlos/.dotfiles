@@ -69,6 +69,6 @@ in
     # "/mnemon" and "/nixapply" protect the hand-managed skills
     # (modules/ai/claude-code.nix's home.file entries) from the rsync
     # --delete this module runs on every activation.
-    excludePatterns = [ "/.system" "/mnemon" "/nixapply" ];
+    excludePatterns = [ "/.system" "/mnemon" "/nixapply" "/skills" ];
   };
 }
