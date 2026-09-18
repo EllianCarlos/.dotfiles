@@ -1,21 +1,60 @@
 # agent-rag-mcp configuration.
 #
-# Read from the server process's CWD, which the `rag-mcp` launcher
-# (pkgs/rag-mcp.nix) sets to ~/rag before exec. Embeddings run locally via
-# Ollama; the vector store is a local ChromaDB (SQLite-backed) under ~/rag.
+# Managed by home-manager (modules/ai/rag.nix symlinks this into ~/rag/).
 #
-# NOTE: the embedding model must be pulled once on the machine:
+# IMPORTANT: this file is symlinked from /nix/store, which is READ-ONLY.
+# agent-rag-mcp resolves relative paths against the *resolved* config path, not
+# against the process CWD, so a relative "./logs/rag_server.log" becomes
+# "/nix/store/logs" and the server dies during startup with:
+#     OSError: [Errno 30] Read-only file system: '/nix/store/logs'
+# EVERY path below MUST therefore be absolute.
+#
+# The launcher (pkgs/rag-mcp.nix) passes --config "$HOME/rag/config.yaml"
+# explicitly. Without it agent-rag-mcp ignores the CWD entirely and reads
+# ~/.config/agent_rag/config.yaml instead.
+#
+# The embedding model must be pulled once on the machine:
 #   ollama pull qwen3-embedding:0.6b
 # Changing the model later changes the vector dimension -> delete
 # ~/rag/chroma_db and run `rag-reindex` to rebuild.
+
+server:
+  name: "rag-server"
+  transport: "stdio" # "stdio" or "sse"
+  port: 8002 # used only when transport: sse
+  host: "127.0.0.1"
+
 embeddings:
-  provider: "ollama"
+  provider: "ollama" # "onnx" | "ollama" | "openrouter"
+
+  # ONNX provider settings (unused while provider is "ollama")
+  model: "all-MiniLM-L6-v2"
+  device: "cpu"
+
+  # Ollama provider settings (active)
   ollama_base_url: "http://localhost:11434"
   ollama_model: "qwen3-embedding:0.6b"
 
-database:
-  persist_directory: "/home/elliancarlos/rag/chroma_db"
+  # OpenRouter provider settings (unused)
+  openrouter_model: "nvidia/llama-nemotron-embed-vl-1b-v2:free"
+  openrouter_batch_size: 64
 
-document_processing:
+store:
+  persist_dir: "/home/elliancarlos/rag/chroma_db"
+  default_collection: "default"
+
+chunking:
   chunk_size: 1000
   chunk_overlap: 200
+
+watch:
+  # Disabled on purpose: home-manager runs `rag-watch` as its own systemd user
+  # service (modules/ai/rag.nix). The MCP server must not watch as well.
+  enabled: false
+  directories: []
+
+logging:
+  level: "INFO"
+  file_path: "/home/elliancarlos/rag/logs/rag_server.log"
+  max_file_size: 10485760 # 10MB in bytes
+  backup_count: 5
