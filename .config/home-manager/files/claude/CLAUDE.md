@@ -1,5 +1,12 @@
 # Global Instructions
 
+## Labels
+
+Do not label items with invented numbering codes like "A1, A2" or "Option 3" in
+prose, plans, or summaries -- use descriptive names or plain lists. Only use
+codes that are an industry standard (REQ1, FREQ1 for requirements) or a real
+mathematical pointer (x1, x2, i, j).
+
 ## Git commits
 
 Do not add a `Co-Authored-By` trailer to git commit messages.
