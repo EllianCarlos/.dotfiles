@@ -10,11 +10,12 @@ This repository manages my system configurations, bridging system-level configur
     *   **NixOS (`/nixos`):** Strictly handles system bootstrap, hardware drivers, audio (Pipewire), networking, core CLI utilities, and virtualization.
     *   **Home Manager (`.config/home-manager`):** Manages the user
         environment, split by responsibility:
-        *   `home.nix` — a ~40-line index; identity and the imports list.
+        *   `home.nix` — a ~50-line index; identity and the imports list.
         *   `modules/` — Home Manager modules, mirroring `nixos/modules/`:
             `shell/`, `editor/`, `desktop/`, `mail/`, `hardware/`, `dev/`, `ai/`.
         *   `pkgs/` — derivations for software not in nixpkgs
-            (mnemon, tuicr, herdr, dsh, wb-headset, antigravity-cli, loop-tools).
+            (mnemon, engram, dsh, wb-headset, omniroute, rag-mcp,
+            opencode-claude, opencode-extensions, pi-extensions, loop-tools).
         *   `checks/` — build-time verifiers that fail the build rather than
             warn at run time, plus `eval-check.nix`, the harness for
             checking a change without a rebuild.
