@@ -1,7 +1,7 @@
 { ... }:
 
 let
-  pins = import ../../../.config/home-manager/pins.nix;
+  pins = import /home/elliancarlos/Projects/.dotfiles/.config/home-manager/pins.nix;
   openlogi = builtins.getFlake "github:${pins.openlogi.owner}/${pins.openlogi.repo}/${pins.openlogi.rev}";
 in
 {
