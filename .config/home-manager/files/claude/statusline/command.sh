@@ -118,14 +118,49 @@ if [ -n "$transcript" ] && [ -f "$transcript" ]; then
   fi
 fi
 
+cols=$( { stty size </dev/tty | awk '{print $2}'; } 2>/dev/null)
+case "$cols" in '' | *[!0-9]*)
+  pid=$$
+  while [ -n "$pid" ] && [ "$pid" -gt 1 ]; do
+    tty=$(ps -o tty= -p "$pid" 2>/dev/null | tr -d ' ')
+    if [ -n "$tty" ] && [ "$tty" != "?" ] && [ -e "/dev/$tty" ]; then
+      cols=$(stty -F "/dev/$tty" size 2>/dev/null | awk '{print $2}')
+      break
+    fi
+    pid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
+  done
+  ;;
+esac
+case "$cols" in '' | *[!0-9]*) cols="${COLUMNS:-}" ;; esac
+case "$cols" in '' | *[!0-9]*) cols=120 ;; esac
+
+show_repo=1 show_bar=1 show_reset=1 show_time=1 show_branch=1 show_limits=1
+if [ "$cols" -lt 55 ]; then
+  show_repo=0 show_bar=0 show_reset=0 show_time=0 show_branch=0 show_limits=0
+elif [ "$cols" -lt 80 ]; then
+  show_repo=0 show_bar=0 show_reset=0 show_time=0
+elif [ "$cols" -lt 110 ]; then
+  BAR_WIDTH=6 show_reset=0 show_time=0
+fi
+
+meter() {
+  local label="$1" pct="$2" reset="$3" s="$1"
+  [ "$show_bar" -eq 1 ] && s="${s} $(bar "$pct")"
+  s="${s} $(printf '%.0f' "$pct")%"
+  [ "$show_reset" -eq 1 ] && [ -n "$reset" ] && s="${s} ⟳${reset}"
+  printf '%s' "$s"
+}
+
 parts=()
 [ -n "$model" ] && parts+=("${C_MODEL}${ICON_MODEL} ${model}${RESET}")
-[ -n "$repo" ] && parts+=("${C_REPO}${ICON_REPO} ${repo}${RESET}")
-[ -n "$branch" ] && parts+=("${C_BRANCH}${ICON_BRANCH} ${branch}${RESET}")
-parts+=("${C_CTX}${ICON_CTX} ctx $(bar "$ctx_used") $(printf '%.0f' "$ctx_used")%${RESET}")
-parts+=("${C_SESSION}${ICON_SESSION} 5h $(bar "$five") $(printf '%.0f' "$five")%${five_reset:+ ⟳${five_reset}}${RESET}")
-parts+=("${C_WEEK}${ICON_WEEK} 7d $(bar "$week") $(printf '%.0f' "$week")%${week_reset:+ ⟳${week_reset}}${RESET}")
-[ -n "$session_time" ] && parts+=("${C_TIME}${ICON_TIME} ${session_time}${RESET}")
+[ "$show_repo" -eq 1 ] && [ -n "$repo" ] && parts+=("${C_REPO}${ICON_REPO} ${repo}${RESET}")
+[ "$show_branch" -eq 1 ] && [ -n "$branch" ] && parts+=("${C_BRANCH}${ICON_BRANCH} ${branch}${RESET}")
+parts+=("${C_CTX}${ICON_CTX} $(meter ctx "$ctx_used" "")${RESET}")
+if [ "$show_limits" -eq 1 ]; then
+  parts+=("${C_SESSION}${ICON_SESSION} $(meter 5h "$five" "$five_reset")${RESET}")
+  parts+=("${C_WEEK}${ICON_WEEK} $(meter 7d "$week" "$week_reset")${RESET}")
+fi
+[ "$show_time" -eq 1 ] && [ -n "$session_time" ] && parts+=("${C_TIME}${ICON_TIME} ${session_time}${RESET}")
 
 out=""
 for i in "${!parts[@]}"; do
