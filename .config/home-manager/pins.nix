@@ -15,13 +15,13 @@
   mcp-servers-nix = {
     owner = "natsukium";
     repo = "mcp-servers-nix";
-    rev = "16e3f9455215c97fe8615bd152b9308422848317"; # upstream HEAD -- repo
+    rev = "9de4bccf471171621f8a294c1a812d4cc88c78e3"; # upstream HEAD -- repo
     # cuts no tags.
   };
   claude-code-nix = {
     owner = "sadjow";
     repo = "claude-code-nix";
-    rev = "6407e4e63a2bddca88119f26322c7f2706aa896c"; # v2.1.275, also upstream HEAD
+    rev = "736ada361161f0a3e69844e3918b6e9bc69ed035"; # v2.1.278, also upstream HEAD
   };
   agent-skills-nix = {
     owner = "Kyure-A";
@@ -36,7 +36,7 @@
   loop-engineering = {
     owner = "cobusgreyling";
     repo = "loop-engineering";
-    rev = "e19d6812ad6ba576a1df217f43262bc7336df43f"; # upstream HEAD -- this
+    rev = "64ab3ab795117b5fb74358e1de22cc565cdc6054"; # upstream HEAD -- this
     # repo's tags (loop-worktree-vX, readiness-core-vX, vX) are per-subtool,
     # not one release line for the whole repo, so there's no single "latest
     # tag" to prefer over HEAD here; see project-pin-bump-prefer-tagged-release.
@@ -44,7 +44,7 @@
   superpowers = {
     owner = "obra";
     repo = "superpowers";
-    rev = "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"; # v6.3.0
+    rev = "5bf4e78011075bcfc0dc295f0724994cd123ee71"; # v6.4.1
   };
   mattpocock-skills = {
     owner = "mattpocock";
@@ -68,12 +68,11 @@
   wb-headset = {
     owner = "Henriklmao";
     repo = "waybar-headsetcontrol";
-    rev = "523ebf9e440167b3206b0b36632095c1cee9810c"; # upstream HEAD, not the
-    # v0.1.5 tag (977a1a8) -- HEAD is 5 commits past that tag, and one of
-    # those commits ("Add Cargo.lock") is what buildRustPackage's
-    # cargoLock.lockFile needs; the tagged release predates it. See
-    # project-pin-bump-prefer-tagged-release for why tag is normally
-    # preferred -- this is the documented exception.
+    rev = "e50011df0e2c553898ae5fe55f16b602391143d6"; # upstream HEAD, not the
+    # v0.1.5 tag (977a1a8) -- still no release cut since; HEAD is where
+    # "Add Cargo.lock" (what buildRustPackage's cargoLock.lockFile needs)
+    # lives. See project-pin-bump-prefer-tagged-release for why tag is
+    # normally preferred -- this is the documented exception.
   };
   watermarks-remover = {
     owner = "guillaumemeyer";
@@ -92,12 +91,12 @@
   openlogi = {
     owner = "AprilNEA";
     repo = "OpenLogi";
-    rev = "2ca2c383d09406ce50821a2e18a8218d425f6fd1";
+    rev = "a92aa43bed3732be5f7fde7aed2fc12cc48ba001"; # v0.8.6
   };
   zen-browser = {
     owner = "0xc000022070";
     repo = "zen-browser-flake";
-    rev = "a12d482485d877cc066516ea256b435b209a1a8c"; # HEAD -- upstream's
+    rev = "1c3a1fcacf97eb3792e9292e3afc0edbfcfa01d4"; # HEAD -- upstream's
     # tags are named "twilight-<hash>" per Zen Browser build, not per
     # flake release, so they track a different thing than this pin does.
     # HEAD is the flake's own moving pin to the latest Zen build.
