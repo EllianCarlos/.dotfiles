@@ -30,6 +30,7 @@ in
     ../../modules/services/tailscale.nix
     ../../modules/services/virtualisation.nix
     ../../modules/services/ollama.nix
+    ../../modules/services/laya.nix
     ../../modules/services/openlogi.nix
   ];
 
@@ -39,6 +40,9 @@ in
   boot.lanzaboote = {
     enable = true;
     pkiBundle = "/var/lib/sbctl";
+    settings = {
+      default = "@saved";
+    };
   };
 
   # Attempting to use newer kernel version

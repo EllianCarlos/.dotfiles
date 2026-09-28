@@ -66,9 +66,9 @@ in
 
     # Default is only ["/.system"] -- setting this option replaces rather
     # than merges the module's default, so both must be listed explicitly.
-    # "/mnemon" and "/nixapply" protect the hand-managed skills
+    # "/mnemon", "/nixapply", and "/laya" protect the hand-managed skills
     # (modules/ai/claude-code.nix's home.file entries) from the rsync
     # --delete this module runs on every activation.
-    excludePatterns = [ "/.system" "/mnemon" "/nixapply" "/skills" ];
+    excludePatterns = [ "/.system" "/mnemon" "/nixapply" "/laya" "/skills" ];
   };
 }

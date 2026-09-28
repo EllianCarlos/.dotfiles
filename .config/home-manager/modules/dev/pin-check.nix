@@ -65,15 +65,27 @@ For each pin above:
 End your reply with exactly one line starting with 'SUMMARY:' (under 200
 chars) stating what you changed and whether it built cleanly."
 
+        echo "stale pins found -- drafting a fix via headless claude (up to 25m, ctrl-c to abort)..."
+
         out_file=$(mktemp)
         claude_exit=0
-        if ! (cd "$repo_dir" && timeout 25m claude -p "$prompt" \
+
+        # Run in its own process group (set -m) so a single ctrl-c can kill
+        # the whole `timeout`+`claude` tree via `kill -- -$pid`, instead of
+        # only reaching the subshell and leaving claude running headless.
+        set -m
+        (cd "$repo_dir" && exec timeout 25m claude -p "$prompt" \
           --permission-mode acceptEdits \
           --allowedTools "Read Write Edit Grep Glob Bash(git ls-remote:*) Bash(git clone:*) Bash(git log:*) Bash(git status:*) Bash(git diff:*) Bash(git checkout:*) Bash(nix-instantiate:*) Bash(nix-build:*) Bash(nix eval:*) Bash(nix search:*) Bash(jq:*) Bash(cat:*) Bash(ls:*) Bash(mkdir:*) Bash(rm:*)" \
           --disallowedTools "Bash(sudo:*) Bash(nixos-rebuild:*) Bash(git commit:*) Bash(git push:*) Bash(git add:*) Bash(git reset:*) Bash(git clean:*)" \
-          --output-format text > "$out_file" 2>&1); then
+          --output-format text > "$out_file" 2>&1) &
+        claude_pid=$!
+        trap 'kill -TERM -- "-$claude_pid" 2>/dev/null || true; exit 130' INT TERM
+        if ! wait "$claude_pid"; then
           claude_exit=$?
         fi
+        trap - INT TERM
+        set +m
 
         summary=$(grep -m1 '^SUMMARY:' "$out_file" || true)
         if [ "$claude_exit" -ne 0 ] || [ -z "$summary" ]; then

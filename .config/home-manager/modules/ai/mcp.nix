@@ -148,6 +148,28 @@ let
           args = [ "-y" "exa-mcp-server" ];
         }}/bin/exa-mcp-wrapped";
     };
+    # firefox -- attaches to the user's own already-running Firefox (their
+    # real profile, cookies, logins) over WebDriver Marionette/BiDi, the same
+    # "drive my actual browser" role playwright's `--extension` flag plays
+    # for Chrome/Edge above (Firefox has no equivalent extension-attach mode,
+    # hence this separate server). --connect-existing skips launching a
+    # fresh Firefox and instead expects one already listening on
+    # --marionette-port (2828, mozilla/firefox-devtools-mcp's own default);
+    # Firefox itself must be started with `-marionette
+    # -remote-debugging-port` for that port to be open (see the `firefox-mcp`
+    # shell alias in zsh.nix). Deliberately run against the user's normal
+    # profile per their own request, not a dedicated one -- upstream's docs
+    # warn this sets navigator.webdriver=true and can trip bot detection
+    # (Cloudflare/Akamai) while Marionette is enabled.
+    firefox = {
+      command =
+        "${mkWrapper {
+          name = "firefox-mcp-wrapped";
+          extraEnv = [ nodePathEnv ];
+          exe = "${pkgs.nodejs}/bin/npx";
+          args = [ "-y" "@mozilla/firefox-devtools-mcp" "--connect-existing" "--marionette-port" "2828" ];
+        }}/bin/firefox-mcp-wrapped";
+    };
   };
 
   # Remote HTTP servers -- shape differs per client. Claude Code wants

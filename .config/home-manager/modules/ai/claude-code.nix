@@ -138,6 +138,9 @@ in
     # --- nixapply ---
     ".claude/skills/nixapply/SKILL.md".source = ../../files/nixapply/skill.md;
 
+    # --- laya (local decision-model server, nixos/modules/services/laya.nix) ---
+    ".claude/skills/laya/SKILL.md".source = ../../files/laya/skill.md;
+
     # --- global Claude Code instructions ---
     ".claude/CLAUDE.md".source = ../../files/claude/CLAUDE.md;
 

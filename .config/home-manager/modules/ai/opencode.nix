@@ -83,6 +83,15 @@ in
     #     some of its budget on thinking.
     #   - "local-lfm": lfm2.5:8b, MoE (~1B active params) purpose-built for
     #     tool calling on consumer hardware, non-reasoning.
+    #   - "local-qwen-quick"/"local-qwen-classify"/"local-qwen-chat": same
+    #     qwen3.5:4b model as "local-qwen" but tools stripped entirely (not
+    #     even read/grep/glob) -- these are pure text in/out tasks, not
+    #     codebase work, so the tool-schema tokens that would otherwise be
+    #     spent go straight back into qwen's small context budget. Each
+    #     pins a task-specific `prompt` instead of relying on tool access:
+    #     terse direct answers, strict-label classification (single item or
+    #     newline-batch, one output line per input line, no prose), and
+    #     open chat.
     # Both limits assume OLLAMA_CONTEXT_LENGTH=24576 with
     # OLLAMA_KV_CACHE_TYPE=q8_0 (see ollama.nix) -- keep these in sync with
     # that file if the context length or KV quant changes.
@@ -164,6 +173,29 @@ in
                "grep": true,
                "glob": true
              }
+           },
+           "local-qwen-quick": {
+             "description": "Terse direct-answer agent pinned to qwen3.5:4b, zero tools. For quick factual/reasoning questions that do not need file or codebase access -- answers in 1-3 sentences, no exploration.",
+             "mode": "primary",
+             "model": "ollama/qwen3.5:4b",
+             "temperature": 0.2,
+             "tools": { "*": false },
+             "prompt": "Answer directly and concisely in 1-3 sentences. No tool calls, no exploration, no hedging or restating the question -- give the best answer from what is already in the request."
+           },
+           "local-qwen-classify": {
+             "description": "Strict-label classification agent pinned to qwen3.5:4b, zero tools. For on-demand single-item classification or newline-delimited batch classification (yes/no, multiple-choice, confidence score) -- see the laya skill for the same pattern via a dedicated CLI.",
+             "mode": "primary",
+             "model": "ollama/qwen3.5:4b",
+             "temperature": 0.1,
+             "tools": { "*": false },
+             "prompt": "You are a classifier. Output ONLY the requested label, choice, or score per item -- no explanation, no prose, no restating the input. For a batch (multiple newline-delimited items), output exactly one label per input line, in the same order, one per output line."
+           },
+           "local-qwen-chat": {
+             "description": "Open general-chat agent pinned to qwen3.5:4b, zero tools. For casual conversation that does not need file or codebase access.",
+             "mode": "primary",
+             "model": "ollama/qwen3.5:4b",
+             "tools": { "*": false },
+             "prompt": "You are a casual conversational assistant. Chat naturally and helpfully. You have no tools -- if the request needs file or codebase access, say so and suggest switching to a different agent instead of trying anyway."
            },
             "reader": {
               "description": "Shunt delegate for reads/summaries -- see the Read delegation policy in AGENTS.md. Pinned to gemini-3.6-flash (cheap/fast) rather than following whatever model the caller is on; read/grep/glob/list only. If its calls fail on quota/TPM errors, the caller retries via local-qwen (local, no TPM ceiling) -- see the fallback order in AGENTS.md.",

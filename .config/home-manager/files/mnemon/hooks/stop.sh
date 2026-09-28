@@ -34,15 +34,17 @@ if [ "$STOP_ACTIVE" = "true" ]; then
   exit 0
 fi
 
-# If a memory write already landed in the recent transcript tail, capture is
-# done for this turn -- don't nag. An explicit "nothing worth storing"
-# acknowledgment also satisfies the gate: the instructions below tell the
-# model it may decline and stop, so the decline itself must be an accepted
-# exit path, not just a store call -- otherwise a turn with genuinely nothing
-# to store can never clear the gate and re-blocks identically forever.
+# If a memory write (or a delegation to it, or its hand-back) already landed
+# in the recent transcript tail, capture is done for this turn and any turn
+# still covered by that tail -- don't nag or re-block on follow-on turns
+# (task-notifications, short acks) that are just about that same save. The
+# short "nts" sentinel satisfies the gate too: the instructions below tell
+# the model it may decline and stop, so the decline itself must be an
+# accepted exit path, not just a store call -- otherwise a turn with
+# genuinely nothing to store can never clear the gate and re-blocks forever.
 TRANSCRIPT="$(printf '%s' "$INPUT" | jq -r '.transcript_path // empty' 2>/dev/null)"
 if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
-  if tail -n 300 "$TRANSCRIPT" 2>/dev/null | grep -qiE 'mnemon remember|mem_save|nothing (new |genuinely )?(worth storing|to store)'; then
+  if tail -n 300 "$TRANSCRIPT" 2>/dev/null | grep -qiE 'mnemon remember|mem_save|memory-scribe|saved to (engram|mnemon)|engram #[0-9]|store: *engram|nothing (new |genuinely )?(worth storing|to store)|\bnts\b'; then
     log_metric "mnemon:gate_pass_saved" 0
     exit 0
   fi
@@ -54,7 +56,7 @@ GATE_MSG='[mnemon] STOP GATE -- evaluate the memory decision tree before ending 
     -> store with the mnemon remember sub-agent (global memory).
   - Fact, bugfix, or decision scoped to THIS repo/codebase
     -> store with engram mem_save (project memory).
-If genuinely nothing is worth storing, say so in one line, then stop.
+If genuinely nothing is worth storing, reply with exactly: nts
 Do not stop silently.'
 echo "$GATE_MSG" >&2
 log_metric "mnemon:gate_block" "${#GATE_MSG}"

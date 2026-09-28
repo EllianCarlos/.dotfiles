@@ -55,6 +55,26 @@
       ollama-stop = "sudo systemctl stop ollama";
       ollama-status = "systemctl status ollama";
 
+      # --- laya ---------------------------------------------------------------
+      # laya has no `enable`d-at-boot service (nixos/modules/services/laya.nix) --
+      # start/stop are the daily toggle, same shape as ollama's. `laya-setup` is
+      # for the first run (or after clearing its caches): it also does uv's
+      # dependency resolution + HF model download, which can take a while, so it
+      # blocks and polls /health instead of returning immediately like laya-start.
+      laya-start = "sudo systemctl start laya";
+      laya-stop = "sudo systemctl stop laya";
+      laya-status = "systemctl status laya";
+      laya-setup = "sudo systemctl start laya && echo -n 'waiting for laya to finish loading' && until curl -fs http://127.0.0.1:11436/health >/dev/null 2>&1; do echo -n '.'; sleep 2; done && echo ' ready on :11436'";
+
+      # --- Firefox MCP (mozilla/firefox-devtools-mcp, mcp.nix) ------------------
+      # Opens your NORMAL Firefox profile (not a dedicated one) with Marionette
+      # and remote debugging on, so the MCP server can attach to it via
+      # --connect-existing instead of launching a separate browser. Upstream
+      # warns Marionette sets navigator.webdriver=true and can trip
+      # Cloudflare/Akamai-style bot detection while it's on -- close this
+      # Firefox and reopen normally when you're done driving it with an agent.
+      firefox-mcp = "firefox -marionette -remote-debugging-port &";
+
     };
 
     autosuggestion.enable = true;

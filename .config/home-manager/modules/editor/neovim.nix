@@ -1,13 +1,20 @@
 # Neovim, plus the language servers, formatters and linters it shells out
 # to. The lua config itself lives in .config/nvim and is symlinked by
 # modules/desktop/dotfiles.nix.
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {
   programs.neovim = {
     enable = true;
     defaultEditor = true;
     viAlias = true;
     vimAlias = true;
+
+    # home-manager (master) now computes this internally from
+    # extraConfig/plugins and writes it to .config/nvim/init.lua whenever
+    # non-empty -- which collides with dotfiles.nix's out-of-store symlink
+    # for the whole .config/nvim directory. Force it empty so this repo's
+    # own nvim/init.lua stays authoritative.
+    initLua = lib.mkForce "";
 
     extraPackages = with pkgs; [
       gcc

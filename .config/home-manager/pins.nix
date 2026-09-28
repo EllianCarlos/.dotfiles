@@ -15,28 +15,29 @@
   mcp-servers-nix = {
     owner = "natsukium";
     repo = "mcp-servers-nix";
-    rev = "9de4bccf471171621f8a294c1a812d4cc88c78e3"; # upstream HEAD -- repo
+    rev = "9b2a27cab506cbc8fe9b1cbe853c5c1eaad4d392"; # upstream HEAD -- repo
     # cuts no tags.
   };
   claude-code-nix = {
     owner = "sadjow";
     repo = "claude-code-nix";
-    rev = "736ada361161f0a3e69844e3918b6e9bc69ed035"; # v2.1.278, also upstream HEAD
+    rev = "041321f576473e072ebe03d6d9a3e79a2aad9580"; # v2.1.284, also upstream HEAD
   };
   agent-skills-nix = {
     owner = "Kyure-A";
     repo = "agent-skills-nix";
-    rev = "5133c874553c6c295654d8de4e3f62c95736b9c6";
+    rev = "dc122af897ab9a685c20ae54c639021619dbbb52"; # upstream HEAD -- repo
+    # cuts no tags.
   };
   opencode-nixpkgs-pin = {
     owner = "NixOS";
     repo = "nixpkgs";
-    rev = "c27cdad491a991b11ed731760aa2ef8db0cb0410";
+    rev = "d71342c80129583070161e75dca16a24749472a9"; # opencode 1.18.31
   };
   loop-engineering = {
     owner = "cobusgreyling";
     repo = "loop-engineering";
-    rev = "64ab3ab795117b5fb74358e1de22cc565cdc6054"; # upstream HEAD -- this
+    rev = "c16e99ce5d048edfa602f021fdb0f3087ec2b464"; # upstream HEAD -- this
     # repo's tags (loop-worktree-vX, readiness-core-vX, vX) are per-subtool,
     # not one release line for the whole repo, so there's no single "latest
     # tag" to prefer over HEAD here; see project-pin-bump-prefer-tagged-release.
@@ -44,14 +45,14 @@
   superpowers = {
     owner = "obra";
     repo = "superpowers";
-    rev = "5bf4e78011075bcfc0dc295f0724994cd123ee71"; # v6.4.1
+    rev = "8ca22dba9a94f28898bbce59f2537ff4d87c747d"; # v6.4.2
   };
   mattpocock-skills = {
     owner = "mattpocock";
     repo = "skills";
     rev = "6acc160e4e0cd062dbbbd7a1b26ae92855edf07e"; # v1.2.3 -- still the
-    # latest tag; upstream HEAD (74ca5fe077456a0b3b2f5310cf9430999fd0b5fd as of
-    # 2026-09-17) is further commits past it with no new release cut yet; see
+    # latest tag; upstream HEAD (c55ee46073ed923f86ce59a5eb3b6d895095d1b7 as of
+    # 2026-09-28) is further commits past it with no new release cut yet; see
     # project-pin-bump-prefer-tagged-release.
   };
   mattpocock-skills-personal = {
@@ -78,25 +79,27 @@
     owner = "guillaumemeyer";
     repo = "watermarks-remover";
     rev = "321d93d2efd6a8b26915c5eb5193d9d1701e2c4b"; # v0.7.0 -- upstream HEAD
-    # (e4d2bd49c4cb84c5fddb50f5361618cfb3b75def as of 2026-09-17) is further
+    # (258cf20cdc2906e24398b3d6f3bc3cbcfd578245 as of 2026-09-28) is further
     # commits past this tag with no new release cut yet; see
     # project-pin-bump-prefer-tagged-release.
   };
   academic-research-skills = {
     owner = "Imbad0202";
     repo = "academic-research-skills";
-    rev = "3c546bc08c56f79e0068f1ea4f0acedf5bf69b5e"; # v3.22.0, also upstream
-    # HEAD.
+    rev = "7de1c9dfb7af9c02a9b57750761323f35a743aa2"; # v3.22.2 -- upstream HEAD
+    # (e79085d0d38609984ef8cfe0faf2d254aac9e0a9 as of 2026-09-28) is further
+    # commits past this tag with no new release cut yet; see
+    # project-pin-bump-prefer-tagged-release.
   };
   openlogi = {
     owner = "AprilNEA";
     repo = "OpenLogi";
-    rev = "a92aa43bed3732be5f7fde7aed2fc12cc48ba001"; # v0.8.6
+    rev = "bc21025d7a96faa8bb0f8dfeb880664a2daa3c31"; # v0.8.9
   };
   zen-browser = {
     owner = "0xc000022070";
     repo = "zen-browser-flake";
-    rev = "1c3a1fcacf97eb3792e9292e3afc0edbfcfa01d4"; # HEAD -- upstream's
+    rev = "e50ed94ebf28bae95397e482dbb1c020f50c20c1"; # HEAD -- upstream's
     # tags are named "twilight-<hash>" per Zen Browser build, not per
     # flake release, so they track a different thing than this pin does.
     # HEAD is the flake's own moving pin to the latest Zen build.
