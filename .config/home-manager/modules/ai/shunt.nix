@@ -43,62 +43,29 @@ let
   cfg = config.ai.shunt;
 
   # --- Claude Code: PreToolUse gate -------------------------------------
-  # stdin: hook JSON ({ tool_name, tool_input, ... }); stdout: shunt's
-  # {"decision":"block","reason":...}; exit 0 always (non-blocking exit
-  # codes would feed stderr to the model instead).
+  # The logic lives in files/shunt/shunt-check.py: it counts the lines a call
+  # would really emit (a Read window, head/tail -n N, sed -n 'A,Bp' ranges,
+  # awk NR ranges, the sum over a && chain, and a per-session budget per file),
+  # so the model cannot route around the gate with chained sed ranges or many
+  # small slices. It answers with hookSpecificOutput permissionDecision=deny.
+  pyBin = name: src: pkgs.writeScriptBin name ("#!${pkgs.python3}/bin/python3\n" + builtins.readFile src);
+  shuntCheck = pyBin "shunt-check" ../../files/shunt/shunt-check.py;
+  # Spotify shunt's two worker scripts. One source; the command name picks the
+  # mode. bulk-read / code-write try the agy Gemini chain first (agy reads the
+  # files in its sandbox), then `claude -p` on SHUNT_DELEGATE with no tools.
+  bulkRead = pyBin "bulk-read" ../../files/shunt/shunt-worker.py;
+  codeWrite = pyBin "code-write" ../../files/shunt/shunt-worker.py;
+
   claudeGate = pkgs.writeShellScript "shunt-gate.sh" ''
-    # shunt hard gate (see modules/ai/shunt.nix): block bulk reads, point at
-    # the reader subagent. Installed by Nix -- edits are overwritten.
-    set -uo pipefail
-    JQ="${pkgs.jq}/bin/jq"
-    GREP="${pkgs.gnugrep}/bin/grep"
-    WC="${pkgs.coreutils}/bin/wc"
-    TR="${pkgs.coreutils}/bin/tr"
-    THRESHOLD=${toString cfg.thresholdLines}
+    exec ${shuntCheck}/bin/shunt-check --harness claude
+  '';
 
-    INPUT=$(cat)
-    TOOL=$($JQ -r '.tool_name // ""' <<<"$INPUT")
-
-    blocked() {
-      $JQ -nc --arg r "$1" '{decision:"block",reason:$r}'
-      exit 0
-    }
-
-    file_lines() { # -> line count on stdout, failure -> empty
-      [ -f "$1" ] || return 1
-      $WC -l < "$1" 2>/dev/null || return 1
-    }
-
-    case "$TOOL" in
-      Read)
-        FILE=$($JQ -r '.tool_input.file_path // ""' <<<"$INPUT")
-        [ -n "$FILE" ] || exit 0
-        # Bounded slice = the shunt escape hatch (parity with upstream).
-        OFF=$($JQ -r '.tool_input.offset // 0' <<<"$INPUT")
-        LIM=$($JQ -r '.tool_input.limit // 0' <<<"$INPUT")
-        [ "$OFF" != "0" ] || [ "$LIM" != "0" ] && exit 0
-        LINES=$(file_lines "$FILE") || exit 0
-        [ -n "$LINES" ] || exit 0
-        [ "$LINES" -gt "$THRESHOLD" ] && blocked "File is $LINES lines (threshold: $THRESHOLD). Delegate this read to the reader subagent instead (Agent tool, subagent_type=\"reader\") -- it extracts only what you need through the fallback model chain. A bounded slice (offset/limit within the threshold) is still allowed."
-        exit 0
-        ;;
-      Bash)
-        CMD=$($JQ -r '.tool_input.command // ""' <<<"$INPUT")
-        [ -n "$CMD" ] || exit 0
-        # Only pure dump commands: anything piped or redirected stays allowed
-        # (parity with upstream check-bash-read).
-        printf '%s' "$CMD" | $GREP -qE '[|>]' && exit 0
-        printf '%s' "$CMD" | $GREP -qE '(^|[[:space:];&(])(sudo[[:space:]]+)?(cat|head|tail|less|more|nl|bat)([[:space:]]|$)' || exit 0
-        for F in $(printf '%s' "$CMD" | $GREP -oE '[^[:space:];|&]+\.[A-Za-z0-9]{1,8}'); do
-          F=$(printf '%s' "$F" | $TR -d "\"'")
-          LINES=$(file_lines "$F") || continue
-          [ -n "$LINES" ] || continue
-          [ "$LINES" -gt "$THRESHOLD" ] && blocked "'$F' is $LINES lines (threshold: $THRESHOLD). Delegate to the reader subagent (Agent tool, subagent_type=\"reader\") instead of dumping the file into context."
-        done
-        exit 0
-        ;;
-    esac
-    exit 0
+  # Read by shunt-check and the worker scripts.
+  shuntEnv = pkgs.writeText "shunt-config.env" ''
+    SHUNT_DEFAULT_ENABLED=1
+    SHUNT_THRESHOLD=${toString cfg.thresholdLines}
+    SHUNT_DELEGATE=haiku
+    SHUNT_AGY=${config.home.homeDirectory}/.claude/hooks/agy-shunt
   '';
 
   # --- Claude Code: the shunt "worker" ----------------------------------
@@ -135,147 +102,104 @@ let
     exit 1
   '';
 
+  # --- opencode and pi: shared JS adapter --------------------------------
+  # Both JS gates are thin adapters over shunt-check, like the shell hooks: they
+  # forward the tool call and let the shared core count the lines and keep the
+  # per-session budget, so slicing and sed/awk chains are caught here too. The
+  # binary is pinned by store path, so no PATH lookup can miss it.
+  jsCheck = harness: ''
+    import { spawnSync } from "node:child_process";
+
+    const SHUNT_CHECK = "${shuntCheck}/bin/shunt-check";
+
+    // Returns the block reason, or null to let the call through. Anything that
+    // goes wrong (missing binary, timeout, bad output) fails open.
+    function shuntReason(tool, input, sessionId, cwd) {
+      try {
+        const r = spawnSync(SHUNT_CHECK, ["--harness", "${harness}"], {
+          input: JSON.stringify({
+            tool_name: String(tool || ""),
+            tool_input: input || {},
+            session_id: String(sessionId || ""),
+            cwd: cwd || process.cwd(),
+          }),
+          encoding: "utf8",
+          timeout: 5000,
+        });
+        if (r.status === 2) return (r.stderr || "").trim() || "SHUNT: read blocked";
+      } catch {}
+      return null;
+    }
+  '';
+
   # --- opencode: single-file ES-module plugin ----------------------------
   # Loaded from opencode.jsonc's `plugin` array via file:// URL (same
   # mechanism as modules/ai/opencode.nix). Blocking = throwing; anything
   # returned (including false) lets the call proceed.
-  ocPlugin = pkgs.writeText "shunt-gate.js" ''
-    // shunt hard gate for opencode (see modules/ai/shunt.nix). Nix-managed.
-    import { readFileSync } from "node:fs";
+  # A default export only: a second named export of the same factory would
+  # register the hook twice, and the second run would count every read against
+  # the session budget again.
+  ocPlugin = pkgs.writeText "shunt-gate.js" (
+    ''
+      // shunt hard gate for opencode. Generated by modules/ai/shunt.nix.
+    ''
+    + jsCheck "opencode"
+    + ''
 
-    const THRESHOLD = ${toString cfg.thresholdLines};
-    const DUMP_RE = /\b(?:cat|head|tail|less|more|nl|bat)\b/;
-
-    function lineCount(path) {
-      try {
-        return readFileSync(path, "utf8").split("\n").length;
-      } catch {
-        return null;
+      // opencode's read takes { filePath, offset (1-indexed), limit }, the
+      // same window shunt-check applies to a Claude Read.
+      export default async function shuntGate({ directory } = {}) {
+        return {
+          "tool.execute.before": async (input, output) => {
+            const tool = input && input.tool;
+            if (tool !== "read" && tool !== "bash") return;
+            const args = (output && output.args) || {};
+            const reason = shuntReason(tool, args, input.sessionID, directory);
+            if (reason) throw new Error(reason);
+          },
+        };
       }
-    }
-
-    export const shuntGate = async () => ({
-      "tool.execute.before": async (input, output) => {
-        const tool = input && input.tool;
-        const args = (output && output.args) || {};
-        if (tool === "read") {
-          if (args.offset !== undefined || args.limit !== undefined) return;
-          const file = args.filePath || args.file || args.path;
-          if (!file) return;
-          const lines = lineCount(file);
-          if (lines !== null && lines > THRESHOLD) {
-            throw new Error(
-              "SHUNT: File is " + lines + " lines (threshold: " + THRESHOLD + "). " +
-                "Delegate this read to the 'reader' agent via the task tool -- it " +
-                "extracts only what you need. A bounded slice (offset/limit) is still allowed.",
-            );
-          }
-          return;
-        }
-        if (tool === "bash") {
-          const cmd = String(args.command || "");
-          if (!cmd || cmd.includes("|") || cmd.includes(">")) return;
-          if (!DUMP_RE.test(cmd)) return;
-          const files = cmd.match(/[^\s;|&]+\.[A-Za-z0-9]{1,8}/g) || [];
-          for (const file of files) {
-            const lines = lineCount(file);
-            if (lines !== null && lines > THRESHOLD) {
-              throw new Error(
-                "SHUNT: '" + file + "' is " + lines + " lines (threshold: " + THRESHOLD + "). " +
-                  "Use the 'reader' agent via the task tool instead of dumping the file.",
-              );
-            }
-          }
-        }
-      },
-    });
-
-    export default shuntGate;
-  '';
+    ''
+  );
 
   # --- pi: gate extension ------------------------------------------------
   # pi extension contract (verified against the vendored
   # @narumitw/pi-plan-mode): package.json's `pi.extensions` lists the entry
   # module; the module default-exports a factory receiving the extension
   # API; pi.on("tool_call") handlers return { block, reason } to block.
-  # pi's read-tool argument names are not pinned by any vendored source, so
-  # the gate probes the common spellings defensively and lets anything it
-  # can't interpret through.
   piGatePkgJson = pkgs.writeText "pi-shunt-gate-package.json" (
     builtins.toJSON {
       name = "pi-shunt-gate";
       version = "0.1.0";
-      description = "shunt hard gate: blocks bulk reads, points at the scout subagent";
+      description = "shunt hard gate: blocks bulk reads, points at bulk-read";
       type = "module";
       pi.extensions = [ "./index.js" ];
     }
   );
-  piGateIndex = pkgs.writeText "pi-shunt-gate-index.js" ''
-    // shunt hard gate for pi (see modules/ai/shunt.nix). Nix-managed.
-    import { readFileSync } from "node:fs";
+  piGateIndex = pkgs.writeText "pi-shunt-gate-index.js" (
+    ''
+      // shunt hard gate for pi. Generated by modules/ai/shunt.nix.
+    ''
+    + jsCheck "pi"
+    + ''
 
-    const THRESHOLD = ${toString cfg.thresholdLines};
-    const READ_TOOLS = new Set(["read", "Read"]);
-    const DUMP_RE = /\b(?:cat|head|tail|less|more|nl|bat)\b/;
-
-    function lineCount(path) {
-      try {
-        return readFileSync(path, "utf8").split("\n").length;
-      } catch {
-        return null;
+      // pi's read takes { path, offset (1-indexed), limit }, the same window
+      // shunt-check applies to a Claude Read. pi has no built-in subagent, so
+      // the block reason's bulk-read command is the delegation path.
+      export default function shuntGate(pi) {
+        pi.on("tool_call", async (event, ctx) => {
+          const tool = event && event.toolName ? String(event.toolName) : "";
+          if (tool !== "read" && tool !== "bash") return;
+          let sid = "";
+          try {
+            sid = ctx.sessionManager.getSessionId();
+          } catch {}
+          const reason = shuntReason(tool, event.input || {}, sid, ctx && ctx.cwd);
+          if (reason) return { block: true, reason };
+        });
       }
-    }
-
-    function bounded(input) {
-      return input.offset !== undefined || input.limit !== undefined;
-    }
-
-    function readPath(input) {
-      return input.path || input.file_path || input.filePath || input.file || null;
-    }
-
-    function dumpPaths(cmd) {
-      return cmd.match(/[^\s;|&]+\.[A-Za-z0-9]{1,8}/g) || [];
-    }
-
-    const READ_REASON =
-      "SHUNT: file has more than " + THRESHOLD + " lines. Delegate this read to the " +
-      "'scout' subagent (subagent tool) -- it extracts only what you need. " +
-      "A bounded slice (offset/limit) is still allowed.";
-
-    export default function shuntGate(pi) {
-      pi.on("tool_call", async (event) => {
-        const tool = event && event.toolName ? String(event.toolName) : "";
-        const input = (event && event.input) || {};
-        if (READ_TOOLS.has(tool)) {
-          if (bounded(input)) return;
-          const file = readPath(input);
-          if (!file) return;
-          const lines = lineCount(file);
-          if (lines !== null && lines > THRESHOLD) {
-            return { block: true, reason: READ_REASON };
-          }
-          return;
-        }
-        if (tool === "bash") {
-          const cmd = typeof input.command === "string" ? input.command : "";
-          if (!cmd || cmd.includes("|") || cmd.includes(">")) return;
-          if (!DUMP_RE.test(cmd)) return;
-          for (const file of dumpPaths(cmd)) {
-            const lines = lineCount(file);
-            if (lines !== null && lines > THRESHOLD) {
-              return {
-                block: true,
-                reason:
-                  "SHUNT: '" + file + "' has more than " + THRESHOLD + " lines. Use the " +
-                  "'scout' subagent instead of dumping the file into context.",
-              };
-            }
-          }
-        }
-      });
-    }
-  '';
+    ''
+  );
   piGate = pkgs.runCommand "pi-shunt-gate" { } ''
     mkdir -p $out/node_modules/pi-shunt-gate
     cp ${piGatePkgJson} $out/node_modules/pi-shunt-gate/package.json
@@ -323,12 +247,19 @@ in
   };
 
   config = {
+    home.packages = [
+      shuntCheck
+      bulkRead
+      codeWrite
+    ];
+
     ai.shunt.opencodePluginUrl = "file://${config.home.homeDirectory}/.local/share/opencode-shunt-vendor/shunt-gate.js";
     ai.shunt.piExtensionPath = "${config.home.homeDirectory}/.local/share/pi-shunt-vendor/node_modules/pi-shunt-gate";
 
     home.file = {
       ".claude/hooks/shunt-gate.sh".source = claudeGate;
       ".claude/hooks/agy-shunt".source = agyShunt;
+      ".config/shunt/config.env".source = shuntEnv;
       ".local/share/opencode-shunt-vendor/shunt-gate.js".source = ocPlugin;
       ".local/share/pi-shunt-vendor".source = piGate;
     };

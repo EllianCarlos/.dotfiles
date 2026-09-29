@@ -33,11 +33,17 @@ Never use the file-based `.md` memory system when mnemon/engram are active.
 
 ## Read delegation
 
-MUST delegate reading and summarizing files to the `reader` subagent (Agent
-tool, subagent_type="reader") to keep reads on the cheap path -- a direct
-Read outside the exceptions below is a violation, not a style choice. State
-exactly what to extract given your current goal -- not "summarize this
-file." `reader` hands the read off to Gemini via `agy` (Google Antigravity
+MUST delegate reading and summarizing files to keep reads on the cheap path --
+a direct Read outside the exceptions below is a violation, not a style choice.
+First choice: `bulk-read --question "<what you need>" --paths <files>` via
+Bash. It sends the files to Gemini through `agy` (then Haiku if the chain is
+exhausted) and returns only the answer with path:line citations. For
+boilerplate that follows an existing file, use `code-write --spec "<what>"
+--reference <file> --target <new file>`; the code goes straight to disk.
+Second choice: the `reader` subagent (Agent tool, subagent_type="reader").
+State exactly what to extract given your current goal -- not "summarize this
+file." Never split a blocked file into smaller slices to get around the shunt
+gate. `reader` hands the read off to Gemini via `agy` (Google Antigravity
 CLI, off the Anthropic plan entirely) and only falls back to reading it
 itself on Haiku if `agy` is unavailable.
 
