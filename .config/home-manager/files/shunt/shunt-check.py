@@ -1,8 +1,11 @@
-"""shunt gate core, shared by the Claude Code, Kiro CLI and Codex hooks.
+"""shunt gate core, shared by the Claude Code, Kiro CLI, Codex, opencode and pi gates.
 
 Reads one PreToolUse payload on stdin, works out how many lines the call would
 put into the agent's context, and blocks it when that exceeds the threshold.
-Each harness has its own block contract, selected with --harness.
+Each harness has its own block contract, selected with --harness:
+claude and codex print a deny JSON on stdout; kiro, opencode and pi exit 2 with
+the reason on stderr (the opencode and pi JS adapters turn that into a throw or
+a { block, reason } result).
 Any error fails open: a broken gate must never block every tool call.
 """
 import json
@@ -382,7 +385,7 @@ def main():
         if before + total <= threshold:
             return 0
     msg = reason(before + total, threshold, what, kind, before, small)
-    if harness == "kiro":
+    if harness in ("kiro", "opencode", "pi"):
         print(msg, file=sys.stderr)
         return 2
     print(

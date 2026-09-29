@@ -26,9 +26,15 @@ Momus, Oracle, Prometheus, Atlas/Ultraworker, etc.) -- there is no exception
 by agent identity, only by task shape (the three cases above).
 
 The gate is enforced MECHANICALLY, not just by this policy: the shunt-gate
-plugin (modules/ai/shunt.nix) blocks Read/Bash calls that would load a file
-bigger than 350 lines and points you at `reader`. Don't fight it and don't
-reconstruct big files from ≤350-line slices.
+plugin (modules/ai/shunt.nix) hands every read/bash call to `shunt-check`,
+which blocks anything that would bring more than 350 lines of a file into this
+session. It counts `sed -n`/`head`/`tail`/awk ranges and adds up all slices of
+one file per session, so reconstructing a big file from slices is blocked too.
+When it blocks, the fastest path is one bash call:
+`bulk-read --question "<what you need>" --paths <file> [...]` (cheap model,
+returns only the answer with path:line citations). Use `reader` when the job
+needs several reading steps. For the exceptions above, look at the exact lines
+you need with a bounded read of at most 80 lines.
 
 Fallback order (TPM-aware): reader is pinned to google/gemini-3.6-flash.
 If its task calls fail on quota/TPM errors, retry the delegation via
