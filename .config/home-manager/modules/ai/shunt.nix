@@ -43,62 +43,29 @@ let
   cfg = config.ai.shunt;
 
   # --- Claude Code: PreToolUse gate -------------------------------------
-  # stdin: hook JSON ({ tool_name, tool_input, ... }); stdout: shunt's
-  # {"decision":"block","reason":...}; exit 0 always (non-blocking exit
-  # codes would feed stderr to the model instead).
+  # The logic lives in files/shunt/shunt-check.py: it counts the lines a call
+  # would really emit (a Read window, head/tail -n N, sed -n 'A,Bp' ranges,
+  # awk NR ranges, the sum over a && chain, and a per-session budget per file),
+  # so the model cannot route around the gate with chained sed ranges or many
+  # small slices. It answers with hookSpecificOutput permissionDecision=deny.
+  pyBin = name: src: pkgs.writeScriptBin name ("#!${pkgs.python3}/bin/python3\n" + builtins.readFile src);
+  shuntCheck = pyBin "shunt-check" ../../files/shunt/shunt-check.py;
+  # Spotify shunt's two worker scripts. One source; the command name picks the
+  # mode. bulk-read / code-write try the agy Gemini chain first (agy reads the
+  # files in its sandbox), then `claude -p` on SHUNT_DELEGATE with no tools.
+  bulkRead = pyBin "bulk-read" ../../files/shunt/shunt-worker.py;
+  codeWrite = pyBin "code-write" ../../files/shunt/shunt-worker.py;
+
   claudeGate = pkgs.writeShellScript "shunt-gate.sh" ''
-    # shunt hard gate (see modules/ai/shunt.nix): block bulk reads, point at
-    # the reader subagent. Installed by Nix -- edits are overwritten.
-    set -uo pipefail
-    JQ="${pkgs.jq}/bin/jq"
-    GREP="${pkgs.gnugrep}/bin/grep"
-    WC="${pkgs.coreutils}/bin/wc"
-    TR="${pkgs.coreutils}/bin/tr"
-    THRESHOLD=${toString cfg.thresholdLines}
+    exec ${shuntCheck}/bin/shunt-check --harness claude
+  '';
 
-    INPUT=$(cat)
-    TOOL=$($JQ -r '.tool_name // ""' <<<"$INPUT")
-
-    blocked() {
-      $JQ -nc --arg r "$1" '{decision:"block",reason:$r}'
-      exit 0
-    }
-
-    file_lines() { # -> line count on stdout, failure -> empty
-      [ -f "$1" ] || return 1
-      $WC -l < "$1" 2>/dev/null || return 1
-    }
-
-    case "$TOOL" in
-      Read)
-        FILE=$($JQ -r '.tool_input.file_path // ""' <<<"$INPUT")
-        [ -n "$FILE" ] || exit 0
-        # Bounded slice = the shunt escape hatch (parity with upstream).
-        OFF=$($JQ -r '.tool_input.offset // 0' <<<"$INPUT")
-        LIM=$($JQ -r '.tool_input.limit // 0' <<<"$INPUT")
-        [ "$OFF" != "0" ] || [ "$LIM" != "0" ] && exit 0
-        LINES=$(file_lines "$FILE") || exit 0
-        [ -n "$LINES" ] || exit 0
-        [ "$LINES" -gt "$THRESHOLD" ] && blocked "File is $LINES lines (threshold: $THRESHOLD). Delegate this read to the reader subagent instead (Agent tool, subagent_type=\"reader\") -- it extracts only what you need through the fallback model chain. A bounded slice (offset/limit within the threshold) is still allowed."
-        exit 0
-        ;;
-      Bash)
-        CMD=$($JQ -r '.tool_input.command // ""' <<<"$INPUT")
-        [ -n "$CMD" ] || exit 0
-        # Only pure dump commands: anything piped or redirected stays allowed
-        # (parity with upstream check-bash-read).
-        printf '%s' "$CMD" | $GREP -qE '[|>]' && exit 0
-        printf '%s' "$CMD" | $GREP -qE '(^|[[:space:];&(])(sudo[[:space:]]+)?(cat|head|tail|less|more|nl|bat)([[:space:]]|$)' || exit 0
-        for F in $(printf '%s' "$CMD" | $GREP -oE '[^[:space:];|&]+\.[A-Za-z0-9]{1,8}'); do
-          F=$(printf '%s' "$F" | $TR -d "\"'")
-          LINES=$(file_lines "$F") || continue
-          [ -n "$LINES" ] || continue
-          [ "$LINES" -gt "$THRESHOLD" ] && blocked "'$F' is $LINES lines (threshold: $THRESHOLD). Delegate to the reader subagent (Agent tool, subagent_type=\"reader\") instead of dumping the file into context."
-        done
-        exit 0
-        ;;
-    esac
-    exit 0
+  # Read by shunt-check and the worker scripts.
+  shuntEnv = pkgs.writeText "shunt-config.env" ''
+    SHUNT_DEFAULT_ENABLED=1
+    SHUNT_THRESHOLD=${toString cfg.thresholdLines}
+    SHUNT_DELEGATE=haiku
+    SHUNT_AGY=${config.home.homeDirectory}/.claude/hooks/agy-shunt
   '';
 
   # --- Claude Code: the shunt "worker" ----------------------------------
@@ -323,12 +290,19 @@ in
   };
 
   config = {
+    home.packages = [
+      shuntCheck
+      bulkRead
+      codeWrite
+    ];
+
     ai.shunt.opencodePluginUrl = "file://${config.home.homeDirectory}/.local/share/opencode-shunt-vendor/shunt-gate.js";
     ai.shunt.piExtensionPath = "${config.home.homeDirectory}/.local/share/pi-shunt-vendor/node_modules/pi-shunt-gate";
 
     home.file = {
       ".claude/hooks/shunt-gate.sh".source = claudeGate;
       ".claude/hooks/agy-shunt".source = agyShunt;
+      ".config/shunt/config.env".source = shuntEnv;
       ".local/share/opencode-shunt-vendor/shunt-gate.js".source = ocPlugin;
       ".local/share/pi-shunt-vendor".source = piGate;
     };
