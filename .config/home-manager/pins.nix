@@ -15,13 +15,13 @@
   mcp-servers-nix = {
     owner = "natsukium";
     repo = "mcp-servers-nix";
-    rev = "9b2a27cab506cbc8fe9b1cbe853c5c1eaad4d392"; # upstream HEAD -- repo
+    rev = "de243d9cb267e96502b90630012c12e4bdeda090"; # upstream HEAD -- repo
     # cuts no tags.
   };
   claude-code-nix = {
     owner = "sadjow";
     repo = "claude-code-nix";
-    rev = "041321f576473e072ebe03d6d9a3e79a2aad9580"; # v2.1.284, also upstream HEAD
+    rev = "b17e42820330bd34ab890632c2f6f80daf4e517f"; # v2.1.289, also upstream HEAD
   };
   agent-skills-nix = {
     owner = "Kyure-A";
@@ -32,12 +32,22 @@
   opencode-nixpkgs-pin = {
     owner = "NixOS";
     repo = "nixpkgs";
-    rev = "d71342c80129583070161e75dca16a24749472a9"; # opencode 1.18.31
+    rev = "1421a6439836357c6dd685a99760c259b9935fdd"; # opencode 1.18.34
+  };
+  # zotero 10.0.4 (nixpkgs bae6f80, 2026-10-01) fails to build: its omni.ja
+  # patch can't find AboutTranslations in ActorManagerParent.sys.mjs. Last
+  # nixpkgs commit with a working zotero is 10.0.2. Unfreeze (drop `frozen`
+  # and the zoteroPinned override in modules/packages.nix) once fixed upstream.
+  zotero-nixpkgs-pin = {
+    owner = "NixOS";
+    repo = "nixpkgs";
+    rev = "363fdbe57ed052c76e816e6270206b0cb348e53a"; # zotero 10.0.2
+    frozen = true;
   };
   loop-engineering = {
     owner = "cobusgreyling";
     repo = "loop-engineering";
-    rev = "c16e99ce5d048edfa602f021fdb0f3087ec2b464"; # upstream HEAD -- this
+    rev = "9588274f3facf6013b98c38f336212be2bb75d6d"; # upstream HEAD -- this
     # repo's tags (loop-worktree-vX, readiness-core-vX, vX) are per-subtool,
     # not one release line for the whole repo, so there's no single "latest
     # tag" to prefer over HEAD here; see project-pin-bump-prefer-tagged-release.
@@ -50,10 +60,7 @@
   mattpocock-skills = {
     owner = "mattpocock";
     repo = "skills";
-    rev = "6acc160e4e0cd062dbbbd7a1b26ae92855edf07e"; # v1.2.3 -- still the
-    # latest tag; upstream HEAD (c55ee46073ed923f86ce59a5eb3b6d895095d1b7 as of
-    # 2026-09-28) is further commits past it with no new release cut yet; see
-    # project-pin-bump-prefer-tagged-release.
+    rev = "24fe0ef7737efae15c87225755e9f6f5965e4888"; # v1.3.1, also upstream HEAD
   };
   mattpocock-skills-personal = {
     owner = "mattpocock";
@@ -79,27 +86,27 @@
     owner = "guillaumemeyer";
     repo = "watermarks-remover";
     rev = "321d93d2efd6a8b26915c5eb5193d9d1701e2c4b"; # v0.7.0 -- upstream HEAD
-    # (258cf20cdc2906e24398b3d6f3bc3cbcfd578245 as of 2026-09-28) is further
+    # (1181fd4e8cc581931a5ee672697a646721e92c78 as of 2026-10-05) is further
     # commits past this tag with no new release cut yet; see
     # project-pin-bump-prefer-tagged-release.
   };
   academic-research-skills = {
     owner = "Imbad0202";
     repo = "academic-research-skills";
-    rev = "7de1c9dfb7af9c02a9b57750761323f35a743aa2"; # v3.22.2 -- upstream HEAD
-    # (e79085d0d38609984ef8cfe0faf2d254aac9e0a9 as of 2026-09-28) is further
-    # commits past this tag with no new release cut yet; see
-    # project-pin-bump-prefer-tagged-release.
+    rev = "6ab4b03bf70a118a1b3ee7f3263ed9f19031061b"; # v3.23.0, also upstream HEAD
   };
   openlogi = {
     owner = "AprilNEA";
     repo = "OpenLogi";
-    rev = "bc21025d7a96faa8bb0f8dfeb880664a2daa3c31"; # v0.8.9
+    rev = "7a9d092a7dda0cb3b7ec18ada4424d681fca65ca"; # v0.8.11 -- upstream HEAD
+    # (4863a45e256d80404b95232b513793cbccb5d6d6 as of 2026-10-05) is further
+    # commits past this tag with no new release cut yet; see
+    # project-pin-bump-prefer-tagged-release.
   };
   zen-browser = {
     owner = "0xc000022070";
     repo = "zen-browser-flake";
-    rev = "e50ed94ebf28bae95397e482dbb1c020f50c20c1"; # HEAD -- upstream's
+    rev = "e56900732d1fa6f360db502451a457ffe3ca1e6e"; # HEAD -- upstream's
     # tags are named "twilight-<hash>" per Zen Browser build, not per
     # flake release, so they track a different thing than this pin does.
     # HEAD is the flake's own moving pin to the latest Zen build.

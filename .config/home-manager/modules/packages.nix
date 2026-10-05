@@ -20,6 +20,11 @@ let
     (import (
       builtins.fetchTarball "https://github.com/${pins.opencode-nixpkgs-pin.owner}/${pins.opencode-nixpkgs-pin.repo}/archive/${pins.opencode-nixpkgs-pin.rev}.tar.gz"
     ) { inherit (pkgs) system; }).opencode;
+
+  zoteroPinned =
+    (import (
+      builtins.fetchTarball "https://github.com/${pins.zotero-nixpkgs-pin.owner}/${pins.zotero-nixpkgs-pin.repo}/archive/${pins.zotero-nixpkgs-pin.rev}.tar.gz"
+    ) { inherit (pkgs) system; }).zotero;
 in
 {
   imports = [ zenBrowserFlake.homeModules.beta ];
@@ -73,7 +78,7 @@ in
       super-productivity
       pass
       google-chrome
-      zotero
+      zoteroPinned
 
       # --- Linux kernel review (lore.kernel.org) ---
       b4 # fetch + review (b4 review TUI) patch series from public-inbox
