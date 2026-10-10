@@ -11,9 +11,9 @@
     enable = true;
   };
 
-  services.mako = {
-    enable = true;
-  };
+  # mako's config is the tracked .config/mako/config (linked in dotfiles.nix);
+  # services.mako would generate its own and clash, so only the package is installed.
+  home.packages = [ pkgs.mako ];
 
   # Vicinae launcher daemon (bound to SUPER + SPACE in hyprland.conf).
   # No home-manager module upstream yet, so the unit is declared by hand.

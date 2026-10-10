@@ -1,0 +1,22 @@
+# TTY design system — mako
+font=JetBrains Mono 11
+background-color=#121211
+text-color=#E8E8E3
+border-color=#33332F
+border-size=1
+border-radius=0
+progress-color=over #FFD400
+padding=8,12
+margin=8
+width=380
+max-icon-size=0
+icons=0
+format=<b>%s</b>\n%b
+default-timeout=6000
+
+[urgency=low]
+text-color=#8C8C84
+
+[urgency=critical]
+border-color=#FF5C57
+default-timeout=0

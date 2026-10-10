@@ -1,0 +1,49 @@
+/* TTY design system for GTK3 (adw-gtk3-dark) and GTK4/libadwaita.
+   Black-first, one signal colour (#FFD400), square corners, no shadows. */
+@define-color accent_bg_color #FFD400;
+@define-color accent_fg_color #000000;
+@define-color accent_color #FFD400;
+@define-color destructive_bg_color #FF5C57;
+@define-color destructive_fg_color #000000;
+@define-color destructive_color #FF5C57;
+@define-color success_bg_color #5AF78E;
+@define-color success_fg_color #000000;
+@define-color success_color #5AF78E;
+@define-color warning_bg_color #FFD400;
+@define-color warning_fg_color #000000;
+@define-color warning_color #FFD400;
+@define-color error_bg_color #FF5C57;
+@define-color error_fg_color #000000;
+@define-color error_color #FF5C57;
+@define-color window_bg_color #0A0A09;
+@define-color window_fg_color #E8E8E3;
+@define-color view_bg_color #000000;
+@define-color view_fg_color #E8E8E3;
+@define-color headerbar_bg_color #0A0A09;
+@define-color headerbar_fg_color #E8E8E3;
+@define-color headerbar_border_color #33332F;
+@define-color headerbar_backdrop_color #0A0A09;
+@define-color card_bg_color #121211;
+@define-color card_fg_color #E8E8E3;
+@define-color popover_bg_color #121211;
+@define-color popover_fg_color #E8E8E3;
+@define-color dialog_bg_color #121211;
+@define-color dialog_fg_color #E8E8E3;
+@define-color sidebar_bg_color #0A0A09;
+@define-color sidebar_fg_color #E8E8E3;
+@define-color sidebar_backdrop_color #0A0A09;
+@define-color sidebar_border_color #33332F;
+@define-color borders #33332F;
+
+* {
+  border-radius: 0;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+window, .background { background-color: #0A0A09; color: #E8E8E3; }
+entry, textview, .view { background-color: #000000; color: #E8E8E3; border: 1px solid #33332F; }
+entry:focus { border-color: #FFD400; }
+button { background-image: none; background-color: #121211; border: 1px solid #33332F; }
+button:hover { background-color: #242422; }
+selection, row:selected, *:selected { background-color: #FFD400; color: #000000; }

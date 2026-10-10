@@ -25,6 +25,7 @@
     loadModels = [
       "qwen3.5:4b"
       "lfm2.5:8b"
+      "qwen2.5-coder:3b-instruct-q8_0" # llmfit's top coding pick for the RX 6600 ("local-qwen-coder")
     ];
 
     # Ollama's own default context is 4096 (sometimes 2048), far too small

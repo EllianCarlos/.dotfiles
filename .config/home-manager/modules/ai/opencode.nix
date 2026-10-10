@@ -9,6 +9,7 @@
 { config, pkgs, ... }:
 let
   custom = import ../../pkgs { inherit pkgs; };
+  translated = (import ./permissions-translate.nix { inherit (pkgs) lib; }).opencode;
 
   # Real absolute paths (not shell $HOME) -- these strings are embedded
   # verbatim into a single-quoted --argjson value below, where the shell
@@ -117,6 +118,8 @@ in
       --argjson plugins ${pkgs.lib.escapeShellArg (builtins.toJSON pluginUrls)} \
       --arg ragCmd ${pkgs.lib.escapeShellArg "${custom.rag-mcp}/bin/rag-mcp"} \
       --argjson engramCmd ${pkgs.lib.escapeShellArg (builtins.toJSON [ "${custom.engram}/bin/engram" "mcp" "--tools=agent" ])} \
+      --argjson permOrdered ${pkgs.lib.escapeShellArg (builtins.toJSON translated.ordered)} \
+      --argjson permSimple ${pkgs.lib.escapeShellArg (builtins.toJSON translated.simple)} \
       --argjson goalCommand ${pkgs.lib.escapeShellArg (
         builtins.toJSON {
           goal = {
@@ -142,6 +145,10 @@ in
                "lfm2.5:8b": {
                  "name": "LFM2.5 8B MoE (local)",
                  "limit": { "context": 24576, "output": 8192 }
+               },
+               "qwen2.5-coder:3b-instruct-q8_0": {
+                 "name": "Qwen2.5 Coder 3B (local)",
+                 "limit": { "context": 24576, "output": 6144 }
                }
              }
            }
@@ -167,6 +174,17 @@ in
              "description": "Minimal agent pinned to the on-device ollama model lfm2.5:8b (MoE, ~1B active params, purpose-built for tool calling on consumer hardware), read/grep/glob only, kept small to fit its context budget.",
              "mode": "primary",
              "model": "ollama/lfm2.5:8b",
+             "tools": {
+               "*": false,
+               "read": true,
+               "grep": true,
+               "glob": true
+             }
+           },
+           "local-qwen-coder": {
+             "description": "Minimal agent pinned to the on-device ollama model qwen2.5-coder:3b-instruct-q8_0 (llmfit top pick for the RX 6600, ~45 tok/s), read/grep/glob only, kept small to fit its context budget.",
+             "mode": "primary",
+             "model": "ollama/qwen2.5-coder:3b-instruct-q8_0",
              "tools": {
                "*": false,
                "read": true,
@@ -228,6 +246,13 @@ in
            "rag": { "type": "local", "command": [$ragCmd], "enabled": true },
            "engram": { "type": "local", "command": $engramCmd, "enabled": true }
          })
+        # Mirrors permissions.nix (see permissions-translate.nix). Replaced
+        # wholesale so a rule dropped upstream does not linger here; `ordered`
+        # pairs are folded with from_entries to keep last-match-wins order.
+        | .permission = (
+            ($permOrdered | with_entries(.value |= (map({key: .[0], value: .[1]}) | from_entries)))
+            + $permSimple
+          )
         | .model = (.model // "google/gemini-3.6-flash")
         # small_model (titles, background summarization): tiny/frequent calls
         # that never need flash-latest peak TPM -- pin the lowest-TPM

@@ -17,6 +17,10 @@ let
     builtins.toJSON {
       outputStyle = "Concise";
       permissions = claudePermissions;
+      # Deep-merged, so plugins enabled at runtime (typescript-lsp, ...) survive.
+      enabledPlugins = {
+        "cc-plugin-you-should-know@builtin" = true;
+      };
       statusLine = {
         type = "command";
         command = "${config.home.homeDirectory}/.claude/statusline-command.sh";

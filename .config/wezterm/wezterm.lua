@@ -4,7 +4,7 @@ local config = wezterm.config_builder()
 
 -- --- Appearance -------------------------------------------------------------
 
-local font_family = "FiraCode Nerd Font"
+local font_family = "JetBrainsMono Nerd Font"
 
 config.font = wezterm.font(font_family)
 config.font_size = 12.5
@@ -23,9 +23,14 @@ config.font_rules = {
   },
 }
 
-config.color_scheme = "Catppuccin Mocha"
+config.color_schemes = { TTY = require("tty-colors") }
+config.color_scheme = "TTY"
 
-config.window_background_opacity = 0.7
+config.window_background_opacity = 1.0
+config.default_cursor_style = "BlinkingBlock"
+config.cursor_blink_rate = 530
+config.cursor_blink_ease_in = "Constant"
+config.cursor_blink_ease_out = "Constant"
 config.window_padding = { left = 4, right = 4, top = 4, bottom = 4 }
 -- "RESIZE" still leaves a client-side title strip on Hyprland.
 config.window_decorations = "NONE"
@@ -40,7 +45,7 @@ config.enable_wayland = true
 
 wezterm.on("update-right-status", function(window, _)
   window:set_right_status(wezterm.format({
-    { Foreground = { Color = "#cba6f7" } },
+    { Foreground = { Color = "#8C8C84" } },
     { Text = "  " .. window:active_workspace() .. "  " },
   }))
 end)

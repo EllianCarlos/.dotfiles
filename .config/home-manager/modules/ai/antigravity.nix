@@ -6,7 +6,9 @@
 # files (unlike Claude Code / the old Gemini CLI, which keep mcpServers
 # inside the main settings file):
 #   - ~/.gemini/antigravity-cli/settings.json -- modelProvider, deep-merged
-#     over whatever's on disk so unmanaged state survives.
+#     over whatever's on disk so unmanaged state survives. permissions.allow
+#     is the union of hand-added rules and those translated from
+#     permissions.nix; permissions.deny is replaced wholesale.
 #   - ~/.gemini/config/mcp_config.json -- mcpServers, wholesale-replaced
 #     rather than deep-merged, same reasoning as the .claude.json fix
 #     above: a deep merge would let a server removed from mcp.nix survive
@@ -14,9 +16,11 @@
 { config, pkgs, ... }:
 let
   antigravityMcpFile = (import ./mcp.nix { inherit pkgs; }).antigravity;
+  translated = (import ./permissions-translate.nix { inherit (pkgs) lib; }).agy;
   antigravitySettingsFile = pkgs.writeText "antigravity-cli-settings.json" (
     builtins.toJSON {
       modelProvider = "gemini";
+      permissions = translated;
     }
   );
 in
@@ -27,7 +31,11 @@ in
     # --- settings.json (auth/model provider) ---
     [ -f "$HOME/.gemini/antigravity-cli/settings.json" ] || echo '{}' > "$HOME/.gemini/antigravity-cli/settings.json"
 
-    ${pkgs.jq}/bin/jq -s '.[0] * .[1]' \
+    ${pkgs.jq}/bin/jq -s '.[0] as $old | .[1] as $new | ($old * $new)
+        | .permissions = {
+            allow: ((($old.permissions.allow // []) + $new.permissions.allow) | unique),
+            deny: $new.permissions.deny
+          }' \
       "$HOME/.gemini/antigravity-cli/settings.json" ${antigravitySettingsFile} \
       > "$HOME/.gemini/antigravity-cli/settings.json.tmp"
     mv "$HOME/.gemini/antigravity-cli/settings.json.tmp" "$HOME/.gemini/antigravity-cli/settings.json"

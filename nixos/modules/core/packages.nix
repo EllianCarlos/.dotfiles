@@ -4,6 +4,9 @@
   # Fonts
   fonts.packages = with pkgs; [
     nerd-fonts.fira-code
+    nerd-fonts.jetbrains-mono
+    jetbrains-mono
+    (google-fonts.override { fonts = [ "Silkscreen" ]; })
     nerd-fonts.droid-sans-mono
     font-awesome
     noto-fonts

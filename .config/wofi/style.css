@@ -1,51 +1,55 @@
-window {
-margin: 0px;
-border: 1px solid #bd93f9;
-background-color: #282a36;
+/* TTY design system — wofi
+ * Panel surface, 1px yellow frame (it is the focused surface),
+ * inset input well, selection = full-width yellow bar with black text.
+ * Pair with: wofi --show drun --insensitive --prompt "run"   (no -I: no icons)
+ */
+
+* {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  border-radius: 0;
+  box-shadow: none;
 }
+
+window {
+  margin: 0;
+  border: 1px solid #FFD400;
+  background-color: #121211;
+}
+
+#outer-box { margin: 0; padding: 0; border: none; background-color: #121211; }
 
 #input {
-margin: 5px;
-border: none;
-color: #f8f8f2;
-background-color: #44475a;
+  margin: 8px;
+  padding: 6px 9px;
+  border: 1px solid #33332F;
+  color: #E8E8E3;
+  background-color: #000000;
+  caret-color: #FFD400;
 }
+#input:focus { border-color: #FFD400; }
+#input image { color: #FFD400; }   /* search glyph */
 
-#inner-box {
-margin: 5px;
-border: none;
-background-color: #282a36;
-}
+#inner-box { margin: 0 0 8px 0; border: none; background-color: #121211; }
+#scroll    { margin: 0; border: none; border-top: 1px solid #33332F; }
 
-#outer-box {
-margin: 5px;
-border: none;
-background-color: #282a36;
+#entry {
+  padding: 4px 18px;
+  border: none;
+  background-color: transparent;
 }
-
-#scroll {
-margin: 0px;
-border: none;
-}
+#entry:hover { background-color: #242422; }
 
 #text {
-margin: 5px;
-border: none;
-color: #f8f8f2;
-} 
-
-#entry.activatable #text {
-color: #282a36;
+  margin: 0;
+  border: none;
+  color: #E8E8E3;
 }
 
-#entry > * {
-color: #f8f8f2;
-}
+#entry:selected { background-color: #FFD400; outline: none; }
+#entry:selected #text { color: #000000; font-weight: normal; }
 
-#entry:selected {
-background-color: #44475a;
-}
-
-#entry:selected #text {
-font-weight: bold;
-}
+/* sub-actions (the ▸ expanders) */
+#expander-box { margin-left: 18px; }
+#entry arrow  { color: #8C8C84; }
+#entry:selected arrow { color: #000000; }

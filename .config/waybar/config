@@ -126,7 +126,7 @@
 
     "disk": {
         "interval": 30,
-        "format": "  {percentage_used}%", // Icon: hdd
+        "format": "  {percentage_used}%", // Icon: hdd
         "path": "/",
         "tooltip-format": "Used: {used} / {total}\nFree: {free} ({percentage_free}%)"
     },
@@ -135,7 +135,7 @@
         "interval": 10,
         "hwmon-path": "/sys/class/hwmon/hwmon2/temp1_input",
         "critical-threshold": 80,
-        "format": "  {temperatureC}°C", // Icon: thermometer-half
+        "format": "  {temperatureC}°C", // Icon: thermometer-half
         "tooltip-format": "Temperature: {temperatureC}°C"
     },
 

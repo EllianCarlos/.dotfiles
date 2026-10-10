@@ -33,6 +33,9 @@ in
     # plugins, which the read-only Nix store wouldn't allow.
     "nvim".source = config.lib.file.mkOutOfStoreSymlink ../../../nvim;
     "wofi".source = ../../../wofi;
+    "mako".source = ../../../mako;
+    # Pixel face must never be antialiased (see fontconfig/conf.d/50-silkscreen.conf).
+    "fontconfig/conf.d/50-silkscreen.conf".source = ../../../fontconfig/conf.d/50-silkscreen.conf;
     "neofetch".source = ../../../neofetch;
     "wallpapers".source = ../../../wallpapers;
     "background".source = ../../../background;

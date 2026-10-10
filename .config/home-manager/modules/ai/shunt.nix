@@ -93,6 +93,12 @@ let
     for M in ''${CHAIN[@]}; do
       LAST=$(agy -p "$PROMPT" --model "$M" "$@" 2>&1)
       RC=$?
+      # Some models (e.g. gemini-3.6-flash) are rejected without --effort;
+      # extraction is cheap, so retry once at the lowest level.
+      if [ "$RC" -ne 0 ] && printf '%s' "$LAST" | $GREP -q 'requires --effort'; then
+        LAST=$(agy -p "$PROMPT" --model "$M" --effort low "$@" 2>&1)
+        RC=$?
+      fi
       if [ "$RC" -eq 0 ] && ! printf '%s' "$LAST" | $GREP -qiE 'RESOURCE_EXHAUSTED|rate[ _-]?limit|quota|429|overloaded|unavailable'; then
         printf '%s\n' "$LAST"
         exit 0

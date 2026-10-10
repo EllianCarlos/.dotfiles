@@ -1,289 +1,126 @@
-/* =============================================================================
- *
- * Waybar configuration
- *
- * Configuration reference: https://github.com/Alexays/Waybar/wiki/Configuration
- *
- * =========================================================================== */
+/* TTY design system — waybar
+ * Flat black bar, 1px rules between modules, no pills.
+ * Yellow marks focus only (active workspace, submap mode).
+ * Accents are semantic: red = critical, yellow = warning, green = charging/ok.
+ * Nerd Font icons are kept; see formats.jsonc to mute them via pango markup.
+ */
 
-/* -----------------------------------------------------------------------------
- * Keyframes
- * -------------------------------------------------------------------------- */
+@define-color root      #0A0A09;
+@define-color panel     #121211;
+@define-color raised    #1A1A18;
+@define-color hover     #242422;
+@define-color border    #33332F;
+@define-color faint     #5E5E58;
+@define-color muted     #8C8C84;
+@define-color secondary #B4B4AC;
+@define-color text      #E8E8E3;
+@define-color void      #000000;
+@define-color yellow    #FFD400;
+@define-color green     #5AF78E;
+@define-color cyan      #5EDFFF;
+@define-color red       #FF5C57;
 
-/*
-Catppuccin Mocha Color Scheme
-*/
-@keyframes blink-warning {
-  70% {
-    color: #cdd6f4; /* Mocha Text */
-  }
-
-  to {
-    color: #1e1e2e; /* Mocha Base */
-    background-color: #f9e2af; /* Mocha Yellow */
-  }
-}
-
+/* stepped blink — 2 steps, no easing */
 @keyframes blink-critical {
-  70% {
-    color: #cdd6f4; /* Mocha Text */
-  }
-
-  to {
-    color: #1e1e2e; /* Mocha Base */
-    background-color: #f38ba8; /* Mocha Red */
-  }
+  to { color: @void; background-color: @red; }
 }
 
-/* -----------------------------------------------------------------------------
- * Base styles
- * -------------------------------------------------------------------------- */
-
-/* Reset all styles */
 * {
   border: none;
   border-radius: 0;
   min-height: 0;
-  margin: 1px;
+  margin: 0;
   padding: 0;
-  color: #cdd6f4; /* Mocha Text */
+  box-shadow: none;
+  text-shadow: none;
 }
 
-/* The whole bar */
 window#waybar {
-  background-color: rgba(0, 0, 0, 0); /* Transparent */
-  font-family: "FiraCode Nerd Font";
-  font-size: 15px;
-}
-
-/* Every modules */
-#battery,
-#clock,
-#backlight,
-#cpu,
-#custom-keyboard-layout,
-#disk,
-#memory,
-#mode,
-#custom-weather,
-#network,
-#pulseaudio,
-#temperature,
-#tray,
-#idle_inhibitor,
-#window,
-#custom-power,
-#workspaces,
-#custom-media,
-#custom-language,
-#custom-PBPbattery,
-#custom-headsetcontrol {
-  padding: 0.15rem 0.5rem;
-  margin: 1px 3px;
-  background-color: rgba(
-    49,
-    50,
-    68,
-    0.8
-  ); /* Mocha Surface 0 with transparency */
-  border-radius: 20px;
-}
-
-/* -----------------------------------------------------------------------------
- * Modules styles
- * -------------------------------------------------------------------------- */
-
-#clock {
-  color: #94e2d5; /* Mocha Teal */
-}
-
-#custom-weather {
-  color: #f5c2e7; /* Mocha Pink */
-}
-
-#custom-language {
-  color: #a6e3a1; /* Mocha Green */
-}
-
-#battery {
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
-}
-
-#battery.warning {
-  color: #f9e2af; /* Mocha Yellow */
-}
-
-#battery.critical {
-  color: #f38ba8; /* Mocha Red */
-}
-
-#battery.warning.discharging {
-  animation-name: blink-warning;
-  animation-duration: 3s;
-}
-
-#battery.critical.discharging {
-  animation-name: blink-critical;
-  animation-duration: 2s;
-}
-
-#cpu {
-  color: #f38ba8; /* Mocha Red */
-}
-
-#cpu.warning {
-  color: #f9e2af; /* Mocha Yellow */
-}
-
-#cpu.critical {
-  color: #f38ba8; /* Mocha Red */
-}
-
-#memory {
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
-  color: #f38ba8; /* Mocha Red */
-}
-
-#memory.warning {
-  color: #f9e2af; /* Mocha Yellow */
-}
-
-#memory.critical {
-  color: #f38ba8; /* Mocha Red */
-  animation-name: blink-critical;
-  animation-duration: 2s;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#mode {
-  border-bottom: 3px transparent;
-  color: #f5c2e7; /* Mocha Pink */
-  margin-left: 5px;
-  padding: 7px;
-}
-
-#network.disconnected {
-  color: #f9e2af; /* Mocha Yellow */
-}
-
-#pulseaudio {
-  color: #cba6f7; /* Mocha Mauve */
-  border-left: 0px;
-  border-right: 0px;
-  margin-right: 0;
-  border-radius: 20px 0 0 20px;
-}
-
-/* #pulseaudio.muted { */
-/*     color: #f5c2e7; */ /* Mocha Pink */
-/* } */
-
-#pulseaudio.microphone {
-  border-left: 0px;
-  border-right: 0px;
-  margin-left: 0;
-  padding-left: 0;
-  border-radius: 0 20px 20px 0;
-}
-
-/* #pulseaudio.microphone.muted { */
-/*     color: #f5c2e7; */ /* Mocha Pink */
-/* } */
-
-#temperature.critical {
-  color: #f38ba8; /* Mocha Red */
-}
-
-#window {
-  font-weight: normal; /* Changed from bold */
-  font-size: 13px; /* New */
-  color: #f38ba8; /* Mocha Red */
-}
-
-#custom-media {
-  font-size: 13px; /* New */
-  color: #cba6f7; /* Mocha Mauve */
-}
-
-#workspaces {
-  font-size: 13px; /* Reduced from 16px */
-  background-color: rgba(
-    49,
-    50,
-    68,
-    0.8
-  ); /* Mocha Surface 0 with transparency */
-  border-radius: 20px;
-}
-
-#workspaces button {
-  border-bottom: 3px solid transparent;
-  margin-bottom: 0px;
-  color: #a6adc8; /* Mocha Subtext 0 */
-}
-
-#workspaces button.active {
-  border-bottom: 1px solid #f5c2e7; /* Mocha Pink */
-  margin-bottom: 1px;
-  padding-left: 0;
-}
-
-#workspaces button.urgent {
-  border-color: #eba0ac; /* Mocha Maroon */
-  color: #eba0ac; /* Mocha Maroon */
-}
-
-#custom-power {
-  font-size: 18px;
-  padding-right: 1rem;
-}
-
-#custom-launcher {
-  font-size: 15px;
-  margin-left: 15px;
-  margin-right: 10px;
-}
-
-#backlight.icon {
-  padding-right: 1px;
+  background-color: @root;
+  border-bottom: 1px solid @border;
+  color: @text;
+  /* Nerd Font build of JetBrains Mono: same metrics, keeps your icons */
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono";
   font-size: 13px;
 }
 
-#disk {
-  color: #89b4fa; /* Mocha Blue */
+tooltip {
+  background-color: @panel;
+  border: 1px solid @border;
+}
+tooltip label { color: @text; padding: 4px 8px; }
+
+/* every module: a cell separated by a 1px rule */
+#battery, #clock, #backlight, #cpu, #custom-keyboard-layout, #disk, #memory,
+#custom-weather, #network, #pulseaudio, #temperature, #tray, #idle_inhibitor,
+#window, #custom-power, #custom-media, #custom-language, #custom-PBPbattery,
+#custom-headsetcontrol, #custom-fcitx5 {
+  padding: 0 10px;
+  color: @secondary;
+  background-color: transparent;
+  border-left: 1px solid @border;
 }
 
-#disk.warning {
-  color: #f9e2af; /* Mocha Yellow */
+.modules-left > widget:first-child > *,
+#window { border-left: none; }
+.modules-right > widget:last-child > * { padding-right: 12px; }
+
+#battery:hover, #cpu:hover, #memory:hover, #network:hover, #pulseaudio:hover,
+#custom-power:hover, #idle_inhibitor:hover {
+  background-color: @hover;
 }
 
-#disk.critical {
-  color: #f38ba8; /* Mocha Red */
+/* ── workspaces: TUI selection idiom ─────────────────────────────── */
+#workspaces { padding: 0; }
+#workspaces button {
+  padding: 0 9px;            /* one 9px cell either side */
+  color: @muted;
+  background: transparent;
+  border-bottom: none;
+}
+#workspaces button:hover { background: @hover; color: @text; }
+#workspaces button.active,
+#workspaces button.focused {
+  background: @yellow;
+  color: @void;
+}
+#workspaces button.urgent { color: @red; }
+#workspaces button.empty  { color: @faint; }
+
+/* submap (resize) — display face, uppercase, yellow block */
+#submap, #mode {
+  font-family: "Silkscreen";
+  font-size: 16px;           /* keep at 8px multiples */
+  letter-spacing: 1px;
+  padding: 0 10px;
+  color: @void;
+  background: @yellow;
 }
 
-#temperature {
-  color: #89dceb; /* Mocha Sky */
+#window { color: @text; padding-left: 12px; }
+#clock  { color: @text; }
+#custom-media { color: @secondary; }
+
+/* ── semantic states only ────────────────────────────────────────── */
+#cpu.warning, #memory.warning, #disk.warning,
+#battery.warning, #network.disconnected,
+#idle_inhibitor.activated,
+#pulseaudio.muted, #pulseaudio.source-muted { color: @yellow; }
+
+#cpu.critical, #memory.critical, #disk.critical,
+#temperature.critical, #battery.critical { color: @red; }
+
+#battery.charging, #battery.plugged { color: @green; }
+
+#battery.critical.discharging, #memory.critical {
+  animation-name: blink-critical;
+  animation-duration: 1060ms;
+  animation-timing-function: steps(2);
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
 }
 
-#temperature.critical {
-  color: #f38ba8; /* Mocha Red */
-}
+#custom-power { color: @muted; }
+#custom-power:hover { color: @red; }
 
-#idle_inhibitor {
-  font-size: 18px;
-  min-width: 20px;
-  margin-left: 0;
-}
-
-#idle_inhibitor.activated {
-  color: #f9e2af; /* Mocha Yellow */
-}
-
-#idle_inhibitor.deactivated {
-  color: #a6adc8; /* Mocha Subtext 0 */
-}
+#tray > .needs-attention { background-color: @red; }
