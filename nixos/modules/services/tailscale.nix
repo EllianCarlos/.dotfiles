@@ -14,6 +14,6 @@
     "TS_DEBUG_FIREWALL_MODE=nftables" 
   ];
   
-  systemd.network.wait-online.enable = false; 
+  systemd.network.wait-online.enable = false;
   boot.initrd.systemd.network.wait-online.enable = false;
 }

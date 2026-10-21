@@ -28,6 +28,7 @@ in
     ../../modules/hardware/printer.nix
     ../../modules/hardware/extprojects.nix
     ../../modules/services/tailscale.nix
+    ../../modules/services/cloudflared.nix
     ../../modules/services/virtualisation.nix
     ../../modules/services/ollama.nix
     ../../modules/services/laya.nix
@@ -113,11 +114,10 @@ in
   # Desktop extra packages
   environment.systemPackages = with pkgs; [
     sbctl
-    (import <nixos-stable> {
-      inherit system;
-      config.allowUnfree = true;
-    }).qemu_full
   ];
+
+  # Flip to false once VM tooling lives in per-project flakes.
+  custom.vms.enable = true;
 
   # System Upgrade
   system.autoUpgrade.enable = true;
