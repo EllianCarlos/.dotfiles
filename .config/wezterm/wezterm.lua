@@ -26,7 +26,7 @@ config.font_rules = {
 config.color_schemes = { TTY = require("tty-colors") }
 config.color_scheme = "TTY"
 
-config.window_background_opacity = 1.0
+config.window_background_opacity = 0.8
 config.default_cursor_style = "BlinkingBlock"
 config.cursor_blink_rate = 530
 config.cursor_blink_ease_in = "Constant"
@@ -108,6 +108,9 @@ wezterm.on("gui-startup", function(cmd)
 end)
 
 -- --- Keybindings -------------------------------------------------------------
+
+config.send_composed_key_when_left_alt_is_pressed = false
+config.send_composed_key_when_right_alt_is_pressed = false
 
 config.leader = { key = "a", mods = "CTRL", timeout_milliseconds = 1000 }
 
