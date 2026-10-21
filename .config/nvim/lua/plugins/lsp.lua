@@ -11,7 +11,7 @@ return {
       "lua_ls",
       "nil_ls",
       "pyright",
-      "rust_analyzer",
+      -- rust_analyzer is managed by rustaceanvim (lang.rust extra)
       "kotlin_language_server",
       "nim_langserver",
       "julials",

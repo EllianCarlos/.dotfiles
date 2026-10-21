@@ -69,6 +69,7 @@ local groups = {
   ["@lsp.type.parameter"] = { link = "@variable.parameter" }, ["@lsp.type.property"] = { link = "@property" },
 
   DiagnosticError = { fg = c.red }, DiagnosticWarn = { fg = c.yellow }, DiagnosticInfo = { fg = c.cyan }, DiagnosticHint = { fg = c.muted }, DiagnosticOk = { fg = c.green },
+  DiagnosticUnnecessary = { fg = c.faint }, DiagnosticDeprecated = { fg = c.faint, strikethrough = true },
   DiagnosticVirtualTextError = { fg = c.red, bg = c.rwash }, DiagnosticVirtualTextWarn = { fg = c.yellow, bg = c.ywash },
   DiagnosticVirtualTextInfo = { fg = c.cyan, bg = c.cwash }, DiagnosticVirtualTextHint = { fg = c.muted, bg = c.raised },
   DiagnosticUnderlineError = { sp = c.red, undercurl = true }, DiagnosticUnderlineWarn = { sp = c.yellow, undercurl = true },
