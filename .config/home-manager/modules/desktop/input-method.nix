@@ -5,6 +5,13 @@
 # cleared below so it never grabs a hotkey on its own -- this is what
 # keeps Ctrl+Space free for nvim's completion menu.
 { pkgs, ... }:
+let
+  pins = import ../../pins.nix;
+  mozcPinned =
+    (import (
+      builtins.fetchTarball "https://github.com/${pins.mozc-nixpkgs-pin.owner}/${pins.mozc-nixpkgs-pin.repo}/archive/${pins.mozc-nixpkgs-pin.rev}.tar.gz"
+    ) { inherit (pkgs) system; }).fcitx5-mozc;
+in
 {
   i18n.inputMethod = {
     enable = true;
@@ -15,7 +22,7 @@
       # relying on the GTK_IM_MODULE/QT_IM_MODULE env vars below.
       waylandFrontend = true;
       addons = with pkgs; [
-        fcitx5-mozc
+        mozcPinned
         fcitx5-gtk
       ];
       settings = {

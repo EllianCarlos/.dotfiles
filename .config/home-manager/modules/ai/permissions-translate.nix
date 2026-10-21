@@ -7,7 +7,7 @@
 #   mcp__srv__tool     -> opencode permission["srv_tool"] | agy mcp(srv/tool)
 #   Read/Grep/Glob/... -> the matching opencode permission key (agy has no
 #                         equivalent rule kind, so those are dropped there)
-#   WebFetch(domain:d) -> opencode permission.webfetch URL globs
+#   WebFetch(domain:d) -> dropped (opencode webfetch takes only a plain action)
 # claude.ai connector MCP servers don't exist outside Claude, so they're skipped.
 #
 # opencode evaluates rule maps last-match-wins in config order, and Nix
@@ -78,16 +78,6 @@ let
     lib.optional (lib.any (p: p.tool == "Read") allow) [ "*" "allow" ]
     ++ map (p: [ p.arg "deny" ]) (lib.filter (p: p.tool == "Read" && p.arg != null) deny);
 
-  webfetchPairs = lib.concatMap (
-    p:
-    let
-      d = lib.removePrefix "domain:" p.arg;
-    in
-    lib.optionals (p.tool == "WebFetch" && p.arg != null) [
-      [ "*://${d}/*" "allow" ]
-    ]
-  ) allow;
-
   mcpAllows = lib.unique (
     map (
       p:
@@ -109,8 +99,7 @@ let
     ordered = {
       bash = bashPairs;
     }
-    // lib.optionalAttrs (readPairs != [ ]) { read = readPairs; }
-    // lib.optionalAttrs (webfetchPairs != [ ]) { webfetch = webfetchPairs; };
+    // lib.optionalAttrs (readPairs != [ ]) { read = readPairs; };
     # Keys that take a plain action (opencode MCP tools match by flat name).
     simple = lib.genAttrs (simpleAllows ++ mcpAllows) (_: "allow");
   };

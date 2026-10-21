@@ -24,10 +24,14 @@ let
     , args ? [ ]
     , extraEnv ? [ ]
     , withSecrets ? false
+    , secretKeys ? [ ]
     ,
     }:
     pkgs.writeShellScriptBin name ''
       ${lib.concatStringsSep "\n" extraEnv}
+      ${lib.optionalString (secretKeys != [ ]) ''
+        export $(${lib.getExe' pkgs.coreutils "cat"} ${lib.escapeShellArg secretsEnvFile} | ${lib.getExe pkgs.gnugrep} -E ${lib.escapeShellArg "^(${lib.concatStringsSep "|" secretKeys})="} | ${lib.getExe' pkgs.findutils "xargs"} -d '\n')
+      ''}
       ${lib.optionalString withSecrets ''
         export $(${lib.getExe' pkgs.coreutils "cat"} ${lib.escapeShellArg secretsEnvFile} | ${lib.getExe pkgs.gnugrep} -v '^#' | ${lib.getExe' pkgs.findutils "xargs"} -d '\n')
       ''}
@@ -79,7 +83,7 @@ let
           name = "filesystem-mcp-wrapped";
           extraEnv = [ nodePathEnv ];
           exe = "${pkgs.nodejs}/bin/npx";
-          args = [ "-y" "@modelcontextprotocol/server-filesystem" "/home/elliancarlos/" ];
+          args = [ "-y" "@modelcontextprotocol/server-filesystem" "/home/elliancarlos/Projects" ];
         }}/bin/filesystem-mcp-wrapped";
     };
     "sequential-thinking" = {
@@ -141,9 +145,8 @@ let
           name = "exa-mcp-wrapped";
           extraEnv = [ nodePathEnv ];
           # Needs EXA_API_KEY from dashboard.exa.ai/api-keys in the secrets
-          # file; withSecrets exports the whole file rather than just this
-          # one key, matching the postgres/github servers above.
-          withSecrets = true;
+          # file; only that key is exported, not the whole file.
+          secretKeys = [ "EXA_API_KEY" ];
           exe = "${pkgs.nodejs}/bin/npx";
           args = [ "-y" "exa-mcp-server" ];
         }}/bin/exa-mcp-wrapped";
@@ -169,6 +172,14 @@ let
           exe = "${pkgs.nodejs}/bin/npx";
           args = [ "-y" "@mozilla/firefox-devtools-mcp" "--connect-existing" "--marionette-port" "2828" ];
         }}/bin/firefox-mcp-wrapped";
+    };
+    browser-control = {
+      command =
+        "${mkWrapper {
+          name = "browser-control-mcp-wrapped";
+          withSecrets = true;
+          exe = "${custom.browser-control-mcp}/bin/browser-control-mcp";
+        }}/bin/browser-control-mcp-wrapped";
     };
   };
 

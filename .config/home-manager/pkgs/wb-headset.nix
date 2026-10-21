@@ -7,7 +7,7 @@ let
   pin = (import ../pins.nix).wb-headset;
   src = pkgs.fetchFromGitHub {
     inherit (pin) owner repo rev;
-    hash = "sha256-4Xl/WZM1Mu4AUUQ2L9fHfFmGs7RRq/2HVrsQJp4jNKg=";
+    hash = "sha256-Xx90aAsTn1GuTzqO2qUoy3JMUCWku1rzEHOlgtUFJYM=";
   };
 in
 pkgs.rustPlatform.buildRustPackage {

@@ -51,6 +51,8 @@
 
       rust-analyzer
       rustfmt
+      clippy
+      vscode-extensions.vadimcn.vscode-lldb.adapter
 
       kotlin-language-server
       ktlint

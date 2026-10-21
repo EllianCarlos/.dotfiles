@@ -91,6 +91,7 @@ in
       waybar
       hyprlock
       hyprpaper
+      hyprshell
       hypridle
 
       zsh-powerlevel10k
@@ -114,6 +115,13 @@ in
       bun
       herdr
       python3 # only needed by herdr
+      (writeShellScriptBin "collie" ''
+        for c in "$HOME"/.config/herdr/plugins/github/herdr.collie-*/bin/collie; do
+          [ -x "$c" ] && latest="$c"
+        done
+        [ -n "$latest" ] || { echo "collie: herdr plugin not installed" >&2; exit 1; }
+        exec "$latest" "$@"
+      '')
 
       cliphist # Clipboard manager
       libnotify # Desktop notifications
@@ -121,9 +129,6 @@ in
 
       xournalpp
 
-      libvirt
-      libguestfs-with-appliance
-      guestfs-tools
       wget
     ]
     ++ [

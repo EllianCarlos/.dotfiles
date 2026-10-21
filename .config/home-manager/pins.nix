@@ -15,24 +15,24 @@
   mcp-servers-nix = {
     owner = "natsukium";
     repo = "mcp-servers-nix";
-    rev = "1e69e55cd3416427f54df7216f771d68162a32cb"; # upstream HEAD -- repo
+    rev = "1cba7df106cb8ddf92f73c09ea725283bd470675"; # upstream HEAD -- repo
     # cuts no tags.
   };
   claude-code-nix = {
     owner = "sadjow";
     repo = "claude-code-nix";
-    rev = "cf32dde7150fc94b01e8325e2a345594625f5084"; # v2.1.296, also upstream HEAD
+    rev = "c932f70402686f018d829534d71f9e8ba7859cfb"; # v2.1.303 -- latest tag (= upstream HEAD)
   };
   agent-skills-nix = {
     owner = "Kyure-A";
     repo = "agent-skills-nix";
-    rev = "dc122af897ab9a685c20ae54c639021619dbbb52"; # upstream HEAD -- repo
+    rev = "2948865044b2af55c8c4e4eb2abda7de79d60f0e"; # upstream HEAD -- repo
     # cuts no tags.
   };
   opencode-nixpkgs-pin = {
     owner = "NixOS";
     repo = "nixpkgs";
-    rev = "1421a6439836357c6dd685a99760c259b9935fdd"; # opencode 1.18.34
+    rev = "0d927ee3b4dfd77e453f28d6289e58d55136975b"; # opencode 1.19.0
   };
   # zotero 10.0.4 (nixpkgs bae6f80, 2026-10-01) fails to build: its omni.ja
   # patch can't find AboutTranslations in ActorManagerParent.sys.mjs. Last
@@ -44,10 +44,20 @@
     rev = "363fdbe57ed052c76e816e6270206b0cb348e53a"; # zotero 10.0.2
     frozen = true;
   };
+  # fcitx5-mozc 2.30.5544.102 on current nixpkgs fails to build: Qt's uic
+  # rejects "::mozc::gui::DictionaryContentTableWidget" in dictionary_tool.ui.
+  # nixpkgs 363fdbe still has a cached, working build. Unfreeze (drop `frozen`
+  # and the mozcPinned override in modules/desktop/input-method.nix) once fixed.
+  mozc-nixpkgs-pin = {
+    owner = "NixOS";
+    repo = "nixpkgs";
+    rev = "363fdbe57ed052c76e816e6270206b0cb348e53a"; # fcitx5-mozc 2.30.5544.102
+    frozen = true;
+  };
   loop-engineering = {
     owner = "cobusgreyling";
     repo = "loop-engineering";
-    rev = "52f9a33890ece03355483c8ec30fae7449cf3c1d"; # upstream HEAD -- this
+    rev = "86ca6e2786cb8dc7478bdbb6fad9963a7d3d4486"; # upstream HEAD -- this
     # repo's tags (loop-worktree-vX, readiness-core-vX, vX) are per-subtool,
     # not one release line for the whole repo, so there's no single "latest
     # tag" to prefer over HEAD here; see project-pin-bump-prefer-tagged-release.
@@ -60,7 +70,7 @@
   mattpocock-skills = {
     owner = "mattpocock";
     repo = "skills";
-    rev = "24fe0ef7737efae15c87225755e9f6f5965e4888"; # v1.3.1, also upstream HEAD
+    rev = "24fe0ef7737efae15c87225755e9f6f5965e4888"; # v1.3.1 -- latest tag; upstream HEAD is past it
   };
   mattpocock-skills-personal = {
     owner = "mattpocock";
@@ -76,7 +86,7 @@
   wb-headset = {
     owner = "Henriklmao";
     repo = "waybar-headsetcontrol";
-    rev = "e50011df0e2c553898ae5fe55f16b602391143d6"; # upstream HEAD, not the
+    rev = "4a92e6fc420af8603796c08d7369b0226221caa2"; # upstream HEAD, not the
     # v0.1.5 tag (977a1a8) -- still no release cut since; HEAD is where
     # "Add Cargo.lock" (what buildRustPackage's cargoLock.lockFile needs)
     # lives. See project-pin-bump-prefer-tagged-release for why tag is
@@ -93,12 +103,12 @@
   academic-research-skills = {
     owner = "Imbad0202";
     repo = "academic-research-skills";
-    rev = "6ab4b03bf70a118a1b3ee7f3263ed9f19031061b"; # v3.23.0, also upstream HEAD
+    rev = "4c5449017f46eb64d112a301d4817d22c7c9f3d9"; # v3.23.1 -- latest tag; upstream HEAD is past it
   };
   openlogi = {
     owner = "AprilNEA";
     repo = "OpenLogi";
-    rev = "9fcca74ac5bd745c2ced2ffdd813f9b32fb54f82"; # v0.8.13 -- upstream HEAD
+    rev = "c542cd7e7df16d6c992d4ccc6ed3e65e5c4f222f"; # v0.8.14 -- latest tag; upstream HEAD
     # (a006f5d6 as of 2026-10-10) is further
     # commits past this tag with no new release cut yet; see
     # project-pin-bump-prefer-tagged-release.
@@ -106,7 +116,7 @@
   zen-browser = {
     owner = "0xc000022070";
     repo = "zen-browser-flake";
-    rev = "1fd1ee43a0fd0bff17a8ba07e2a281406a92991f"; # HEAD -- upstream's
+    rev = "e1b9b3578ebb388b56012cd9ddd80e19681d2d39"; # HEAD -- upstream's
     # tags are named "twilight-<hash>" per Zen Browser build, not per
     # flake release, so they track a different thing than this pin does.
     # HEAD is the flake's own moving pin to the latest Zen build.

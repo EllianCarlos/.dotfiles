@@ -17,7 +17,11 @@ Follow every step. Do not skip to "done" without the command output proving it.
 2. Validate every changed `.nix` file with `nix-instantiate --parse <file>`
    and every changed `.json`/`.jsonc` file with `jq . <file>`. Fix any
    failure before continuing.
-3. Rebuild: `sudo cp -r ~/Projects/.dotfiles/nixos/* /etc/nixos/ && sudo nixos-rebuild switch`.
+3. Rebuild: run the `update` shell function (defined in
+   `.config/home-manager/modules/shell/zsh.nix`). It rsyncs `nixos/` into
+   `/etc/nixos/` and calls `nixos-rebuild switch -I nixos-config=...` for the
+   current host. A bare `nixos-rebuild switch` fails because `nixos/` has no
+   top-level `configuration.nix`.
    This needs sudo. Do not run it and do not probe for passwordless sudo.
    Print the exact command for the user to run themselves, then wait for
    them to confirm it succeeded (and paste the output if it failed).

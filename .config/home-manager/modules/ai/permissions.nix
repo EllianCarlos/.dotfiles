@@ -344,6 +344,22 @@
     "Bash(*.env)"
     "Bash(*.env *)"
     "Bash(pass *)"
+    "Bash(gpg *)"
+
+    "Read(/home/*/.secrets/**)"
+    "Read(/home/*/.ssh/**)"
+    "Read(/home/*/.aws/**)"
+    "Read(/home/*/.gnupg/**)"
+    "Grep(/home/*/.secrets/**)"
+    "Grep(/home/*/.ssh/**)"
+    "Grep(/home/*/.aws/**)"
+    "Grep(/home/*/.gnupg/**)"
+    "Bash(*/.secrets*)"
+    "Bash(*/.ssh/*)"
+    "Bash(*/.aws/*)"
+    "Bash(*/.gnupg*)"
+    "Bash(*$HOME*secrets*)"
+    "Bash(*cloudflared/*token*)"
   ];
 
   defaultMode = "auto";
