@@ -13,6 +13,10 @@
   engram = pkgs.callPackage ./engram.nix { };
   rag-mcp = pkgs.callPackage ./rag-mcp.nix { };
   browser-control-mcp = pkgs.callPackage ./browser-control-mcp.nix { };
+  fetchkit = pkgs.callPackage ./fetchkit.nix { };
+  nix-mcp = pkgs.callPackage ./nix-mcp.nix { };
+  mcp-git = pkgs.callPackage ./mcp-git { };
+  mcp-time = pkgs.callPackage ./mcp-time { };
   dsh = pkgs.callPackage ./dsh.nix { };
   omniroute = pkgs.callPackage ./omniroute.nix { };
   pi-extensions = pkgs.callPackage ./pi-extensions.nix { };

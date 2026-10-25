@@ -56,14 +56,26 @@ let
       # This file is read live off disk at launch, never copied into the store.
       envFile = /home/elliancarlos/.secrets/.env;
     };
-    nixos.enable = true;
-    git.enable = true;
-    time.enable = true;
-    fetch.enable = true;
   };
 
   # Hand-defined stdio servers -- also identical shape across clients.
   stdioServers = {
+    # Native (Go/Rust) replacements for the Python reference servers, which
+    # break on nixpkgs python mcp 2.x. Server names are kept so client
+    # configs and permissions (mcp__git__*, ...) still match.
+    nixos = {
+      command = "${custom.nix-mcp}/bin/nix-mcp";
+    };
+    fetch = {
+      command = "${custom.fetchkit}/bin/fetchkit";
+      args = [ "mcp" ];
+    };
+    git = {
+      command = "${custom.mcp-git}/bin/mcp-git";
+    };
+    time = {
+      command = "${custom.mcp-time}/bin/mcp-time";
+    };
     # filesystem/sequential-thinking -- run via npx against the published,
     # pre-built npm packages instead of `programs.filesystem` /
     # `programs.sequential-thinking` (mcp-servers-nix's own nix-built

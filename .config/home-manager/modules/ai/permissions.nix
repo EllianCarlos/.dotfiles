@@ -286,7 +286,7 @@
     "mcp__playwright__browser_find"
     "mcp__playwright__browser_wait_for"
 
-    "mcp__fetch__fetch"
+    "mcp__fetch__web_fetch"
 
     # --- MCP: claude.ai connectors ---
     "mcp__claude_ai_Anthropic_Economic_Index__*"
