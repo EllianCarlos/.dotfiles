@@ -28,6 +28,7 @@ in
 
     ./modules/hardware/g535-audio.nix
     ./modules/dev/pin-check.nix
+    ./modules/dev/pc-price-check.nix
 
     ./modules/ai/claude-code.nix
     ./modules/ai/antigravity.nix
