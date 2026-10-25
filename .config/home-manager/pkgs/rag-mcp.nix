@@ -1,7 +1,7 @@
 # rag-mcp -- launcher for agent-rag-mcp (local hybrid-RAG MCP server).
 #
 # Single source of truth for how the RAG server is started, referenced by all
-# three agent MCP configs (Claude via mcp.nix, Pi, OpenCode) so they share one
+# three agent MCP configs (Claude via mcp.nix, Hermes, OpenCode) so they share one
 # command and one on-disk index.
 #
 # - `RAG_CONFIG` is REQUIRED. agent-rag-mcp resolves its config in this order

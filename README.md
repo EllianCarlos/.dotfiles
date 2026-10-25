@@ -15,7 +15,7 @@ This repository manages my system configurations, bridging system-level configur
             `shell/`, `editor/`, `desktop/`, `mail/`, `hardware/`, `dev/`, `ai/`.
         *   `pkgs/` — derivations for software not in nixpkgs
             (mnemon, engram, dsh, wb-headset, omniroute, rag-mcp,
-            opencode-claude, opencode-extensions, pi-extensions, loop-tools).
+            opencode-claude, opencode-extensions, loop-tools).
         *   `checks/` — build-time verifiers that fail the build rather than
             warn at run time, plus `eval-check.nix`, the harness for
             checking a change without a rebuild.

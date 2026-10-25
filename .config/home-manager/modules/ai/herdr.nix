@@ -13,10 +13,12 @@
 # `herdr integration install claude` is safe to re-run: it writes the same
 # hook file and settings entry every time and exits 0.
 #
-# Antigravity CLI and pi get the same treatment. Both drop a standalone hook
-# file (~/.gemini/config/hooks/, ~/.pi/agent/extensions/) instead of writing
-# into a settings.json this repo also manages, so neither needs an
-# entryAfter guard against antigravitySettings -- there is nothing to wipe.
+# Antigravity CLI gets the same treatment. It drops a standalone hook file
+# (~/.gemini/config/hooks/) instead of writing into a settings.json this repo
+# also manages, so it needs no entryAfter guard against antigravitySettings.
+#
+# Hermes runs after hermesAgentSetup, the Hermes module's own config.yaml
+# merge, so that merge never rewrites what herdr installs.
 #
 # opencode is left out. Its installer refuses to run until
 # ~/.config/opencode already exists (opencode itself creates that on first
@@ -32,8 +34,8 @@
     ${pkgs.herdr}/bin/herdr integration install antigravity-cli
   '';
 
-  home.activation.herdrPiIntegration = config.lib.dag.entryAfter [ "writeBoundary" ] ''
-    ${pkgs.herdr}/bin/herdr integration install pi
+  home.activation.herdrHermesIntegration = config.lib.dag.entryAfter [ "hermesAgentSetup" ] ''
+    ${pkgs.herdr}/bin/herdr integration install hermes
   '';
 
   home.activation.herdrOpencodeIntegration = config.lib.dag.entryAfter [ "writeBoundary" ] ''

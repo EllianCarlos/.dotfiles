@@ -52,8 +52,8 @@ The ONLY exceptions -- read the file yourself, in full, otherwise delegate:
 - You are debugging and need to see exact code/output, not a summary.
 - The user explicitly asked you to read/open/show its contents.
 
-This is the same routing model applied across opencode and pi in this
-dotfiles repo (see files/opencode/AGENTS.md, files/pi/AGENTS.md) -- all three
+This is the same routing model applied across opencode and Hermes in this
+dotfiles repo (see files/opencode/AGENTS.md, files/hermes/SOUL.md) -- all three
 harnesses land on google/gemini-3.6-flash as the cheap delegate; Claude Code
 just reaches it via a subprocess (`agy`) instead of native cross-provider
 subagents.

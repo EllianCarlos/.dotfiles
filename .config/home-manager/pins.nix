@@ -29,6 +29,11 @@
     rev = "2948865044b2af55c8c4e4eb2abda7de79d60f0e"; # upstream HEAD -- repo
     # cuts no tags.
   };
+  hermes-agent = {
+    owner = "NousResearch";
+    repo = "hermes-agent";
+    rev = "f97608f178d1ffeca59860195ab7da295f7c8e5f"; # v2026.9.24 -- latest tag
+  };
   opencode-nixpkgs-pin = {
     owner = "NixOS";
     repo = "nixpkgs";

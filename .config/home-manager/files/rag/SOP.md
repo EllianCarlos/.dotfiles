@@ -1,6 +1,6 @@
 # Local RAG — SOP
 
-Personal hybrid-RAG over your files, shared by Claude Code, Pi, and OpenCode.
+Personal hybrid-RAG over your files, shared by Claude Code, Hermes, and OpenCode.
 Retrieval is local (agent-rag-mcp = ChromaDB + Ollama embeddings); generation
 is your cloud LLM. All three agents call one MCP server against one DB.
 
@@ -29,7 +29,7 @@ is your cloud LLM. All three agents call one MCP server against one DB.
 
        rag-reindex
 
-4. Restart your agent (Claude/Pi/OpenCode) so it connects to the `rag` MCP
+4. Restart your agent (Claude/Hermes/OpenCode) so it connects to the `rag` MCP
    server, then confirm: in Claude, `/mcp` shows `rag` connected; ask it to
    `rag_search` something you indexed.
 
@@ -70,9 +70,9 @@ Embedding dimension is fixed at index time. To switch models: edit
    maps the corpus path automatically. If `rag-reindex` prints
    "could not map a corpus-path argument", it also prints the real schema —
    set the right key in `files/rag/ingest.py` (`PATH_KEYS`).
-3. **Pi MCP config** — Pi's MCP registration shape is wired best-effort under
-   `mcpServers.rag` in `~/.pi/agent/settings.json`. If Pi does not surface the
-   tools, confirm Pi's expected MCP key (it uses `pi-mcp-adapter`).
+3. **Hermes MCP config** — `rag` is registered under `mcp_servers.rag` in
+   `~/.hermes/config.yaml` by `modules/ai/hermes.nix`. Check it with
+   `hermes mcp list`.
 
 ## Troubleshooting
 

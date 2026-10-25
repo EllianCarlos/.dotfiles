@@ -1,6 +1,6 @@
 # Registers opencode-claude (../../pkgs/opencode-claude.nix) and the rest
-# of ../../pkgs/opencode-extensions.nix with opencode. Unlike pi's npm/
-# directory, ~/.config/opencode/node_modules is shared with opencode's own
+# of ../../pkgs/opencode-extensions.nix with opencode.
+# ~/.config/opencode/node_modules is shared with opencode's own
 # runtime deps, so this does not symlink over it -- instead each built
 # plugin is placed at a stable location outside opencode's own
 # directories, and opencode.jsonc's `plugin` array points at each one's

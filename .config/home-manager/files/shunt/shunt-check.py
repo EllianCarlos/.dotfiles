@@ -1,11 +1,11 @@
-"""shunt gate core, shared by the Claude Code, Kiro CLI, Codex, opencode and pi gates.
+"""shunt gate core, shared by the Claude Code, Kiro CLI, Codex, opencode and Hermes gates.
 
 Reads one PreToolUse payload on stdin, works out how many lines the call would
 put into the agent's context, and blocks it when that exceeds the threshold.
 Each harness has its own block contract, selected with --harness:
-claude and codex print a deny JSON on stdout; kiro, opencode and pi exit 2 with
-the reason on stderr (the opencode and pi JS adapters turn that into a throw or
-a { block, reason } result).
+claude and codex print a deny JSON on stdout; kiro, opencode and hermes exit 2 with
+the reason on stderr (the opencode JS adapter turns that into a throw; Hermes
+reads exit 2 natively).
 Any error fails open: a broken gate must never block every tool call.
 """
 import json
@@ -308,10 +308,10 @@ def analyse(payload, harness):
     if isinstance(tool_input, str):
         tool_input = json.loads(tool_input)
     cwd = payload.get("cwd") or os.getcwd()
-    if tool in ("Read", "read", "fs_read", "view", "mcp__fs__read"):
+    if tool in ("Read", "read", "read_file", "fs_read", "view", "mcp__fs__read"):
         total, files = read_lines(tool_input, cwd)
         return total, [f"{p} ({n} lines)" for p, n in files], "read", [p for p, _ in files]
-    if tool in ("Bash", "bash", "shell", "execute_bash"):
+    if tool in ("Bash", "bash", "terminal", "shell", "execute_bash"):
         cmd = tool_input.get("command", "")
         if isinstance(cmd, list):
             cmd = shlex.join(str(c) for c in cmd)
@@ -385,7 +385,7 @@ def main():
         if before + total <= threshold:
             return 0
     msg = reason(before + total, threshold, what, kind, before, small)
-    if harness in ("kiro", "opencode", "pi"):
+    if harness in ("kiro", "opencode", "hermes"):
         print(msg, file=sys.stderr)
         return 2
     print(

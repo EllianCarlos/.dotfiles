@@ -110,7 +110,7 @@ let
     # agent-rag-mcp -- local hybrid RAG over ~/rag/corpus (ChromaDB + Ollama
     # qwen3-embedding). The rag-mcp launcher (pkgs/rag-mcp.nix) cds into ~/rag
     # so the server finds its config.yaml, then execs `uvx agent-rag-mcp`.
-    # Same launcher is reused for Pi and OpenCode so all three share one index.
+    # Same launcher is reused for Hermes and OpenCode so all three share one index.
     rag = {
       command = "${custom.rag-mcp}/bin/rag-mcp";
     };

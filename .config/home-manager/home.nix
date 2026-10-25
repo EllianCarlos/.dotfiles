@@ -34,7 +34,7 @@ in
     ./modules/ai/antigravity.nix
     ./modules/ai/herdr.nix
     ./modules/ai/shunt.nix
-    ./modules/ai/pi.nix
+    ./modules/ai/hermes.nix
     ./modules/ai/opencode.nix
     ./modules/ai/skills.nix
     ./modules/ai/rag.nix

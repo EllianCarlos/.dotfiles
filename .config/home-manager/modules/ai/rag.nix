@@ -1,11 +1,11 @@
-# Local hybrid-RAG over ~/rag, shared by Claude Code, Pi, and OpenCode.
+# Local hybrid-RAG over ~/rag, shared by Claude Code, Hermes, and OpenCode.
 #
 # agent-rag-mcp (ChromaDB + Ollama qwen3-embedding) does retrieval; the cloud
 # LLM does generation. This module owns everything AROUND the server: the
 # config, the sources -> corpus conversion pipeline, the ingest, the manual
 # `rag-reindex` command, and the `rag-watch` auto-reindex service. The server
 # itself is launched by pkgs/rag-mcp.nix and wired into each agent's MCP config
-# in modules/ai/{mcp,pi,opencode}.nix. See files/rag/SOP.md for operation.
+# in modules/ai/{mcp,hermes,opencode}.nix. See files/rag/SOP.md for operation.
 { config, pkgs, ... }:
 let
   custom = import ../../pkgs { inherit pkgs; };
