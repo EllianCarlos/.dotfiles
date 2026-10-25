@@ -1,0 +1,32 @@
+// hyprshell 4.10.8 config (schema: crates/config-lib/src/io/config.rs, config version 4).
+// Deployed read-only from the Nix store by modules/desktop/dotfiles.nix, so
+// `hyprshell config edit` cannot save here -- edit this file and rebuild instead.
+// Omitted fields fall back to upstream defaults (serde(default)). The loader
+// enables RON implicit_some, so Option fields are written without Some(...).
+(
+    version: 4,
+    windows: (
+        scale: 8.5,
+        items_per_row: 5,
+        // super+Tab: recent-window switcher; releasing super closes it and focuses
+        // the selection. Not otherwise bound in hypr/hyprland.conf.
+        switch: (
+            modifier: "super",
+            key: "Tab",
+            // Empty: list windows from every monitor, not just the focused one.
+            filter_by: [],
+            switch_workspaces: false,
+        ),
+        // super+grave: window overview + launcher. Upstream's default trigger is a
+        // bare super tap (key "Super_L"), which would fire around every $mainMod
+        // bind, so it is moved to a free combo instead.
+        overview: (
+            modifier: "super",
+            key: "grave",
+            filter_by: [],
+            launcher: (
+                default_terminal: "wezterm",
+            ),
+        ),
+    ),
+)

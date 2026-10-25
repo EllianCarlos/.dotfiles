@@ -23,6 +23,10 @@ in
     "kitty".source = ../../../kitty;
     "waybar".source = ../../../waybar;
     "bottom".source = ../../../bottom;
+    # Without a config.ron hyprshell disables switch/overview and registers no
+    # binds (super+Tab did nothing). Store copy, so `hyprshell config edit`
+    # can't save -- edit the tracked file and rebuild.
+    "hyprshell/config.ron".source = ../../files/hyprshell/config.ron;
     # Only config.toml is tracked here; herdr writes everything else in this dir
     # itself at runtime (logs, sockets, session.json, plugins/...), and also
     # rewrites config.toml in place during onboarding -- so it needs an
