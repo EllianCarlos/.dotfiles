@@ -8,6 +8,13 @@
 let
   lanzaboote = builtins.getFlake "github:nix-community/lanzaboote/v1.1.0";
   system = "x86_64-linux";
+
+  clearSavedBootEntry = pkgs.writeShellScript "clear-saved-boot-entry" ''
+    var=/sys/firmware/efi/efivars/LoaderEntryLastBooted-4a67b082-0a4c-41cf-b6c7-440b29bb8c4f
+    [ -e "$var" ] || exit 0
+    ${pkgs.e2fsprogs}/bin/chattr -i "$var"
+    rm -f "$var"
+  '';
 in
 {
   imports = [
@@ -43,6 +50,17 @@ in
     pkiBundle = "/var/lib/sbctl";
     settings = {
       default = "@saved";
+    };
+  };
+
+  system.activationScripts.clearSavedBootEntry.text = "${clearSavedBootEntry}";
+  systemd.services.clear-saved-boot-entry = {
+    description = "Forget systemd-boot's last-booted NixOS entry";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "sys-firmware-efi-efivars.mount" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = clearSavedBootEntry;
     };
   };
 
