@@ -17,6 +17,7 @@ in
     ./modules/packages.nix
 
     ./modules/shell/zsh.nix
+    ./modules/shell/ai-commit.nix
     ./modules/editor/neovim.nix
     ./modules/mail
 
