@@ -15,18 +15,18 @@
   mcp-servers-nix = {
     owner = "natsukium";
     repo = "mcp-servers-nix";
-    rev = "1cba7df106cb8ddf92f73c09ea725283bd470675"; # upstream HEAD -- repo
+    rev = "deffe043ca9d2b344875802f0dcff6abc07d3dc9"; # upstream HEAD -- repo
     # cuts no tags.
   };
   claude-code-nix = {
     owner = "sadjow";
     repo = "claude-code-nix";
-    rev = "c932f70402686f018d829534d71f9e8ba7859cfb"; # v2.1.303 -- latest tag (= upstream HEAD)
+    rev = "b89e273e45ef0ea122e3410f55dd7a102e71f453"; # v2.1.316 -- latest tag (= upstream HEAD)
   };
   agent-skills-nix = {
     owner = "Kyure-A";
     repo = "agent-skills-nix";
-    rev = "2948865044b2af55c8c4e4eb2abda7de79d60f0e"; # upstream HEAD -- repo
+    rev = "f48aa227f3d157ae3abda12cd9c4ab867f400419"; # upstream HEAD -- repo
     # cuts no tags.
   };
   hermes-agent = {
@@ -37,7 +37,7 @@
   opencode-nixpkgs-pin = {
     owner = "NixOS";
     repo = "nixpkgs";
-    rev = "0d927ee3b4dfd77e453f28d6289e58d55136975b"; # opencode 1.19.0
+    rev = "6f0277a4d511a434576503077c6846e76389cda1"; # opencode (nixpkgs HEAD as of 2026-11-02)
   };
   # zotero 10.0.4 (nixpkgs bae6f80, 2026-10-01) fails to build: its omni.ja
   # patch can't find AboutTranslations in ActorManagerParent.sys.mjs. Last
@@ -62,7 +62,7 @@
   loop-engineering = {
     owner = "cobusgreyling";
     repo = "loop-engineering";
-    rev = "86ca6e2786cb8dc7478bdbb6fad9963a7d3d4486"; # upstream HEAD -- this
+    rev = "b2540bdd4ef3a8df67b44c4f3ad7d363ac30d1ff"; # upstream HEAD -- this
     # repo's tags (loop-worktree-vX, readiness-core-vX, vX) are per-subtool,
     # not one release line for the whole repo, so there's no single "latest
     # tag" to prefer over HEAD here; see project-pin-bump-prefer-tagged-release.
@@ -70,12 +70,12 @@
   superpowers = {
     owner = "obra";
     repo = "superpowers";
-    rev = "bb92a77741419a4ab5f06e711a283343f1ada0c3"; # v7.0.0
+    rev = "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b"; # v7.0.1
   };
   mattpocock-skills = {
     owner = "mattpocock";
     repo = "skills";
-    rev = "24fe0ef7737efae15c87225755e9f6f5965e4888"; # v1.3.1 -- latest tag; upstream HEAD is past it
+    rev = "d1478fcb140db0b93c0c8df17bcfd311844749d0"; # v1.3.2 -- latest tag; upstream HEAD is past it
   };
   mattpocock-skills-personal = {
     owner = "mattpocock";
@@ -108,20 +108,21 @@
   academic-research-skills = {
     owner = "Imbad0202";
     repo = "academic-research-skills";
-    rev = "4c5449017f46eb64d112a301d4817d22c7c9f3d9"; # v3.23.1 -- latest tag; upstream HEAD is past it
+    rev = "bcbcac39e874744cda98d6ddaaf765cfd00b0e40"; # v3.24.1 -- latest tag (= upstream HEAD)
   };
   openlogi = {
     owner = "AprilNEA";
     repo = "OpenLogi";
-    rev = "c542cd7e7df16d6c992d4ccc6ed3e65e5c4f222f"; # v0.8.14 -- latest tag; upstream HEAD
-    # (a006f5d6 as of 2026-10-10) is further
-    # commits past this tag with no new release cut yet; see
-    # project-pin-bump-prefer-tagged-release.
+    rev = "c542cd7e7df16d6c992d4ccc6ed3e65e5c4f222f"; # v0.8.14 -- frozen: v0.8.18's flake.nix
+    # calls builtins.warn, which the installed Nix lacks ("attribute 'warn'
+    # missing"). Unfreeze once Nix has builtins.warn. Upstream HEAD
+    # (a1c7241d as of 2026-10-27) is further along.
+    frozen = true;
   };
   zen-browser = {
     owner = "0xc000022070";
     repo = "zen-browser-flake";
-    rev = "e1b9b3578ebb388b56012cd9ddd80e19681d2d39"; # HEAD -- upstream's
+    rev = "536b03dea1ab7460afd44565e81f0a72c371c70f"; # HEAD -- upstream's
     # tags are named "twilight-<hash>" per Zen Browser build, not per
     # flake release, so they track a different thing than this pin does.
     # HEAD is the flake's own moving pin to the latest Zen build.
