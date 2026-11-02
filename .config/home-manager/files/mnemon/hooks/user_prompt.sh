@@ -23,7 +23,7 @@ PROMPT="$(jq -r '.prompt // empty' 2>/dev/null)"
 # bound its length so a huge paste does not become a huge query.
 QUERY="${PROMPT:0:500}"
 
-RESULTS="$(mnemon recall "$QUERY" --limit 5 2>/dev/null)"
+RESULTS="$(timeout 50 mnemon recall "$QUERY" --limit 5 2>/dev/null)"
 
 # Token-cost proxy logging (bytes, ~/4 = rough tokens) -- see `mnemon-metrics`.
 # This is the automatic, per-turn recall injection: it fires whether or not

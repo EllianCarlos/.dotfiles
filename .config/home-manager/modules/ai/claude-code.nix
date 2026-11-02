@@ -53,6 +53,7 @@ let
               {
                 type = "command";
                 command = "${hooksDir}/user_prompt.sh";
+                timeout = 60;
               }
             ];
           }
@@ -114,7 +115,9 @@ let
     }
   );
 
-  claudeMcpFile = (import ./mcp.nix { inherit pkgs; }).claude;
+  mcpConfigs = import ./mcp.nix { inherit pkgs; };
+  claudeMcpFile = mcpConfigs.claude;
+  claudeMcpDisabled = builtins.toJSON mcpConfigs.claudeDisabled;
 in
 {
   home.file = {
@@ -191,7 +194,9 @@ in
 
     # --- .claude.json ---
     if [ -f "$HOME/.claude.json" ]; then
-      ${pkgs.jq}/bin/jq -s '.[0] as $old | .[1] as $new | ($old * $new) | .mcpServers = $new.mcpServers' "$HOME/.claude.json" ${claudeMcpFile} > "$HOME/.claude.json.tmp"
+      ${pkgs.jq}/bin/jq -s '.[0] as $old | .[1] as $new | ($old * $new) | .mcpServers = $new.mcpServers' "$HOME/.claude.json" ${claudeMcpFile} \
+        | ${pkgs.jq}/bin/jq --argjson off '${claudeMcpDisabled}' '.projects |= (. // {} | map_values(.disabledMcpServers //= $off))' \
+        > "$HOME/.claude.json.tmp"
       mv "$HOME/.claude.json.tmp" "$HOME/.claude.json"
     else
       cp ${claudeMcpFile} "$HOME/.claude.json"

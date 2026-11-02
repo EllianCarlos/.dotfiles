@@ -213,6 +213,16 @@ let
         else { type = "http"; inherit url; })
       httpServerUrls;
 
+  # Claude Code servers enabled out of the box. Every other server stays
+  # defined but is listed in claudeDisabled, which claude-code.nix seeds into
+  # each project's disabledMcpServers so it is toggled on via /mcp.
+  claudeDefaultOn = [ "engram" "context7" "nixos" ];
+  claudeDisabled = lib.subtractLists claudeDefaultOn (
+    builtins.attrNames sharedPrograms
+    ++ builtins.attrNames stdioServers
+    ++ builtins.attrNames httpServerUrls
+  );
+
   mkClientConfig = flavor: extraSettings:
     mcp-services-nix.lib.mkConfig pkgs {
       # mcp-servers-nix has no "antigravity" flavor, but "claude-code"
@@ -227,4 +237,5 @@ in
 {
   claude = mkClientConfig "claude" { };
   antigravity = mkClientConfig "antigravity" { };
+  inherit claudeDisabled;
 }
