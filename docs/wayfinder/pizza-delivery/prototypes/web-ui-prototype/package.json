@@ -1,0 +1,13 @@
+{
+  "name": "pizza-delivery-web-ui-prototype",
+  "private": true,
+  "scripts": {
+    "prototype": "bun ./index.html"
+  },
+  "dependencies": {
+    "@cloudscape-design/components": "^3.0.1411",
+    "@cloudscape-design/global-styles": "^1.0.72",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}
