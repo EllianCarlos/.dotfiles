@@ -39,7 +39,6 @@ in
     ../../modules/services/virtualisation.nix
     ../../modules/services/ollama.nix
     ../../modules/services/laya.nix
-    ../../modules/services/openlogi.nix
   ];
 
   # Bootloader
