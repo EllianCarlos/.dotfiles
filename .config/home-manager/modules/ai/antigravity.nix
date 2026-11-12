@@ -1,14 +1,20 @@
 # Antigravity CLI (`agy`) configuration.
 #
-# Pins auth to the API key path (GEMINI_API_KEY, exported from `pass` in
-# programs.zsh.initExtra) so `agy` never drops into the interactive
-# browser/keyring login flow. Antigravity CLI splits its config across two
-# files (unlike Claude Code / the old Gemini CLI, which keep mcpServers
-# inside the main settings file):
-#   - ~/.gemini/antigravity-cli/settings.json -- modelProvider, deep-merged
+# Auth: uses the DEFAULT backend -- the user's Google (Antigravity) login,
+# which carries Gemini Pro quota -- by NOT setting modelProvider. Setting
+# modelProvider = "gemini" would force API-key auth and demand GEMINI_API_KEY
+# (free-tier limits) in every environment, including non-interactive shunt
+# workers. GEMINI_API_KEY stays exported in zsh only for opencode's google
+# provider; agy does not read it anymore. Antigravity CLI splits its config
+# across two files (unlike Claude Code / the old Gemini CLI, which keep
+# mcpServers inside the main settings file):
+#   - ~/.gemini/antigravity-cli/settings.json -- permissions, deep-merged
 #     over whatever's on disk so unmanaged state survives. permissions.allow
 #     is the union of hand-added rules and those translated from
-#     permissions.nix; permissions.deny is replaced wholesale.
+#     permissions.nix; permissions.deny is replaced wholesale. modelProvider
+#     is explicitly deleted: the deep merge would otherwise let a stale
+#     "gemini" value linger on disk forever and silently pin agy back to
+#     API-key auth.
 #   - ~/.gemini/config/mcp_config.json -- mcpServers, wholesale-replaced
 #     rather than deep-merged, same reasoning as the .claude.json fix
 #     above: a deep merge would let a server removed from mcp.nix survive
@@ -19,7 +25,6 @@ let
   translated = (import ./permissions-translate.nix { inherit (pkgs) lib; }).agy;
   antigravitySettingsFile = pkgs.writeText "antigravity-cli-settings.json" (
     builtins.toJSON {
-      modelProvider = "gemini";
       permissions = translated;
     }
   );
@@ -32,6 +37,7 @@ in
     [ -f "$HOME/.gemini/antigravity-cli/settings.json" ] || echo '{}' > "$HOME/.gemini/antigravity-cli/settings.json"
 
     ${pkgs.jq}/bin/jq -s '.[0] as $old | .[1] as $new | ($old * $new)
+        | del(.modelProvider)
         | .permissions = {
             allow: ((($old.permissions.allow // []) + $new.permissions.allow) | unique),
             deny: $new.permissions.deny
