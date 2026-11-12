@@ -4,3 +4,11 @@ opencode
 .worktrees/
 .omo/
 .opencode/
+
+# npm install artifacts (vendored opencode packages, throwaway prototypes).
+node_modules/
+
+# The bare `opencode` pattern above also matched the repo-managed files under
+# .config/home-manager/files/opencode/, silently hiding new files there.
+!.config/home-manager/files/opencode/
+!.config/home-manager/files/opencode/**
