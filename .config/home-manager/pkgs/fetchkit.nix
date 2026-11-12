@@ -1,6 +1,6 @@
 # everruns/fetchkit -- web fetching + HTML-to-Markdown; `fetchkit mcp` runs an
 # MCP server over stdio. Replaces the Python mcp-server-fetch.
-{ lib, rustPlatform, fetchFromGitHub, pkg-config, openssl }:
+{ lib, rustPlatform, fetchFromGitHub, pkg-config, openssl, cmake }:
 rustPlatform.buildRustPackage rec {
   pname = "fetchkit";
   version = "0.6.0";
@@ -15,8 +15,9 @@ rustPlatform.buildRustPackage rec {
   cargoHash = "sha256-97h7bMWW3n/w+atjLF6vnxD1XJKhHNTAzj7+ZhikR8o=";
   cargoBuildFlags = [ "--package" "fetchkit-cli" ];
   doCheck = false;
+  preBuild = "unset AWS_LC_SYS_USE_SYSTEM";
 
-  nativeBuildInputs = [ pkg-config ];
+  nativeBuildInputs = [ pkg-config cmake ];
   buildInputs = [ openssl ];
 
   meta = {

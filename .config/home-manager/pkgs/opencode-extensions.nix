@@ -39,7 +39,7 @@ pkgs.buildNpmPackage {
   pname = "opencode-extensions-vendor";
   version = "0";
   src = ./vendor/opencode-extensions;
-  npmDepsHash = "sha256-wkJ74U+55PNy+bfEOyhk1U7a7HITStYUN2c6hgIUmX4=";
+  npmDepsHash = "sha256-5hGz+A4Xx+6vhMDc5EZ47zTcG1JkIWffDutVK/0cMZY=";
   npmFlags = [ "--legacy-peer-deps" ];
   dontNpmBuild = true;
   installPhase = ''

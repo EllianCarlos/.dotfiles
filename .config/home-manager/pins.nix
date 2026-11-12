@@ -15,13 +15,13 @@
   mcp-servers-nix = {
     owner = "natsukium";
     repo = "mcp-servers-nix";
-    rev = "deffe043ca9d2b344875802f0dcff6abc07d3dc9"; # upstream HEAD -- repo
+    rev = "4c8248eccec98c2ebe59765c644359e5f6aeb0ea"; # upstream HEAD -- repo
     # cuts no tags.
   };
   claude-code-nix = {
     owner = "sadjow";
     repo = "claude-code-nix";
-    rev = "b89e273e45ef0ea122e3410f55dd7a102e71f453"; # v2.1.316 -- latest tag (= upstream HEAD)
+    rev = "dcf5354053c67a0c653796cca9af5630e4a54fc4"; # upstream HEAD (= floating "latest"/"v2" tags; past v2.1.319)
   };
   agent-skills-nix = {
     owner = "Kyure-A";
@@ -37,7 +37,7 @@
   opencode-nixpkgs-pin = {
     owner = "NixOS";
     repo = "nixpkgs";
-    rev = "6f0277a4d511a434576503077c6846e76389cda1"; # opencode (nixpkgs HEAD as of 2026-11-02)
+    rev = "abfaba84d0a30eebb02124cf19802409f3442b0c"; # opencode (nixpkgs HEAD as of 2026-11-09)
   };
   # zotero 10.0.4 (nixpkgs bae6f80, 2026-10-01) fails to build: its omni.ja
   # patch can't find AboutTranslations in ActorManagerParent.sys.mjs. Last
@@ -62,7 +62,7 @@
   loop-engineering = {
     owner = "cobusgreyling";
     repo = "loop-engineering";
-    rev = "b2540bdd4ef3a8df67b44c4f3ad7d363ac30d1ff"; # upstream HEAD -- this
+    rev = "166bae33308ef5461f23af435bb3c73ebbb3708d"; # upstream HEAD -- this
     # repo's tags (loop-worktree-vX, readiness-core-vX, vX) are per-subtool,
     # not one release line for the whole repo, so there's no single "latest
     # tag" to prefer over HEAD here; see project-pin-bump-prefer-tagged-release.
@@ -70,7 +70,7 @@
   superpowers = {
     owner = "obra";
     repo = "superpowers";
-    rev = "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b"; # v7.0.1
+    rev = "22f0b463e7a5e579904dd6211a520321035526f7"; # v7.0.2 -- latest tag (= upstream HEAD)
   };
   mattpocock-skills = {
     owner = "mattpocock";
@@ -108,21 +108,13 @@
   academic-research-skills = {
     owner = "Imbad0202";
     repo = "academic-research-skills";
-    rev = "bcbcac39e874744cda98d6ddaaf765cfd00b0e40"; # v3.24.1 -- latest tag (= upstream HEAD)
-  };
-  openlogi = {
-    owner = "AprilNEA";
-    repo = "OpenLogi";
-    rev = "c542cd7e7df16d6c992d4ccc6ed3e65e5c4f222f"; # v0.8.14 -- frozen: v0.8.18's flake.nix
-    # calls builtins.warn, which the installed Nix lacks ("attribute 'warn'
-    # missing"). Unfreeze once Nix has builtins.warn. Upstream HEAD
-    # (a1c7241d as of 2026-10-27) is further along.
-    frozen = true;
+    rev = "fd5ff1b858374219b4d342e38587b66e18f61cbd"; # v3.24.2 -- latest tag; upstream HEAD
+    # (6d938867 as of 2026-11-09) is past it; see project-pin-bump-prefer-tagged-release.
   };
   zen-browser = {
     owner = "0xc000022070";
     repo = "zen-browser-flake";
-    rev = "536b03dea1ab7460afd44565e81f0a72c371c70f"; # HEAD -- upstream's
+    rev = "5f45f55b9f6f2de78504a95b372e13951793be3a"; # HEAD -- upstream's
     # tags are named "twilight-<hash>" per Zen Browser build, not per
     # flake release, so they track a different thing than this pin does.
     # HEAD is the flake's own moving pin to the latest Zen build.

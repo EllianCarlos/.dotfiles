@@ -23,7 +23,8 @@ pkgs.buildNpmPackage {
   pname = "opencode-claude-vendor";
   version = "0.14.0";
   src = ./vendor/opencode-claude;
-  npmDepsHash = "sha256-OXwNpMGZ5J5UTix2SoaqiLaxc88bEiGNu0PQf3DgLDk=";
+  npmDepsHash = "sha256-JCstgQHFxaM9yjAx9YeggqeRgc+M7OfWXWR4P+U6GOk=";
+  npmFlags = [ "--legacy-peer-deps" ];
   dontNpmBuild = true;
   installPhase = ''
     mkdir -p $out
