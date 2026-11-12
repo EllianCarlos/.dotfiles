@@ -10,7 +10,7 @@ let
   mozcPinned =
     (import (
       builtins.fetchTarball "https://github.com/${pins.mozc-nixpkgs-pin.owner}/${pins.mozc-nixpkgs-pin.repo}/archive/${pins.mozc-nixpkgs-pin.rev}.tar.gz"
-    ) { inherit (pkgs) system; }).fcitx5-mozc;
+    ) { system = pkgs.stdenv.hostPlatform.system; }).fcitx5-mozc;
 in
 {
   i18n.inputMethod = {

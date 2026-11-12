@@ -19,17 +19,23 @@ let
   opencodePinned =
     (import (
       builtins.fetchTarball "https://github.com/${pins.opencode-nixpkgs-pin.owner}/${pins.opencode-nixpkgs-pin.repo}/archive/${pins.opencode-nixpkgs-pin.rev}.tar.gz"
-    ) { inherit (pkgs) system; }).opencode;
+    ) { system = pkgs.stdenv.hostPlatform.system; }).opencode;
 
   zoteroPinned =
     (import (
       builtins.fetchTarball "https://github.com/${pins.zotero-nixpkgs-pin.owner}/${pins.zotero-nixpkgs-pin.repo}/archive/${pins.zotero-nixpkgs-pin.rev}.tar.gz"
-    ) { inherit (pkgs) system; }).zotero;
+    ) { system = pkgs.stdenv.hostPlatform.system; }).zotero;
 in
 {
   imports = [ zenBrowserFlake.homeModules.beta ];
 
   nixpkgs.config.allowUnfree = true;
+
+  # nixpkgs marks gtk2 broken (refusing evaluation) ahead of its removal in
+  # 27.05. It's still needed here: the HM input-method module unconditionally
+  # builds a gtk2-immodule.cache with gtk2 in its build inputs. Warn instead
+  # of refusing, but only for this package.
+  nixpkgs.config.problems.handlers."gtk+".broken = "warn";
 
   home.file.".ticker.yaml".source = ../../.ticker.yaml;
 
@@ -65,7 +71,11 @@ in
       firefox
       discord
       spotify
-      mplayer
+      # dvdnav disabled: mplayer pins the ancient libdvdnav_4_2_1, whose
+      # symbols now conflict with ffmpeg 7.1.5's libdvdnav 6.x at link time
+      # (undefined reference to `dvdnav_open2`). Only DVD *menu* navigation
+      # is lost; DVD/stream playback via ffmpeg still works.
+      (mplayer.override { dvdnavSupport = false; })
       sxiv
       tmux
       devenv
@@ -73,8 +83,12 @@ in
       zip
       stress-ng
       jq
-      vicinae
-      tuicr
+      # nixpkgs' cargo-setup-hook forces system oniguruma/libgit2, but
+      # tuicr's derivation doesn't list them. Drop once nixpkgs fixes it.
+      (tuicr.overrideAttrs (old: {
+        nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkg-config ];
+        buildInputs = (old.buildInputs or [ ]) ++ [ oniguruma libgit2 openssl zlib ];
+      }))
       super-productivity
       pass
       google-chrome

@@ -2,6 +2,8 @@
 { pkgs, ... }:
 {
   home.pointerCursor = {
+    # Explicit: enabling via the bare pointerCursor attr is deprecated.
+    enable = true;
     gtk.enable = true;
     # x11.enable = true;
     package = pkgs.bibata-cursors;
