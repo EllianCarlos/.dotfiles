@@ -4,6 +4,9 @@
   # Set your time zone.
   time.timeZone = "America/Sao_Paulo";
 
+  # Cap journal size (was growing to 4G on the small root disk).
+  services.journald.settings.Journal.SystemMaxUse = "500M";
+
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings = {
