@@ -3,9 +3,9 @@
 # ~/.config/opencode/node_modules is shared with opencode's own
 # runtime deps, so this does not symlink over it -- instead each built
 # plugin is placed at a stable location outside opencode's own
-# directories, and opencode.jsonc's `plugin` array points at each one's
-# built entry file directly via a file:// URL (verified working for
-# opencode-claude: this makes claude-code/* show up in `opencode models`).
+# directories, and opencode.jsonc's `plugins` array points at each
+# package root via a file:// URL (V2 loads configured plugin paths as
+# DIRECTORIES and resolves them through the package's `exports` map).
 { config, pkgs, ... }:
 let
   custom = import ../../pkgs { inherit pkgs; };
@@ -17,35 +17,128 @@ let
   claudeLink = "${config.home.homeDirectory}/.local/share/opencode-claude-vendor";
   extLink = "${config.home.homeDirectory}/.local/share/opencode-extensions-vendor";
 
-  # Each entry file below is that package's own `main` (or `exports["."]`)
-  # field, read from the built tree -- see opencode-extensions.nix for
-  # what each package does.
+  # Each entry below is that package's package root (V2 loads configured
+  # plugin paths as DIRECTORIES and resolves them through the package's own
+  # `exports` map) -- see opencode-extensions.nix for what each package does.
+  #
+  # V2 API status (migrated 2026-11-10, load-tested via `opencode run` with
+  # zero "failed to load plugin" entries in the log):
+  #   - @plannotator/opencode, oh-my-opencode 5.x, opencode-websearch 0.7,
+  #     @tarquinen/opencode-dcp 3.2, @openchamber/opencode-claude 1.7
+  #     -> upstream V2 ({ id, setup } default export), loaded directly.
+  #   - @nick-vi/opencode-type-inject 1.6 -> upstream is dual V1/V2, but its
+  #     entry lives at .opencode/plugin/type-inject.ts with no `exports` map,
+  #     so the V2 directory loader can't resolve it: a shim re-exports its
+  #     default from a root index.js (Bun imports the TS transparently).
+  #   - opencode-wakatime 1.4, opencode-notification -> still V1 internally
+  #     (async fn returning a hook map). The shims call the V1 function with
+  #     an adapted ctx and drive its hooks from V2's ctx.event.subscribe(),
+  #     mapping V2 {type, data} events onto the V1 {type, properties} shape.
+  #     Verified loading; the V1 internals (tracker, scheduler) run unchanged.
+  #   - opencode-pty -> NOT ported: V1 `command.execute.before` interception
+  #     has no confirmed V2 equivalent (ctx.command only exposes
+  #     transform/list, no execute hook).
+  #   - opencode-vibeguard -> NOT portable: its redaction hooks
+  #     (experimental.chat.messages.transform, experimental.text.complete)
+  #     were removed in the V2 API.
+  #   - opencode-plugin-inspector -> NOT ported: it mirrors the full V1 hook
+  #     surface to an HTTP UI; V1-only.
+  shim = name: body: pkgs.writeTextFile {
+    name = "opencode-shim-${name}";
+    destination = "/index.js";
+    text = body;
+  };
+  typeInjectShim = shim "type-inject" ''
+    export { default } from "${extLink}/node_modules/@nick-vi/opencode-type-inject/.opencode/plugin/type-inject.ts";
+  '';
+  wakatimeShim = shim "wakatime" ''
+    import v1Plugin from "${extLink}/node_modules/opencode-wakatime/dist/index.js";
+
+    export default {
+      id: "opencode-wakatime",
+      async setup(ctx) {
+        const hooks = await v1Plugin({
+          client: ctx.client ?? {},
+          directory: ctx.directory ?? ctx.location?.directory,
+          project: { worktree: ctx.location?.directory },
+          worktree: ctx.location?.directory,
+        });
+        const controller = new AbortController();
+        (async () => {
+          try {
+            for await (const event of ctx.event.subscribe({ signal: controller.signal })) {
+              const v1 = { event: { type: event.type, properties: event.data ?? {} } };
+              if (hooks.event) await hooks.event(v1);
+              if (hooks["chat.message"] && (event.type === "message.updated" || event.type === "message.part.updated")) {
+                await hooks["chat.message"]();
+              }
+            }
+          } catch {}
+        })();
+        return async () => {
+          controller.abort();
+          await hooks.dispose?.();
+        };
+      },
+    };
+  '';
+  notificationShim = shim "notification" ''
+    import { SimpleNotificationPlugin } from "${extLink}/node_modules/opencode-notification/dist/index.js";
+
+    export default {
+      id: "opencode-notification",
+      async setup(ctx) {
+        const client = {
+          session: { get: (...a) => ctx.session?.get?.(...a) },
+          tui: { showToast: (...a) => (ctx.tui?.showToast ? ctx.tui.showToast(...a) : Promise.resolve()) },
+        };
+        const hooks = await SimpleNotificationPlugin({
+          client,
+          directory: ctx.location?.directory,
+        });
+        const controller = new AbortController();
+        (async () => {
+          try {
+            for await (const event of ctx.event.subscribe({ signal: controller.signal })) {
+              if (hooks.event) await hooks.event({ event: { type: event.type, properties: event.data ?? {} } });
+            }
+          } catch {}
+        })();
+        return async () => {
+          controller.abort();
+          await hooks.destroy?.();
+        };
+      },
+    };
+  '';
   extensionEntries = [
-    "${extLink}/node_modules/oh-my-opencode/dist/index.js"
-    "${extLink}/node_modules/opencode-pty/dist/index.js"
-    "${extLink}/node_modules/opencode-websearch/dist/index.js"
-    "${extLink}/node_modules/opencode-plugin-inspector/dist/main.js"
-    "${extLink}/node_modules/opencode-vibeguard/src/index.js"
-    "${extLink}/node_modules/opencode-wakatime/dist/index.js"
-    "${extLink}/node_modules/opencode-notification/dist/index.js"
-    "${extLink}/node_modules/@plannotator/opencode/dist/index.js"
-    "${extLink}/node_modules/@nick-vi/opencode-type-inject/.opencode/plugin/type-inject.ts"
-    "${extLink}/node_modules/@tarquinen/opencode-dcp/dist/index.js"
+    "${extLink}/node_modules/@plannotator/opencode"
+    "${extLink}/node_modules/oh-my-opencode"
+    "${extLink}/node_modules/opencode-websearch"
+    "${extLink}/node_modules/@tarquinen/opencode-dcp"
+    "${claudeLink}/node_modules/@openchamber/opencode-claude"
+    typeInjectShim
+    wakatimeShim
+    notificationShim
   ];
 
-  pluginUrls = builtins.map (p: "file://${p}") (
-    [ "${claudeLink}/node_modules/@openchamber/opencode-claude/opencode-claude.js" ] ++ extensionEntries
-  ) ++ [ config.ai.shunt.opencodePluginUrl ]
+  pluginUrls = builtins.map (p: "file://${p}") extensionEntries
+  ++ [ config.ai.shunt.opencodePluginUrl ]
   # opencode-goal-plugin manages its own install/cache under
   # ~/.cache/opencode/packages -- OpenCode resolves plain npm specs in
-  # `plugin` itself, unlike the file://-vendored packages above, and an
+  # `plugins` itself, unlike the file://-vendored packages above, and an
   # unpinned entry sticks to whichever version it first resolved forever,
-  # so this must stay version-pinned and bumped by hand.
-  ++ [ "opencode-goal-plugin@0.10.0" ];
+  # so this must stay version-pinned and bumped by hand. 0.11.x carries
+  # the V2 plugin API ({ id, server, setup } default export); 0.10.0 was
+  # V1-only and failed to load in OpenCode 2.
+  ++ [ "opencode-goal-plugin@0.11.4" ];
 in
 {
   home.file.".local/share/opencode-claude-vendor".source = custom.opencode-claude;
   home.file.".local/share/opencode-extensions-vendor".source = custom.opencode-extensions;
+  home.file.".local/share/opencode-shims-vendor/type-inject".source = typeInjectShim;
+  home.file.".local/share/opencode-shims-vendor/wakatime".source = wakatimeShim;
+  home.file.".local/share/opencode-shims-vendor/notification".source = notificationShim;
 
   # Global instructions, including the Read delegation policy that routes to
   # the "reader" agent defined below. Auto-loaded by opencode itself and, per
@@ -53,12 +146,27 @@ in
   # dynamic personas (Sisyphus, Hephaestus, Ultraworker, etc.) too.
   home.file.".config/opencode/AGENTS.md".source = ../../files/opencode/AGENTS.md;
 
+  # Ported Claude Code PostToolUse hooks (format-on-write, validate-config) as
+  # a V2 plugin -- see the file header for what is intentionally not ported.
+  home.file.".config/opencode/plugins/claude-code-hooks.js".source =
+    ../../files/opencode/plugins/claude-code-hooks.js;
+
   # entryAfter writeBoundary: needs the home.file symlinks above in place
   # first for the file:// paths it writes to resolve.
   home.activation.opencodePlugins = config.lib.dag.entryAfter [ "writeBoundary" ] ''
     mkdir -p "$HOME/.config/opencode"
     [ -f "$HOME/.config/opencode/opencode.jsonc" ] \
       || echo '{"$schema": "https://opencode.ai/config.json"}' > "$HOME/.config/opencode/opencode.jsonc"
+
+    # herdr's opencode integration (agent-state reporter for herdr panes):
+    # installed into .config/opencode/plugins/ (V2 plugin discovery dir).
+    # The file is managed by herdr itself -- its installer overwrites it on
+    # every run and its header says not to edit it -- so instead of a
+    # home.file symlink (which would fight herdr's updates) we run herdr's
+    # own idempotent installer at activation. That also keeps the plugin in
+    # sync with whichever herdr version nix installed. It additionally
+    # installs the TUI-side plugin next to it.
+    ${pkgs.herdr}/bin/herdr integration install opencode >/dev/null
 
     # .model picks the default model on launch (google/* auth comes from
     # GOOGLE_GENERATIVE_AI_API_KEY, exported from `pass show gemini` in
@@ -118,8 +226,7 @@ in
       --argjson plugins ${pkgs.lib.escapeShellArg (builtins.toJSON pluginUrls)} \
       --arg ragCmd ${pkgs.lib.escapeShellArg "${custom.rag-mcp}/bin/rag-mcp"} \
       --argjson engramCmd ${pkgs.lib.escapeShellArg (builtins.toJSON [ "${custom.engram}/bin/engram" "mcp" "--tools=agent" ])} \
-      --argjson permOrdered ${pkgs.lib.escapeShellArg (builtins.toJSON translated.ordered)} \
-      --argjson permSimple ${pkgs.lib.escapeShellArg (builtins.toJSON translated.simple)} \
+      --argjson permRules ${pkgs.lib.escapeShellArg (builtins.toJSON translated.rules)} \
       --argjson goalCommand ${pkgs.lib.escapeShellArg (
         builtins.toJSON {
           goal = {
@@ -129,7 +236,8 @@ in
           };
         }
       )} \
-      '.plugin = ((.plugin // []) + $plugins | unique)
+      '.plugins = ((.plugins // []) + $plugins | unique)
+       | del(.plugin)
        | .command = ((.command // {}) * $goalCommand)
        | .provider = ((.provider // {}) * {
            "claude-code": { "name": "Claude Code" },
@@ -247,12 +355,12 @@ in
            "engram": { "type": "local", "command": $engramCmd, "enabled": true }
          })
         # Mirrors permissions.nix (see permissions-translate.nix). Replaced
-        # wholesale so a rule dropped upstream does not linger here; `ordered`
-        # pairs are folded with from_entries to keep last-match-wins order.
-        | .permission = (
-            ($permOrdered | with_entries(.value |= (map({key: .[0], value: .[1]}) | from_entries)))
-            + $permSimple
-          )
+        # wholesale so a rule dropped upstream does not linger here. V2
+        # bypass-by-default: one blanket allow rule, then the deny rules
+        # from permissions.nix (last match wins, so denies hold and
+        # secrets/.env/pass/gpg stay protected while nothing else prompts).
+        | .permissions = $permRules
+        | del(.permission)
         | .model = (.model // "google/gemini-3.6-flash")
         # small_model (titles, background summarization): tiny/frequent calls
         # that never need flash-latest peak TPM -- pin the lowest-TPM

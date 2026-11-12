@@ -39,8 +39,13 @@ you need with a bounded read of at most 80 lines.
 Fallback order (TPM-aware): reader is pinned to google/gemini-3.6-flash.
 If its task calls fail on quota/TPM errors, retry the delegation via
 `local-qwen` (ollama, local, no TPM ceiling) -- that is the terminal
-fallback of the chain. `small_model` (titles/background work) is separately
-pinned to the low-TPM google/gemini-flash-lite-latest.
+fallback of the chain. Model nuance: `qwen3.5:4b` is slower (thinking
+model) but tool-use capable -- prefer it for anything that must execute
+commands (memory-scribe, bash work). `qwen2.5-coder:3b-instruct-q8_0` is
+faster for pure text/formatting jobs but has proven unreliable at executing
+tool calls (it has emitted drafts as text instead of running the CLI).
+`small_model` (titles/background work) is separately pinned to the
+low-TPM google/gemini-flash-lite-latest.
 
 Memory saves (mnemon/engram) are local CLIs -- no model cost -- but save
 composition MUST go through the dedicated `memory-scribe` subagent (task

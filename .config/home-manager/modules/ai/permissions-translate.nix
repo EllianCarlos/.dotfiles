@@ -2,17 +2,18 @@
 # source of truth) into the formats opencode and Antigravity (`agy`) read, so
 # an allow/deny edit in permissions.nix reaches all three harnesses.
 #
-# Rules carry over by tool kind:
-#   Bash(x)            -> opencode permission.bash["x"]   | agy command(x)
-#   mcp__srv__tool     -> opencode permission["srv_tool"] | agy mcp(srv/tool)
-#   Read/Grep/Glob/... -> the matching opencode permission key (agy has no
-#                         equivalent rule kind, so those are dropped there)
-#   WebFetch(domain:d) -> dropped (opencode webfetch takes only a plain action)
-# claude.ai connector MCP servers don't exist outside Claude, so they're skipped.
-#
-# opencode evaluates rule maps last-match-wins in config order, and Nix
-# attrsets sort their keys, so `ordered` is emitted as [pattern action] pairs
-# for the activation script's jq to fold into an object in that order.
+# opencode (V2) takes one ordered `permissions` array, last match wins:
+#   { action, resource, effect } rules. With bypass-by-default requested, a
+#   single allow-all rule comes first and only the deny rules from
+#   permissions.nix are emitted after it -- the granular allowlist is
+#   redundant under allow-by-default:
+#   Bash(x)            -> { action: "shell", resource: x }
+#   Read(x)/Grep(x)    -> { action: "read"/"grep", resource: x }
+#   everything else    -> covered by the blanket allow rule
+#   mcp__srv__tool     -> covered by the blanket allow rule
+#   WebFetch(domain:d) -> covered by the blanket allow rule
+# agy keeps its per-rule allowlist (it has no blanket-bypass flag), so its
+# translation still maps allow and deny rules command-by-command.
 { lib }:
 let
   rules = import ./permissions.nix;
@@ -44,22 +45,6 @@ let
       name = lib.concatStringsSep "__" (lib.drop 2 parts);
     };
 
-  # Bare-tool allow rules -> opencode permission key.
-  simpleKeys = {
-    Skill = "skill";
-    Agent = "task";
-    LSP = "lsp";
-    WebSearch = "websearch";
-    Grep = "grep";
-    Glob = "glob";
-    Read = "read";
-    Edit = "edit";
-    Write = "edit";
-    MultiEdit = "edit";
-    TaskCreate = "todowrite";
-    TaskUpdate = "todowrite";
-  };
-
   # `Bash(run_in_backgroun:true)` is a Claude-side typo'd flag, not a command.
   isBashRule = p: p.tool == "Bash" && p.arg != null && !(lib.hasPrefix "run_in_backgroun" p.arg);
 
@@ -67,41 +52,23 @@ let
   deny = map parse rules.deny;
 
   # --- opencode ---------------------------------------------------------
-  # Per tool, an ordered [pattern action] list: ask-by-default first, then
-  # allows, then denies (last match wins, so deny beats a broader allow).
-  bashPairs =
-    [ [ "*" "ask" ] ]
-    ++ map (p: [ p.arg "allow" ]) (lib.filter isBashRule allow)
-    ++ map (p: [ p.arg "deny" ]) (lib.filter isBashRule deny);
-
-  readPairs =
-    lib.optional (lib.any (p: p.tool == "Read") allow) [ "*" "allow" ]
-    ++ map (p: [ p.arg "deny" ]) (lib.filter (p: p.tool == "Read" && p.arg != null) deny);
-
-  mcpAllows = lib.unique (
-    map (
-      p:
-      let
-        m = mcpParts p;
-      in
-      "${m.server}_${m.name}"
-    ) (lib.filter isMcp allow)
-  );
-
-  # `read` is excluded: it goes through `ordered` so its deny rules apply.
-  simpleAllows = lib.unique (
-    lib.filter (k: k != "read") (
-      map (p: simpleKeys.${p.tool}) (lib.filter (p: (p.arg == null || p.arg == "*") && simpleKeys ? ${p.tool}) allow)
+  # V2 `permissions` array: blanket allow first (the --dangerously-skip-
+  # permissions equivalent the user asked for), then every deny rule from
+  # permissions.nix. Last match wins, so a deny always beats the blanket
+  # allow, and secrets/.env/pass/gpg stay protected while nothing else
+  # prompts.
+  opencodeRules =
+    [ { action = "*"; resource = "*"; effect = "allow"; } ]
+    ++ map (p: { action = "shell"; resource = p.arg; effect = "deny"; }) (lib.filter isBashRule deny)
+    ++ map (p: { action = "read"; resource = p.arg; effect = "deny"; }) (
+      lib.filter (p: p.tool == "Read" && p.arg != null) deny
     )
-  );
+    ++ map (p: { action = "grep"; resource = p.arg; effect = "deny"; }) (
+      lib.filter (p: p.tool == "Grep" && p.arg != null) deny
+    );
 
   opencode = {
-    ordered = {
-      bash = bashPairs;
-    }
-    // lib.optionalAttrs (readPairs != [ ]) { read = readPairs; };
-    # Keys that take a plain action (opencode MCP tools match by flat name).
-    simple = lib.genAttrs (simpleAllows ++ mcpAllows) (_: "allow");
+    rules = opencodeRules;
   };
 
   # --- agy --------------------------------------------------------------

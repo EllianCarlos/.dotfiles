@@ -9,6 +9,8 @@ import argparse
 import json
 import os
 import re
+import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -73,7 +75,8 @@ def run_claude(system, prompt, model):
             env = dict(os.environ, DISABLE_PROMPT_CACHING="1")
             proc = subprocess.run(argv, input=prompt, capture_output=True, text=True, timeout=TIMEOUT, env=env)
         except subprocess.TimeoutExpired:
-            sys.exit(f"shunt: worker timed out after {TIMEOUT}s; split the request")
+            print(f"shunt: claude/{model} timed out; falling through", file=sys.stderr)
+            return None
         try:
             out = json.loads(proc.stdout)
         except json.JSONDecodeError:
@@ -82,7 +85,37 @@ def run_claude(system, prompt, model):
         if proc.returncode == 0 and not out.get("is_error"):
             return out
         err = str(out.get("result") or proc.stderr)[-500:]
-    sys.exit(f"shunt: worker failed: {err}")
+    print(f"shunt: claude/{model} failed ({err.strip()[-200:]}); falling through", file=sys.stderr)
+    return None
+
+
+def run_cmd_leg(conf_key, system, prompt):
+    """One SHUNT_*_CMD fallback leg: a shell command that reads the prompt on
+    stdin and prints the answer. A missing binary or a failing command falls
+    through to the next leg, so legs can be wired before their CLI exists."""
+    cmd = conf_value(conf_key, "").strip()
+    if not cmd:
+        return None
+    try:
+        binary = shlex.split(cmd)[0]
+    except ValueError:
+        return None
+    if not shutil.which(binary):
+        print(f"shunt: {binary} not on PATH; skipping {conf_key} leg", file=sys.stderr)
+        return None
+    start = time.time()
+    try:
+        proc = subprocess.run(cmd, shell=True, input=f"{system}\n\n{prompt}", capture_output=True,
+                              text=True, timeout=TIMEOUT)
+    except (OSError, subprocess.TimeoutExpired):
+        print(f"shunt: {conf_key} leg failed; falling through", file=sys.stderr)
+        return None
+    if proc.returncode != 0 or not proc.stdout.strip():
+        print(f"shunt: {conf_key} leg failed ({(proc.stderr or '').strip()[-200:]}); falling through",
+              file=sys.stderr)
+        return None
+    print(f"shunt: worker={cmd!r} {time.time() - start:.1f}s", file=sys.stderr)
+    return proc.stdout
 
 
 def run_agy(agy, system, question, paths):
@@ -120,15 +153,30 @@ def run_worker(system, prompt, question=None, paths=None):
             sys.exit(f"shunt: SHUNT_WORKER failed: {proc.stderr.strip()[-500:]}")
         print(f"shunt: worker={custom!r} {time.time() - start:.1f}s", file=sys.stderr)
         return proc.stdout
+    # Free tiers before paid haiku, per modules/ai/shunt.nix: opencode
+    # glm-free -> opencode deepseek-free -> openrouter nemotron-free. Each
+    # leg reads the corpus inline on stdin and falls through on failure.
+    for key in ("SHUNT_OPENCODE_GLM_CMD", "SHUNT_OPENCODE_DEEPSEEK_CMD", "SHUNT_OPENROUTER_CMD"):
+        answer = run_cmd_leg(key, system, prompt)
+        if answer is not None:
+            return answer
     out = run_claude(system, prompt, model)
-    usage = {}
-    for m, u in (out.get("modelUsage") or {}).items():
-        usage = u
-        model = m
-    tokens_in = sum(usage.get(k, 0) for k in ("inputTokens", "cacheReadInputTokens", "cacheCreationInputTokens"))
-    print(f"shunt: worker={model} in={tokens_in} out={usage.get('outputTokens', 0)} "
-          f"cost=${out.get('total_cost_usd', 0):.4f} {time.time() - start:.1f}s", file=sys.stderr)
-    return out.get("result", "")
+    if out is not None:
+        usage = {}
+        for m, u in (out.get("modelUsage") or {}).items():
+            usage = u
+            model = m
+        tokens_in = sum(usage.get(k, 0) for k in ("inputTokens", "cacheReadInputTokens", "cacheCreationInputTokens"))
+        print(f"shunt: worker={model} in={tokens_in} out={usage.get('outputTokens', 0)} "
+              f"cost=${out.get('total_cost_usd', 0):.4f} {time.time() - start:.1f}s", file=sys.stderr)
+        return out.get("result", "")
+    # Remaining chain per modules/ai/shunt.nix: haiku (above, already tried)
+    # -> kiro -> qwen. Each cmd leg reads the corpus inline on stdin.
+    for key in ("SHUNT_KIRO_CMD", "SHUNT_QWEN_CMD"):
+        answer = run_cmd_leg(key, system, prompt)
+        if answer is not None:
+            return answer
+    sys.exit("shunt: worker chain exhausted (agy, opencode-free, openrouter-free, claude, kiro, qwen)")
 
 
 def strip_fences(text):
