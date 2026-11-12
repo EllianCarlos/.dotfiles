@@ -38,6 +38,7 @@ in
     ./modules/ai/opencode.nix
     ./modules/ai/skills.nix
     ./modules/ai/rag.nix
+    ./modules/ai/memory-backup.nix
   ];
 
   # --- Identity -------------------------------------------------------------
