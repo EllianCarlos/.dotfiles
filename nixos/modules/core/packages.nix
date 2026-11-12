@@ -17,7 +17,7 @@
 
   # Common Packages (System-level & Virtualization)
   environment.systemPackages = with pkgs; [
-    git zsh vim
+    git gh zsh vim
     killall bottom ripgrep fd
     wl-clipboard wireplumber
     brightnessctl nixfmt

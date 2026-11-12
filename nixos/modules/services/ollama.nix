@@ -41,6 +41,11 @@
     # back to 12288 (or q4_0, a further ~2x on top of q8_0) if it gets used.
     environmentVariables.OLLAMA_CONTEXT_LENGTH = "24576";
     environmentVariables.OLLAMA_KV_CACHE_TYPE = "q8_0";
+
+    # Default 5m unloads the model between agent invocations, so every memory
+    # save / classification pays a cold load (3-5GB from disk, worse on CPU).
+    # 30m keeps it resident in VRAM across a working session.
+    environmentVariables.OLLAMA_KEEP_ALIVE = "30m";
   };
 
   # isSystemUser accounts do not get createHome by default; ollama's
