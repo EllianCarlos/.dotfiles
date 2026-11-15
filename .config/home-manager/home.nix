@@ -46,6 +46,9 @@ in
   home.homeDirectory = "/home/elliancarlos";
   home.stateVersion = "25.05";
 
+  # User-installed binaries (e.g. the pizza-delivery symlink).
+  home.sessionPath = [ "$HOME/.local/bin" ];
+
   nixpkgs.overlays = [ claude-code-flake.overlays.default ];
 
 
