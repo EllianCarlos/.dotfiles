@@ -113,6 +113,49 @@ in
       # --- Audio ---
       custom.wb-headset
 
+      # --- Voice typing (push-to-talk toggle, bound to SUPER+SHIFT+V) ---
+      # Model lives on /mnt/nixdata (root disk is tight); fetched on first use.
+      wtype
+      whisper-cpp
+      (writeShellApplication {
+        name = "voice-type";
+        runtimeInputs = [ pipewire whisper-cpp wtype curl libnotify coreutils procps ];
+        text = ''
+          dir="''${XDG_RUNTIME_DIR:-/tmp}/voice-type"
+          model_dir="/mnt/nixdata/whisper"
+          model="$model_dir/ggml-small.bin"
+          mkdir -p "$dir"
+
+          # Second press: stop recording, transcribe, type.
+          if [ -f "$dir/pid" ] && kill -0 "$(cat "$dir/pid")" 2>/dev/null; then
+            kill -INT "$(cat "$dir/pid")"
+            rm -f "$dir/pid"
+            sleep 0.3
+            notify-send -t 2000 "Voice typing" "Transcribing..."
+            text="$(whisper-cli -m "$model" -f "$dir/rec.wav" -l auto -nt -np 2>/dev/null \
+              | tr '\n' ' ' | sed 's/^ *//; s/ *$//')"
+            if [ -n "$text" ]; then
+              wtype -- "$text"
+            else
+              notify-send -t 2000 "Voice typing" "Nothing heard"
+            fi
+            exit 0
+          fi
+
+          # First press: make sure the model exists, then start recording.
+          if [ ! -f "$model" ]; then
+            notify-send "Voice typing" "Downloading model (~470MB) to $model_dir"
+            mkdir -p "$model_dir"
+            curl -fL -o "$model.part" \
+              "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin"
+            mv "$model.part" "$model"
+          fi
+          pw-record --rate 16000 --channels 1 "$dir/rec.wav" &
+          echo $! > "$dir/pid"
+          notify-send -t 2000 "Voice typing" "Recording... press again to stop"
+        '';
+      })
+
       # --- AI Agents ---
       antigravity-cli
       # kiro

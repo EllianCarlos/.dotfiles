@@ -169,6 +169,9 @@ hl.bind("Print", hl.dsp.exec_cmd("grim - | wl-copy"))
 -- wezterm) -- Ctrl+Space collides with nvim's completion menu.
 hl.bind(mainMod .. " + I", hl.dsp.exec_cmd("fcitx5-remote -t"))
 
+-- Voice typing: press to start recording, press again to transcribe and type
+hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("voice-type"))
+
 -- Focus
 hl.bind(mainMod .. " + H", hl.dsp.focus({ direction = "left" }))
 hl.bind(mainMod .. " + L", hl.dsp.focus({ direction = "right" }))
