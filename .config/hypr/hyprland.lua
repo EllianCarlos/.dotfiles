@@ -186,7 +186,9 @@ hl.bind(mainMod .. " + mouse_up", hl.dsp.focus({ workspace = "e-1" }))
 
 -- Resize submap: SUPER + O enters, escape leaves.
 hl.bind(mainMod .. " + O", hl.dsp.submap("resize"))
-hl.define_submap("resize", "escape", function()
+-- Global safety reset so a stuck submap never swallows h/j/k/l.
+hl.bind(mainMod .. " + Escape", hl.dsp.submap("reset"))
+hl.define_submap("resize", "Escape", function()
   hl.bind("l", hl.dsp.window.resize({ x = 10, y = 0, relative = true }), { repeating = true })
   hl.bind("h", hl.dsp.window.resize({ x = -10, y = 0, relative = true }), { repeating = true })
   hl.bind("k", hl.dsp.window.resize({ x = 0, y = -10, relative = true }), { repeating = true })
