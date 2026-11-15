@@ -13,7 +13,15 @@
       set collapse_all = yes;
       set use_threads = yes;
       set sort = "reverse-last-date-received";
+      set sort_aux = "date-received"
+      bind index zc collapse-thread
+      bind index zC collapse-all
       set delete = ask-yes;
+      set allow_ansi = yes
+      set display_filter = "${pkgs.delta}/bin/delta --color-only --paging=never --true-color=never --syntax-theme=none --minus-style 'red' --plus-style 'green' --minus-emph-style 'bold red' --plus-emph-style 'bold green' --zero-style normal"
+      color body brightwhite default "^(diff|---|\\+\\+\\+|@@).*"
+      color body green default "^\\+.*"
+      color body red default "^-.*"
     '';
   };
 
