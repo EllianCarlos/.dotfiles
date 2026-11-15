@@ -48,6 +48,14 @@
     environmentVariables.OLLAMA_KEEP_ALIVE = "30m";
   };
 
+  # Mitigation, not a root-cause fix: the llama-server runner never exits on
+  # unload (`ollama ps` stuck on "Stopping...") and its anonymous RSS crept to
+  # ~8GB over days (fresh runner: ~0.4GB) while the model sits fully on the
+  # GPU. Cap the service's RAM instead of restarting on a schedule: if the
+  # runner leaks past the cap the kernel kills it, and ollama respawns a fresh
+  # one on the next request. Remove once upstream fixes it.
+  systemd.services.ollama.serviceConfig.MemoryMax = "6G";
+
   # isSystemUser accounts do not get createHome by default; ollama's
   # WorkingDirectory needs /mnt/nixdata/ollama to exist before the service starts.
   users.users.ollama.createHome = true;
