@@ -366,7 +366,8 @@ in
         # that never need flash-latest peak TPM -- pin the lowest-TPM
         # flash-line model per the shunt fallback rationale (shunt.nix).
         | .small_model = (.small_model // "google/gemini-flash-lite-latest")' \
-      "$HOME/.config/opencode/opencode.jsonc" > "$HOME/.config/opencode/opencode.jsonc.tmp"
-    mv "$HOME/.config/opencode/opencode.jsonc.tmp" "$HOME/.config/opencode/opencode.jsonc"
+      <(${pkgs.gnused}/bin/sed 's#^[[:space:]]*//.*$##' "$HOME/.config/opencode/opencode.jsonc") \
+      > "$HOME/.config/opencode/opencode.jsonc.tmp" \
+      && mv "$HOME/.config/opencode/opencode.jsonc.tmp" "$HOME/.config/opencode/opencode.jsonc"
   '';
 }
