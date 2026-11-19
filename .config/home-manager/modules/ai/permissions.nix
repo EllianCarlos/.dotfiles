@@ -42,7 +42,7 @@
     "Bash(run_in_backgroun:true)"
 
     "Bash(mnemon recall *)"
-    "Read(*)"
+    "Read"
 
     # --- Built-in tools ---
     "Skill"

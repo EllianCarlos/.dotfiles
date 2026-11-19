@@ -15,18 +15,18 @@
   mcp-servers-nix = {
     owner = "natsukium";
     repo = "mcp-servers-nix";
-    rev = "4c8248eccec98c2ebe59765c644359e5f6aeb0ea"; # upstream HEAD -- repo
+    rev = "47945d9392b28359ff15abc4837f669306afbdca"; # upstream HEAD -- repo
     # cuts no tags.
   };
   claude-code-nix = {
     owner = "sadjow";
     repo = "claude-code-nix";
-    rev = "dcf5354053c67a0c653796cca9af5630e4a54fc4"; # upstream HEAD (= floating "latest"/"v2" tags; past v2.1.319)
+    rev = "2c0782ecf4d07e4395cb56b33555fa4eb30f6784"; # upstream HEAD (= floating "latest"/"v2" tags; past v2.1.319)
   };
   agent-skills-nix = {
     owner = "Kyure-A";
     repo = "agent-skills-nix";
-    rev = "f48aa227f3d157ae3abda12cd9c4ab867f400419"; # upstream HEAD -- repo
+    rev = "93a02cb60eda167de8c5baa085e4a2bcfc71b885"; # upstream HEAD -- repo
     # cuts no tags.
   };
   hermes-agent = {
@@ -37,7 +37,7 @@
   opencode-nixpkgs-pin = {
     owner = "NixOS";
     repo = "nixpkgs";
-    rev = "abfaba84d0a30eebb02124cf19802409f3442b0c"; # opencode (nixpkgs HEAD as of 2026-11-09)
+    rev = "9266f07ab66c60f48ae19d8dda60536839ad7d1e"; # opencode (nixpkgs HEAD as of 2026-11-09)
   };
   # zotero 10.0.4 (nixpkgs bae6f80, 2026-10-01) fails to build: its omni.ja
   # patch can't find AboutTranslations in ActorManagerParent.sys.mjs. Last
@@ -62,7 +62,7 @@
   loop-engineering = {
     owner = "cobusgreyling";
     repo = "loop-engineering";
-    rev = "166bae33308ef5461f23af435bb3c73ebbb3708d"; # upstream HEAD -- this
+    rev = "260e575bf5fa6f0636ab3fdd7122b430f8b2d1f9"; # upstream HEAD -- this
     # repo's tags (loop-worktree-vX, readiness-core-vX, vX) are per-subtool,
     # not one release line for the whole repo, so there's no single "latest
     # tag" to prefer over HEAD here; see project-pin-bump-prefer-tagged-release.
@@ -91,7 +91,7 @@
   wb-headset = {
     owner = "Henriklmao";
     repo = "waybar-headsetcontrol";
-    rev = "4a92e6fc420af8603796c08d7369b0226221caa2"; # upstream HEAD, not the
+    rev = "8e73f057d54a58486a7589b9cce5a91e5ea85c83"; # upstream HEAD, not the
     # v0.1.5 tag (977a1a8) -- still no release cut since; HEAD is where
     # "Add Cargo.lock" (what buildRustPackage's cargoLock.lockFile needs)
     # lives. See project-pin-bump-prefer-tagged-release for why tag is
@@ -108,13 +108,13 @@
   academic-research-skills = {
     owner = "Imbad0202";
     repo = "academic-research-skills";
-    rev = "fd5ff1b858374219b4d342e38587b66e18f61cbd"; # v3.24.2 -- latest tag; upstream HEAD
+    rev = "36b22af2ff7b463e5f616f1d616a8f0cb7f43c35"; # v3.24.3 -- latest tag; upstream HEAD
     # (6d938867 as of 2026-11-09) is past it; see project-pin-bump-prefer-tagged-release.
   };
   zen-browser = {
     owner = "0xc000022070";
     repo = "zen-browser-flake";
-    rev = "5f45f55b9f6f2de78504a95b372e13951793be3a"; # HEAD -- upstream's
+    rev = "cb44a9fc1faa18c55dde38a8338f6d46fa2bc6de"; # HEAD -- upstream's
     # tags are named "twilight-<hash>" per Zen Browser build, not per
     # flake release, so they track a different thing than this pin does.
     # HEAD is the flake's own moving pin to the latest Zen build.
